@@ -281,6 +281,10 @@ func startStandAlone(ctx *server.Context, opts StartOptions) error {
 		if err = svr.Stop(); err != nil {
 			tmos.Exit(err.Error())
 		}
+
+		if err := app.Close(); err != nil {
+			tmos.Exit(err.Error())
+		}
 	}()
 
 	// Wait for SIGINT or SIGTERM signal
@@ -394,6 +398,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 		defer func() {
 			if tmNode.IsRunning() {
 				_ = tmNode.Stop()
+				_ = app.Close()
 			}
 		}()
 	}

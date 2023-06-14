@@ -59,6 +59,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 - (ante) [#1717](https://github.com/evmos/ethermint/pull/1717) Reuse sender recovery result.
+- (cli) [#242](https://github.com/crypto-org-chain/ethermint/pull/242) Integrate tendermint bootstrap cmd.
+- (cli) [#246](https://github.com/crypto-org-chain/ethermint/pull/246) Call app.Close to cleanup resource on graceful shutdown.
+
 
 ## [v0.21.0] - 2023-01-26
 
@@ -74,7 +77,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - (evm) [#1582](https://github.com/evmos/ethermint/pull/1582) Cleanup `evm` files
 - (evm) [#1544](https://github.com/evmos/ethermint/pull/1544) Migrate deprecated event emitting to new `TypedEvent`
 - (deps) [#1532](https://github.com/evmos/ethermint/pull/1532) Upgrade Go-Ethereum version to [`v1.10.26`](https://github.com/ethereum/go-ethereum/releases/tag/v1.10.26).
-- (cli) [#242](https://github.com/crypto-org-chain/ethermint/pull/242) Integrate tendermint bootstrap cmd.
 
 ### Bug Fixes
 
