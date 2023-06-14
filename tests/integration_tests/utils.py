@@ -33,6 +33,7 @@ TEST_CONTRACTS = {
     "Mars": "Mars.sol",
     "StateContract": "StateContract.sol",
     "TestExploitContract": "TestExploitContract.sol",
+    "TestRevert": "TestRevert.sol",
 }
 
 

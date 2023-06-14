@@ -547,6 +547,8 @@ EstimateGasResponse defines EstimateGas response
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `gas` | [uint64](#uint64) |  | the estimated gas |
+| `ret` | [bytes](#bytes) |  | ret is the returned data from evm function (result or data supplied with revert opcode) |
+| `vm_error` | [string](#string) |  | vm_error is the error returned by vm execution |
 
 
 
