@@ -30,8 +30,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/consensus/misc"
+	"github.com/ethereum/go-ethereum/common/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/params"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -39,6 +40,7 @@ import (
 
 	"github.com/evmos/ethermint/rpc/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
@@ -117,6 +119,47 @@ func (b *Backend) getAccountNonce(accAddr common.Address, pending bool, height i
 	return nonce, nil
 }
 
+// CalcBaseFee calculates the basefee of the header.
+func CalcBaseFee(config *params.ChainConfig, parent *ethtypes.Header, baseFeeChangeDenominator, elasticityMultiplier uint32) *big.Int {
+	// If the current block is the first EIP-1559 block, return the InitialBaseFee.
+	if !config.IsLondon(parent.Number) {
+		return new(big.Int).SetUint64(params.InitialBaseFee)
+	}
+
+	parentGasTarget := parent.GasLimit / uint64(elasticityMultiplier)
+	// If the parent gasUsed is the same as the target, the baseFee remains unchanged.
+	if parent.GasUsed == parentGasTarget {
+		return new(big.Int).Set(parent.BaseFee)
+	}
+
+	var (
+		num   = new(big.Int)
+		denom = new(big.Int)
+	)
+
+	if parent.GasUsed > parentGasTarget {
+		// If the parent block used more gas than its target, the baseFee should increase.
+		// max(1, parentBaseFee * gasUsedDelta / parentGasTarget / baseFeeChangeDenominator)
+		num.SetUint64(parent.GasUsed - parentGasTarget)
+		num.Mul(num, parent.BaseFee)
+		num.Div(num, denom.SetUint64(parentGasTarget))
+		num.Div(num, denom.SetUint64(uint64(baseFeeChangeDenominator)))
+		baseFeeDelta := math.BigMax(num, common.Big1)
+
+		return num.Add(parent.BaseFee, baseFeeDelta)
+	} else {
+		// Otherwise if the parent block used less gas than its target, the baseFee should decrease.
+		// max(0, parentBaseFee * gasUsedDelta / parentGasTarget / baseFeeChangeDenominator)
+		num.SetUint64(parentGasTarget - parent.GasUsed)
+		num.Mul(num, parent.BaseFee)
+		num.Div(num, denom.SetUint64(parentGasTarget))
+		num.Div(num, denom.SetUint64(uint64(baseFeeChangeDenominator)))
+		baseFee := num.Sub(parent.BaseFee, num)
+
+		return math.BigMax(baseFee, common.Big0)
+	}
+}
+
 // output: targetOneFeeHistory
 func (b *Backend) processBlock(
 	tendermintBlock *tmrpctypes.ResultBlock,
@@ -134,11 +177,6 @@ func (b *Backend) processBlock(
 	// set basefee
 	targetOneFeeHistory.BaseFee = blockBaseFee
 	cfg := b.ChainConfig()
-	if cfg.IsLondon(big.NewInt(blockHeight + 1)) {
-		targetOneFeeHistory.NextBaseFee = misc.CalcBaseFee(cfg, b.CurrentHeader())
-	} else {
-		targetOneFeeHistory.NextBaseFee = new(big.Int)
-	}
 	// set gas used ratio
 	gasLimitUint64, ok := (*ethBlock)["gasLimit"].(hexutil.Uint64)
 	if !ok {
@@ -148,6 +186,26 @@ func (b *Backend) processBlock(
 	gasUsedBig, ok := (*ethBlock)["gasUsed"].(*hexutil.Big)
 	if !ok {
 		return fmt.Errorf("invalid gas used type: %T", (*ethBlock)["gasUsed"])
+	}
+
+	baseFee, ok := (*ethBlock)["baseFeePerGas"].(*hexutil.Big)
+	if !ok {
+		return fmt.Errorf("invalid baseFee: %T", (*ethBlock)["baseFeePerGas"])
+	}
+
+	if cfg.IsLondon(big.NewInt(blockHeight + 1)) {
+		var header ethtypes.Header
+		header.Number = new(big.Int).SetInt64(blockHeight)
+		header.BaseFee = baseFee.ToInt()
+		header.GasLimit = uint64(gasLimitUint64)
+		header.GasUsed = gasUsedBig.ToInt().Uint64()
+		params, err := b.queryClient.FeeMarket.Params(b.ctx, &feemarkettypes.QueryParamsRequest{})
+		if err != nil {
+			return err
+		}
+		targetOneFeeHistory.NextBaseFee = CalcBaseFee(cfg, &header, params.Params.BaseFeeChangeDenominator, params.Params.ElasticityMultiplier)
+	} else {
+		targetOneFeeHistory.NextBaseFee = new(big.Int)
 	}
 
 	gasusedfloat, _ := new(big.Float).SetInt(gasUsedBig.ToInt()).Float64()
