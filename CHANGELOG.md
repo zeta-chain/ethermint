@@ -54,6 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - (rpc) [#1722](https://github.com/evmos/ethermint/pull/1722) Align revert response for `eth_estimateGas` and `eth_call` as Ethereum.
 - (rpc) [#1720](https://github.com/evmos/ethermint/pull/1720) Fix next block fee for historical block and calculate base fee by params.
 - (rpc) [#1685](https://github.com/evmos/ethermint/pull/1685) Fix parse for websocket connID.
+- (rpc) [#1773](https://github.com/evmos/ethermint/pull/1773) Avoid channel get changed when concurrent subscribe happens.
 
 ### Improvements
 

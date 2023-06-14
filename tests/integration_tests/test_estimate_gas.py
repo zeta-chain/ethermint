@@ -28,7 +28,7 @@ def test_revert(cluster):
     w3 = cluster.w3
     call = w3.provider.make_request
     validator = ADDRS["validator"]
-    erc20 = deploy_contract(
+    erc20, _ = deploy_contract(
         w3,
         CONTRACTS["TestRevert"],
     )
