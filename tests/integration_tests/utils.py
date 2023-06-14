@@ -1,9 +1,11 @@
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import bech32
@@ -188,10 +190,9 @@ def decode_bech32(addr):
 
 
 def supervisorctl(inipath, *args):
-    subprocess.run(
+    return subprocess.check_output(
         (sys.executable, "-msupervisor.supervisorctl", "-c", inipath, *args),
-        check=True,
-    )
+    ).decode()
 
 
 def parse_events(logs):
@@ -206,3 +207,60 @@ def derive_new_account(n=1):
     account_path = f"m/44'/60'/0'/0/{n}"
     mnemonic = os.getenv("COMMUNITY_MNEMONIC")
     return Account.from_mnemonic(mnemonic, account_path=account_path)
+
+
+def send_raw_transactions(w3, raw_transactions):
+    with ThreadPoolExecutor(len(raw_transactions)) as exec:
+        tasks = [
+            exec.submit(w3.eth.send_raw_transaction, raw) for raw in raw_transactions
+        ]
+        sended_hash_set = {future.result() for future in as_completed(tasks)}
+    return sended_hash_set
+
+
+def modify_command_in_supervisor_config(ini: Path, fn, **kwargs):
+    "replace the first node with the instrumented binary"
+    ini.write_text(
+        re.sub(
+            r"^command = (ethermintd .*$)",
+            lambda m: f"command = {fn(m.group(1))}",
+            ini.read_text(),
+            flags=re.M,
+            **kwargs,
+        )
+    )
+
+
+def build_batch_tx(w3, cli, txs, key=KEYS["validator"]):
+    "return cosmos batch tx and eth tx hashes"
+    signed_txs = [sign_transaction(w3, tx, key) for tx in txs]
+    tmp_txs = [cli.build_evm_tx(signed.rawTransaction.hex()) for signed in signed_txs]
+
+    msgs = [tx["body"]["messages"][0] for tx in tmp_txs]
+    fee = sum(int(tx["auth_info"]["fee"]["amount"][0]["amount"]) for tx in tmp_txs)
+    gas_limit = sum(int(tx["auth_info"]["fee"]["gas_limit"]) for tx in tmp_txs)
+
+    tx_hashes = [signed.hash for signed in signed_txs]
+
+    # build batch cosmos tx
+    return {
+        "body": {
+            "messages": msgs,
+            "memo": "",
+            "timeout_height": "0",
+            "extension_options": [
+                {"@type": "/ethermint.evm.v1.ExtensionOptionsEthereumTx"}
+            ],
+            "non_critical_extension_options": [],
+        },
+        "auth_info": {
+            "signer_infos": [],
+            "fee": {
+                "amount": [{"denom": "aphoton", "amount": str(fee)}],
+                "gas_limit": str(gas_limit),
+                "payer": "",
+                "granter": "",
+            },
+        },
+        "signatures": [],
+    }, tx_hashes

@@ -589,14 +589,12 @@ func (api *pubSubAPI) subscribeLogs(wsConn *wsConn, subID rpc.ID, extra interfac
 					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", event.Data))
 					continue
 				}
-
-				txResponse, err := evmtypes.DecodeTxResponse(dataTx.TxResult.Result.Data)
+				txLogs, err := evmtypes.DecodeTxLogsFromEvents(dataTx.TxResult.Result.Data)
 				if err != nil {
 					api.logger.Error("failed to decode tx response", "error", err.Error())
 					return
 				}
-
-				logs := rpcfilters.FilterLogs(evmtypes.LogsToEthereum(txResponse.Logs), crit.FromBlock, crit.ToBlock, crit.Addresses, crit.Topics)
+				logs := rpcfilters.FilterLogs(txLogs, crit.FromBlock, crit.ToBlock, crit.Addresses, crit.Topics)
 				if len(logs) == 0 {
 					continue
 				}
