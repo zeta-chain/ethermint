@@ -45,8 +45,8 @@ import (
 // EthermintApp testing.
 var DefaultConsensusParams = &tmproto.ConsensusParams{
 	Block: &tmproto.BlockParams{
-		MaxBytes: 200000,
-		MaxGas:   -1, // no limit
+		MaxBytes: 1048576,
+		MaxGas:   81500000, // default limit
 	},
 	Evidence: &tmproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
