@@ -23,3 +23,4 @@ done
 # move proto files to the right places
 cp -r github.com/evmos/ethermint/* ./
 rm -rf github.com
+
