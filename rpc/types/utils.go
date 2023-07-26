@@ -241,7 +241,7 @@ func BaseFeeFromEvents(events []abci.Event) *big.Int {
 		}
 
 		for _, attr := range event.Attributes {
-			if bytes.Equal([]byte(attr.Key), []byte(feemarkettypes.AttributeKeyBaseFee)) {
+			if attr.Key == feemarkettypes.AttributeKeyBaseFee {
 				result, success := new(big.Int).SetString(attr.Value, 10)
 				if success {
 					return result
