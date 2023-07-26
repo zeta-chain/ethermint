@@ -16,7 +16,6 @@
 package types
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"math/big"

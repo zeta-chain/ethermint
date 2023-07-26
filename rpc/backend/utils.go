@@ -16,7 +16,6 @@
 package backend
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -318,7 +317,7 @@ func TxLogsFromEvents(events []abci.Event, msgIndex int) ([]*ethtypes.Log, error
 func ParseTxLogsFromEvent(event abci.Event) ([]*ethtypes.Log, error) {
 	logs := make([]*evmtypes.Log, 0, len(event.Attributes))
 	for _, attr := range event.Attributes {
-		if !attr.Key != evmtypes.AttributeKeyTxLog {
+		if attr.Key != evmtypes.AttributeKeyTxLog {
 			continue
 		}
 
