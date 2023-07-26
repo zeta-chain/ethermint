@@ -318,7 +318,7 @@ func TxLogsFromEvents(events []abci.Event, msgIndex int) ([]*ethtypes.Log, error
 func ParseTxLogsFromEvent(event abci.Event) ([]*ethtypes.Log, error) {
 	logs := make([]*evmtypes.Log, 0, len(event.Attributes))
 	for _, attr := range event.Attributes {
-		if !bytes.Equal([]byte(attr.Key), []byte(evmtypes.AttributeKeyTxLog)) {
+		if !attr.Key != evmtypes.AttributeKeyTxLog {
 			continue
 		}
 
