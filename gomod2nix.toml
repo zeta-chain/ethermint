@@ -599,9 +599,8 @@ schema = 3
     version = "v0.0.0-20230711160842-782d3b101e98"
     hash = "sha256-VtrLmOh1SLOKKLRmKc/NKR6NR/9DSR4RSq+OXnwmgHY="
   [mod."google.golang.org/grpc"]
-    version = "v0.0.0-20230726140020-924503e66efe"
-    hash = "sha256-L5B6RDas5ttwndNHPi+7ZQtQenVphcTgRjhQ0K6cEiA="
-    replaced = "github.com/mmsqe/grpc-go"
+    version = "v1.56.2"
+    hash = "sha256-zL0LYCT9OaWU+Zisp0yUT+DYZvVPRePL2AE3gNI4h7M="
   [mod."google.golang.org/protobuf"]
     version = "v1.31.0"
     hash = "sha256-UdIk+xRaMfdhVICvKRk1THe3R1VU+lWD8hqoW/y8jT0="
