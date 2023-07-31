@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -173,18 +172,8 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 	return cdc.MustMarshalJSON(gs)
 }
 
-// RandomizedParams creates randomized fee market param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
-	return nil
-}
-
 // RegisterStoreDecoder registers a decoder for fee market module's types
 func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
-
-// ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
-	return nil
-}
 
 // GenerateGenesisState creates a randomized GenState of the fee market module.
 func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
