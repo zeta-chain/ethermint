@@ -79,7 +79,7 @@ func (k *Keeper) NewEVM(
 		active = append(active, addr)
 	}
 	for _, fn := range k.customContractFns {
-		c := fn(rules)
+		c := fn(ctx, rules)
 		addr := c.Address()
 		contracts[addr] = c
 		active = append(active, addr)
