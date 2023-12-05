@@ -38,8 +38,8 @@ import (
 	"github.com/evmos/ethermint/x/evm/types"
 )
 
-// CustomContractFn defines a custom precompiled contract generator with rules and returns a precompiled contract.
-type CustomContractFn func(params.Rules) vm.PrecompiledContract
+// CustomContractFn defines a custom precompiled contract generator with ctx, rules and returns a precompiled contract.
+type CustomContractFn func(sdk.Context, params.Rules) vm.PrecompiledContract
 
 type EventConverter = func([]abci.EventAttribute) []*ethtypes.Log
 
