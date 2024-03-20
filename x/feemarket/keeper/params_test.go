@@ -6,9 +6,17 @@ import (
 	"github.com/zeta-chain/ethermint/x/feemarket/types"
 )
 
-func (suite *KeeperTestSuite) TestSetGetParams() {
-	params := suite.app.FeeMarketKeeper.GetParams(suite.ctx)
-	suite.app.FeeMarketKeeper.SetParams(suite.ctx, params)
+type ParamsTestSuite struct {
+	testutil.BaseTestSuite
+}
+
+func TestParamsTestSuite(t *testing.T) {
+	suite.Run(t, new(ParamsTestSuite))
+}
+
+func (suite *ParamsTestSuite) TestSetGetParams() {
+	params := types.DefaultParams()
+	suite.App.FeeMarketKeeper.SetParams(suite.Ctx, params)
 	testCases := []struct {
 		name      string
 		paramsFun func() interface{}

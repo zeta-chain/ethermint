@@ -17,9 +17,12 @@ package statedb
 
 import (
 	"fmt"
+	"math/big"
 	"sort"
 
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -334,11 +337,11 @@ func (s *StateDB) setStateObject(object *stateObject) {
 	s.stateObjects[object.Address()] = object
 }
 
-func (s *StateDB) cloneNativeState() sdk.MultiStore {
+func (s *StateDB) cloneNativeState() storetypes.MultiStore {
 	return s.cacheMultiStore().Clone()
 }
 
-func (s *StateDB) restoreNativeState(ms sdk.MultiStore) {
+func (s *StateDB) restoreNativeState(ms storetypes.MultiStore) {
 	manager := sdk.NewEventManager()
 	s.cacheCtx = s.cacheCtx.WithMultiStore(ms).WithEventManager(manager)
 }
@@ -372,18 +375,36 @@ func (s *StateDB) CacheContext() sdk.Context {
  */
 
 // AddBalance adds amount to the account associated with addr.
-func (s *StateDB) AddBalance(addr common.Address, amount *uint256.Int) {
-	stateObject := s.getOrNewStateObject(addr)
-	if stateObject != nil {
-		stateObject.AddBalance(amount)
+func (s *StateDB) AddBalance(addr common.Address, amount *big.Int) {
+	if amount.Sign() <= 0 {
+		return
+	}
+	coins := sdk.Coins{sdk.NewCoin(s.evmDenom, sdkmath.NewIntFromBigInt(amount))}
+	if err := s.ExecuteNativeAction(common.Address{}, nil, func(ctx sdk.Context) error {
+		return s.keeper.AddBalance(ctx, sdk.AccAddress(addr.Bytes()), coins)
+	}); err != nil {
+		s.err = err
 	}
 }
 
 // SubBalance subtracts amount from the account associated with addr.
-func (s *StateDB) SubBalance(addr common.Address, amount *uint256.Int) {
-	stateObject := s.getOrNewStateObject(addr)
-	if stateObject != nil {
-		stateObject.SubBalance(amount)
+func (s *StateDB) SubBalance(addr common.Address, amount *big.Int) {
+	if amount.Sign() <= 0 {
+		return
+	}
+	coins := sdk.Coins{sdk.NewCoin(s.evmDenom, sdkmath.NewIntFromBigInt(amount))}
+	if err := s.ExecuteNativeAction(common.Address{}, nil, func(ctx sdk.Context) error {
+		return s.keeper.SubBalance(ctx, sdk.AccAddress(addr.Bytes()), coins)
+	}); err != nil {
+		s.err = err
+	}
+}
+
+func (s *StateDB) SetBalance(addr common.Address, amount *big.Int) {
+	if err := s.ExecuteNativeAction(common.Address{}, nil, func(ctx sdk.Context) error {
+		return s.keeper.SetBalance(ctx, addr, amount, s.evmDenom)
+	}); err != nil {
+		s.err = err
 	}
 }
 

@@ -3,30 +3,136 @@ package keeper_test
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
+	"testing"
 
 	sdkmath "cosmossdk.io/math"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	ethlogger "github.com/ethereum/go-ethereum/eth/tracers/logger"
 	ethparams "github.com/ethereum/go-ethereum/params"
-	"github.com/zeta-chain/ethermint/tests"
-	"github.com/zeta-chain/ethermint/x/evm/statedb"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/zeta-chain/ethermint/server/config"
-	ethermint "github.com/zeta-chain/ethermint/types"
-	"github.com/zeta-chain/ethermint/x/evm/types"
+	"github.com/evmos/ethermint/app"
+	"github.com/evmos/ethermint/server/config"
+	"github.com/evmos/ethermint/tests"
+	"github.com/evmos/ethermint/testutil"
+	ethermint "github.com/evmos/ethermint/types"
+	"github.com/evmos/ethermint/x/evm/statedb"
+	"github.com/evmos/ethermint/x/evm/types"
+	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 // Not valid Ethereum address
 const invalidAddress = "0x0000"
 
-func (suite *KeeperTestSuite) TestQueryAccount() {
+type GRPCServerTestSuiteSuite struct {
+	testutil.EVMTestSuiteWithAccountAndQueryClient
+	enableFeemarket bool
+	enableLondonHF  bool
+}
+
+func (suite *GRPCServerTestSuiteSuite) SetupTest() {
+	suite.EVMTestSuiteWithAccountAndQueryClient.SetupTestWithCb(suite.T(), func(app *app.EthermintApp, genesis app.GenesisState) app.GenesisState {
+		feemarketGenesis := feemarkettypes.DefaultGenesisState()
+		if suite.enableFeemarket {
+			feemarketGenesis.Params.EnableHeight = 1
+			feemarketGenesis.Params.NoBaseFee = false
+		} else {
+			feemarketGenesis.Params.NoBaseFee = true
+		}
+		genesis[feemarkettypes.ModuleName] = app.AppCodec().MustMarshalJSON(feemarketGenesis)
+		if !suite.enableLondonHF {
+			evmGenesis := types.DefaultGenesisState()
+			maxInt := sdkmath.NewInt(math.MaxInt64)
+			evmGenesis.Params.ChainConfig.LondonBlock = &maxInt
+			evmGenesis.Params.ChainConfig.ArrowGlacierBlock = &maxInt
+			evmGenesis.Params.ChainConfig.GrayGlacierBlock = &maxInt
+			evmGenesis.Params.ChainConfig.MergeNetsplitBlock = &maxInt
+			evmGenesis.Params.ChainConfig.ShanghaiTime = &maxInt
+			genesis[types.ModuleName] = app.AppCodec().MustMarshalJSON(evmGenesis)
+		}
+		return genesis
+	})
+}
+
+func TestGRPCServerTestSuite(t *testing.T) {
+	s := new(GRPCServerTestSuiteSuite)
+	s.enableFeemarket = false
+	s.enableLondonHF = true
+	suite.Run(t, s)
+}
+
+// deployTestContract deploy a test erc20 contract and returns the contract address
+func (suite *GRPCServerTestSuiteSuite) deployTestContract(owner common.Address) common.Address {
+	supply := sdkmath.NewIntWithDecimal(1000, 18).BigInt()
+	return suite.EVMTestSuiteWithAccountAndQueryClient.DeployTestContract(
+		suite.T(),
+		owner,
+		supply,
+		suite.enableFeemarket,
+	)
+}
+
+func (suite *GRPCServerTestSuiteSuite) transferERC20Token(t require.TestingT, contractAddr, from, to common.Address, amount *big.Int) *types.MsgEthereumTx {
+	chainID := suite.App.EvmKeeper.ChainID()
+
+	transferData, err := types.ERC20Contract.ABI.Pack("transfer", to, amount)
+	require.NoError(t, err)
+	args, err := json.Marshal(&types.TransactionArgs{To: &contractAddr, From: &from, Data: (*hexutil.Bytes)(&transferData)})
+	require.NoError(t, err)
+	res, err := suite.EvmQueryClient.EstimateGas(suite.Ctx, &types.EthCallRequest{
+		Args:            args,
+		GasCap:          25_000_000,
+		ProposerAddress: suite.Ctx.BlockHeader().ProposerAddress,
+	})
+	require.NoError(t, err)
+
+	nonce := suite.App.EvmKeeper.GetNonce(suite.Ctx, suite.Address)
+
+	var ercTransferTx *types.MsgEthereumTx
+	if suite.enableFeemarket {
+		ercTransferTx = types.NewTx(
+			chainID,
+			nonce,
+			&contractAddr,
+			nil,
+			res.Gas,
+			nil,
+			suite.App.FeeMarketKeeper.GetBaseFee(suite.Ctx),
+			big.NewInt(1),
+			transferData,
+			&ethtypes.AccessList{}, // accesses
+		)
+	} else {
+		ercTransferTx = types.NewTx(
+			chainID,
+			nonce,
+			&contractAddr,
+			nil,
+			res.Gas,
+			nil,
+			nil, nil,
+			transferData,
+			nil,
+		)
+	}
+
+	ercTransferTx.From = suite.Address.Bytes()
+	err = ercTransferTx.Sign(ethtypes.LatestSignerForChainID(chainID), suite.Signer)
+	require.NoError(t, err)
+	rsp, err := suite.App.EvmKeeper.EthereumTx(suite.Ctx, ercTransferTx)
+	require.NoError(t, err)
+	require.Empty(t, rsp.VmError)
+	return ercTransferTx
+}
+
+func (suite *GRPCServerTestSuiteSuite) TestQueryAccount() {
 	var (
 		req        *types.QueryAccountRequest
 		expAccount *types.QueryAccountResponse
@@ -78,9 +184,7 @@ func (suite *KeeperTestSuite) TestQueryAccount() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			ctx := sdk.WrapSDKContext(suite.ctx)
-			res, err := suite.queryClient.Account(ctx, req)
-
+			res, err := suite.EvmQueryClient.Account(suite.Ctx, req)
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
@@ -122,7 +226,7 @@ func (suite *KeeperTestSuite) TestQueryCosmosAccount() {
 				expAccount = &types.QueryCosmosAccountResponse{
 					CosmosAddress: sdk.AccAddress(suite.address.Bytes()).String(),
 					Sequence:      0,
-					AccountNumber: 0,
+					AccountNumber: suite.App.AccountKeeper.NextAccountNumber(suite.Ctx) - 1,
 				}
 				req = &types.QueryCosmosAccountRequest{
 					Address: suite.address.String(),
@@ -135,13 +239,13 @@ func (suite *KeeperTestSuite) TestQueryCosmosAccount() {
 			func() {
 				acc := suite.app.AccountKeeper.GetAccount(suite.ctx, suite.address.Bytes())
 				suite.Require().NoError(acc.SetSequence(10))
-				suite.Require().NoError(acc.SetAccountNumber(1))
-				suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-
+				num := suite.App.AccountKeeper.NextAccountNumber(suite.Ctx)
+				suite.Require().NoError(acc.SetAccountNumber(num))
+				suite.App.AccountKeeper.SetAccount(suite.Ctx, acc)
 				expAccount = &types.QueryCosmosAccountResponse{
 					CosmosAddress: sdk.AccAddress(suite.address.Bytes()).String(),
 					Sequence:      10,
-					AccountNumber: 1,
+					AccountNumber: num,
 				}
 				req = &types.QueryCosmosAccountRequest{
 					Address: suite.address.String(),
@@ -156,9 +260,7 @@ func (suite *KeeperTestSuite) TestQueryCosmosAccount() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			ctx := sdk.WrapSDKContext(suite.ctx)
-			res, err := suite.queryClient.CosmosAccount(ctx, req)
-
+			res, err := suite.EvmQueryClient.CosmosAccount(suite.Ctx, req)
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
@@ -215,9 +317,7 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			ctx := sdk.WrapSDKContext(suite.ctx)
-			res, err := suite.queryClient.Balance(ctx, req)
-
+			res, err := suite.EvmQueryClient.Balance(suite.Ctx, req)
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
@@ -273,10 +373,7 @@ func (suite *KeeperTestSuite) TestQueryStorage() {
 			vmdb := suite.StateDB()
 			tc.malleate(vmdb)
 			suite.Require().NoError(vmdb.Commit())
-
-			ctx := sdk.WrapSDKContext(suite.ctx)
-			res, err := suite.queryClient.Storage(ctx, req)
-
+			res, err := suite.EvmQueryClient.Storage(suite.Ctx, req)
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
@@ -332,10 +429,7 @@ func (suite *KeeperTestSuite) TestQueryCode() {
 			vmdb := suite.StateDB()
 			tc.malleate(vmdb)
 			suite.Require().NoError(vmdb.Commit())
-
-			ctx := sdk.WrapSDKContext(suite.ctx)
-			res, err := suite.queryClient.Code(ctx, req)
-
+			res, err := suite.EvmQueryClient.Code(suite.Ctx, req)
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
@@ -392,7 +486,7 @@ func (suite *KeeperTestSuite) TestQueryTxLogs() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			vmdb := statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewTxConfig(common.BytesToHash(suite.ctx.HeaderHash().Bytes()), txHash, txIndex, logIndex))
+			vmdb := statedb.New(suite.Ctx, suite.App.EvmKeeper, statedb.NewTxConfig(common.BytesToHash(suite.Ctx.HeaderHash()), txHash, txIndex, logIndex))
 			tc.malleate(vmdb)
 			suite.Require().NoError(vmdb.Commit())
 
@@ -402,11 +496,9 @@ func (suite *KeeperTestSuite) TestQueryTxLogs() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestQueryParams() {
-	ctx := sdk.WrapSDKContext(suite.ctx)
+func (suite *GRPCServerTestSuiteSuite) TestQueryParams() {
 	expParams := types.DefaultParams()
-
-	res, err := suite.queryClient.Params(ctx, &types.QueryParamsRequest{})
+	res, err := suite.EvmQueryClient.Params(suite.Ctx, &types.QueryParamsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(expParams, res.Params)
 }
@@ -440,7 +532,7 @@ func (suite *KeeperTestSuite) TestQueryValidatorAccount() {
 				expAccount = &types.QueryValidatorAccountResponse{
 					AccountAddress: sdk.AccAddress(suite.address.Bytes()).String(),
 					Sequence:       0,
-					AccountNumber:  0,
+					AccountNumber:  suite.App.AccountKeeper.NextAccountNumber(suite.Ctx) - 1,
 				}
 				req = &types.QueryValidatorAccountRequest{
 					ConsAddress: suite.consAddress.String(),
@@ -453,13 +545,13 @@ func (suite *KeeperTestSuite) TestQueryValidatorAccount() {
 			func() {
 				acc := suite.app.AccountKeeper.GetAccount(suite.ctx, suite.address.Bytes())
 				suite.Require().NoError(acc.SetSequence(10))
-				suite.Require().NoError(acc.SetAccountNumber(1))
-				suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-
+				num := suite.App.AccountKeeper.NextAccountNumber(suite.Ctx)
+				suite.Require().NoError(acc.SetAccountNumber(num))
+				suite.App.AccountKeeper.SetAccount(suite.Ctx, acc)
 				expAccount = &types.QueryValidatorAccountResponse{
 					AccountAddress: sdk.AccAddress(suite.address.Bytes()).String(),
 					Sequence:       10,
-					AccountNumber:  1,
+					AccountNumber:  num,
 				}
 				req = &types.QueryValidatorAccountRequest{
 					ConsAddress: suite.consAddress.String(),
@@ -472,11 +564,8 @@ func (suite *KeeperTestSuite) TestQueryValidatorAccount() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
-
 			tc.malleate()
-			ctx := sdk.WrapSDKContext(suite.ctx)
-			res, err := suite.queryClient.ValidatorAccount(ctx, req)
-
+			res, err := suite.EvmQueryClient.ValidatorAccount(suite.Ctx, req)
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
@@ -583,8 +672,8 @@ func (suite *KeeperTestSuite) TestEstimateGas() {
 		{
 			"erc20 transfer",
 			func() {
-				contractAddr := suite.DeployTestContract(suite.T(), suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
-				suite.Commit()
+				contractAddr := suite.deployTestContract(suite.Address)
+				suite.Commit(suite.T())
 				transferData, err := types.ERC20Contract.ABI.Pack("transfer", common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), big.NewInt(1000))
 				suite.Require().NoError(err)
 				args = types.TransactionArgs{To: &contractAddr, From: &suite.address, Data: (*hexutil.Bytes)(&transferData)}
@@ -658,8 +747,8 @@ func (suite *KeeperTestSuite) TestEstimateGas() {
 		{
 			"erc20 transfer w/ enableFeemarket",
 			func() {
-				contractAddr := suite.DeployTestContract(suite.T(), suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
-				suite.Commit()
+				contractAddr := suite.deployTestContract(suite.Address)
+				suite.Commit(suite.T())
 				transferData, err := types.ERC20Contract.ABI.Pack("transfer", common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), big.NewInt(1000))
 				suite.Require().NoError(err)
 				args = types.TransactionArgs{To: &contractAddr, From: &suite.address, Data: (*hexutil.Bytes)(&transferData)}
@@ -740,8 +829,7 @@ func (suite *KeeperTestSuite) TestEstimateGas() {
 				GasCap:          gasCap,
 				ProposerAddress: suite.ctx.BlockHeader().ProposerAddress,
 			}
-
-			rsp, err := suite.queryClient.EstimateGas(sdk.WrapSDKContext(suite.ctx), &req)
+			rsp, err := suite.EvmQueryClient.EstimateGas(suite.Ctx, &req)
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().Equal(int64(tc.expGas), int64(rsp.Gas))
@@ -838,13 +926,12 @@ func (suite *KeeperTestSuite) TestTraceTx() {
 				vmdb := suite.StateDB()
 				vmdb.SetNonce(suite.address, vmdb.GetNonce(suite.address)+1)
 				suite.Require().NoError(vmdb.Commit())
-
-				contractAddr := suite.DeployTestContract(suite.T(), suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
-				suite.Commit()
+				contractAddr := suite.deployTestContract(suite.Address)
+				suite.Commit(suite.T())
 				// Generate token transfer transaction
-				firstTx := suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
-				txMsg = suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
-				suite.Commit()
+				firstTx := suite.transferERC20Token(suite.T(), contractAddr, suite.Address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
+				txMsg = suite.transferERC20Token(suite.T(), contractAddr, suite.Address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
+				suite.Commit(suite.T())
 
 				predecessors = append(predecessors, firstTx)
 			},
@@ -913,7 +1000,7 @@ func (suite *KeeperTestSuite) TestTraceTx() {
 				)
 
 				predecessors = append(predecessors, contractTx)
-				suite.Commit()
+				suite.Commit(suite.T())
 
 				params := suite.app.EvmKeeper.GetParams(suite.ctx)
 				params.EnableCreate = false
@@ -939,11 +1026,11 @@ func (suite *KeeperTestSuite) TestTraceTx() {
 			suite.enableFeemarket = tc.enableFeemarket
 			suite.SetupTest()
 			// Deploy contract
-			contractAddr := suite.DeployTestContract(suite.T(), suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
-			suite.Commit()
+			contractAddr := suite.deployTestContract(suite.Address)
+			suite.Commit(suite.T())
 			// Generate token transfer transaction
-			txMsg = suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
-			suite.Commit()
+			txMsg = suite.transferERC20Token(suite.T(), contractAddr, suite.Address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
+			suite.Commit(suite.T())
 
 			tc.malleate()
 			traceReq := types.QueryTraceTxRequest{
@@ -955,8 +1042,7 @@ func (suite *KeeperTestSuite) TestTraceTx() {
 			if chainID != nil {
 				traceReq.ChainId = chainID.Int64()
 			}
-			res, err := suite.queryClient.TraceTx(sdk.WrapSDKContext(suite.ctx), &traceReq)
-
+			res, err := suite.EvmQueryClient.TraceTx(suite.Ctx, &traceReq)
 			if tc.expPass {
 				suite.Require().NoError(err)
 				// if data is to big, slice the result
@@ -1058,13 +1144,12 @@ func (suite *KeeperTestSuite) TestTraceBlock() {
 				vmdb := suite.StateDB()
 				vmdb.SetNonce(suite.address, vmdb.GetNonce(suite.address)+1)
 				suite.Require().NoError(vmdb.Commit())
-
-				contractAddr := suite.DeployTestContract(suite.T(), suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
-				suite.Commit()
+				contractAddr := suite.deployTestContract(suite.Address)
+				suite.Commit(suite.T())
 				// create multiple transactions in the same block
-				firstTx := suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
-				secondTx := suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
-				suite.Commit()
+				firstTx := suite.transferERC20Token(suite.T(), contractAddr, suite.Address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
+				secondTx := suite.transferERC20Token(suite.T(), contractAddr, suite.Address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
+				suite.Commit(suite.T())
 				// overwrite txs to include only the ones on new block
 				txs = append([]*types.MsgEthereumTx{}, firstTx, secondTx)
 			},
@@ -1115,11 +1200,13 @@ func (suite *KeeperTestSuite) TestTraceBlock() {
 			suite.enableFeemarket = tc.enableFeemarket
 			suite.SetupTest()
 			// Deploy contract
-			contractAddr := suite.DeployTestContract(suite.T(), suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
-			suite.Commit()
+			contractAddr := suite.deployTestContract(suite.Address)
+			// set some balance to handle fees
+			suite.App.EvmKeeper.SetBalance(suite.Ctx, suite.Address, big.NewInt(1000000000000000000), types.DefaultEVMDenom)
+			suite.Commit(suite.T())
 			// Generate token transfer transaction
-			txMsg := suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
-			suite.Commit()
+			txMsg := suite.transferERC20Token(suite.T(), contractAddr, suite.Address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
+			suite.Commit(suite.T())
 
 			txs = append(txs, txMsg)
 
@@ -1132,9 +1219,7 @@ func (suite *KeeperTestSuite) TestTraceBlock() {
 			if chainID != nil {
 				traceReq.ChainId = chainID.Int64()
 			}
-
-			res, err := suite.queryClient.TraceBlock(sdk.WrapSDKContext(suite.ctx), &traceReq)
-
+			res, err := suite.EvmQueryClient.TraceBlock(suite.Ctx, &traceReq)
 			if tc.expPass {
 				suite.Require().NoError(err)
 				// if data is to big, slice the result
@@ -1172,15 +1257,15 @@ func (suite *KeeperTestSuite) TestNonceInQuery() {
 		Data: (*hexutil.Bytes)(&data),
 	})
 	suite.Require().NoError(err)
-	proposerAddress := suite.ctx.BlockHeader().ProposerAddress
-	_, err = suite.queryClient.EstimateGas(sdk.WrapSDKContext(suite.ctx), &types.EthCallRequest{
+	proposerAddress := suite.Ctx.BlockHeader().ProposerAddress
+	_, err = suite.EvmQueryClient.EstimateGas(suite.Ctx, &types.EthCallRequest{
 		Args:            args,
 		GasCap:          uint64(config.DefaultGasCap),
 		ProposerAddress: proposerAddress,
 	})
 	suite.Require().NoError(err)
 
-	_, err = suite.queryClient.EthCall(sdk.WrapSDKContext(suite.ctx), &types.EthCallRequest{
+	_, err = suite.EvmQueryClient.EthCall(suite.Ctx, &types.EthCallRequest{
 		Args:            args,
 		GasCap:          uint64(config.DefaultGasCap),
 		ProposerAddress: proposerAddress,
@@ -1212,8 +1297,8 @@ func (suite *KeeperTestSuite) TestQueryBaseFee() {
 		{
 			"pass - non-nil Base Fee",
 			func() {
-				baseFee := sdk.OneInt().BigInt()
-				suite.app.FeeMarketKeeper.SetBaseFee(suite.ctx, baseFee)
+				baseFee := sdkmath.OneInt().BigInt()
+				suite.App.FeeMarketKeeper.SetBaseFee(suite.Ctx, baseFee)
 
 				aux = sdkmath.NewIntFromBigInt(baseFee)
 				expRes = &types.QueryBaseFeeResponse{BaseFee: &aux}
@@ -1223,8 +1308,8 @@ func (suite *KeeperTestSuite) TestQueryBaseFee() {
 		{
 			"pass - nil Base Fee when london hardfork not activated",
 			func() {
-				baseFee := sdk.OneInt().BigInt()
-				suite.app.FeeMarketKeeper.SetBaseFee(suite.ctx, baseFee)
+				baseFee := sdkmath.OneInt().BigInt()
+				suite.App.FeeMarketKeeper.SetBaseFee(suite.Ctx, baseFee)
 
 				expRes = &types.QueryBaseFeeResponse{}
 			},
@@ -1233,7 +1318,7 @@ func (suite *KeeperTestSuite) TestQueryBaseFee() {
 		{
 			"pass - zero Base Fee when feemarket not activated",
 			func() {
-				baseFee := sdk.ZeroInt()
+				baseFee := sdkmath.ZeroInt()
 				expRes = &types.QueryBaseFeeResponse{BaseFee: &baseFee}
 			},
 			true, false, true,

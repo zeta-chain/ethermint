@@ -20,15 +20,14 @@ import (
 	"math"
 	"math/big"
 
-	tmtypes "github.com/cometbft/cometbft/types"
-	"github.com/holiman/uint256"
+	cmttypes "github.com/cometbft/cometbft/types"
 
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	ethermint "github.com/zeta-chain/ethermint/types"
-	"github.com/zeta-chain/ethermint/x/evm/statedb"
-	"github.com/zeta-chain/ethermint/x/evm/types"
+	ethermint "github.com/evmos/ethermint/types"
+	"github.com/evmos/ethermint/x/evm/statedb"
+	"github.com/evmos/ethermint/x/evm/types"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -120,7 +119,7 @@ func (k Keeper) GetHashFn(ctx sdk.Context) vm.GetHashFunc {
 
 			// only recompute the hash if not set (eg: checkTxState)
 			contextBlockHeader := ctx.BlockHeader()
-			header, err := tmtypes.HeaderFromProto(&contextBlockHeader)
+			header, err := cmttypes.HeaderFromProto(&contextBlockHeader)
 			if err != nil {
 				k.Logger(ctx).Error("failed to cast tendermint header from proto", "error", err)
 				return common.Hash{}
@@ -132,13 +131,13 @@ func (k Keeper) GetHashFn(ctx sdk.Context) vm.GetHashFunc {
 		case ctx.BlockHeight() > h:
 			// Case 2: if the chain is not the current height we need to retrieve the hash from the store for the
 			// current chain epoch. This only applies if the current height is greater than the requested height.
-			histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, h)
-			if !found {
-				k.Logger(ctx).Debug("historical info not found", "height", h)
+			histInfo, err := k.stakingKeeper.GetHistoricalInfo(ctx, h)
+			if err != nil {
+				k.Logger(ctx).Debug("historical info not found", "height", h, "err", err.Error())
 				return common.Hash{}
 			}
 
-			header, err := tmtypes.HeaderFromProto(&histInfo.Header)
+			header, err := cmttypes.HeaderFromProto(&histInfo.Header)
 			if err != nil {
 				k.Logger(ctx).Error("failed to cast tendermint header from proto", "error", err)
 				return common.Hash{}
@@ -443,25 +442,28 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 	// calculate a minimum amount of gas to be charged to sender if GasLimit
 	// is considerably higher than GasUsed to stay more aligned with Tendermint gas mechanics
 	// for more info https://github.com/evmos/ethermint/issues/1085
-	// #nosec G115 msg.GasLimit range checked
-	gasLimit := sdk.NewDec(int64(msg.GasLimit))
-	minGasMultiplier := k.GetMinGasMultiplier(ctx)
+	gasLimit := sdkmath.LegacyNewDec(int64(msg.GasLimit))
+	minGasMultiplier := cfg.FeeMarketParams.MinGasMultiplier
+	if minGasMultiplier.IsNil() {
+		// in case we are executing eth_call on a legacy block, returns a zero value.
+		minGasMultiplier = sdkmath.LegacyZeroDec()
+	}
 	minimumGasUsed := gasLimit.Mul(minGasMultiplier)
 
 	if msg.GasLimit < leftoverGas {
 		return nil, errorsmod.Wrapf(types.ErrGasOverflow, "message gas limit < leftover gas (%d < %d)", msg.GasLimit, leftoverGas)
 	}
 
-	// #nosec G115 temporaryGasUsed always in range
-	gasUsed := sdk.MaxDec(minimumGasUsed, sdk.NewDec(int64(temporaryGasUsed))).TruncateInt().Uint64()
+	gasUsed := sdkmath.LegacyMaxDec(minimumGasUsed, sdkmath.LegacyNewDec(int64(temporaryGasUsed))).TruncateInt().Uint64()
 	// reset leftoverGas, to be used by the tracer
 	leftoverGas = msg.GasLimit - gasUsed
 
 	return &types.MsgEthereumTxResponse{
-		GasUsed: gasUsed,
-		VmError: vmError,
-		Ret:     ret,
-		Logs:    types.NewLogsFromEth(stateDB.Logs()),
-		Hash:    txConfig.TxHash.Hex(),
+		GasUsed:   gasUsed,
+		VmError:   vmError,
+		Ret:       ret,
+		Logs:      types.NewLogsFromEth(stateDB.Logs()),
+		Hash:      cfg.TxConfig.TxHash.Hex(),
+		BlockHash: ctx.HeaderHash(),
 	}, nil
 }

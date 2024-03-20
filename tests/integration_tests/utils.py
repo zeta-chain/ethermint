@@ -76,11 +76,15 @@ def w3_wait_for_new_blocks(w3, n, sleep=0.5):
             break
 
 
+def get_sync_info(s):
+    return s.get("SyncInfo") or s.get("sync_info")
+
+
 def wait_for_new_blocks(cli, n, sleep=0.5):
-    cur_height = begin_height = int((cli.status())["SyncInfo"]["latest_block_height"])
+    cur_height = begin_height = int(get_sync_info(cli.status())["latest_block_height"])
     while cur_height - begin_height < n:
         time.sleep(sleep)
-        cur_height = int((cli.status())["SyncInfo"]["latest_block_height"])
+        cur_height = int(get_sync_info(cli.status())["latest_block_height"])
     return cur_height
 
 
@@ -91,7 +95,7 @@ def wait_for_block(cli, height, timeout=240):
         except AssertionError as e:
             print(f"get sync status failed: {e}", file=sys.stderr)
         else:
-            current_height = int(status["SyncInfo"]["latest_block_height"])
+            current_height = int(get_sync_info(status)["latest_block_height"])
             if current_height >= height:
                 break
             print("current block height", current_height)
@@ -118,7 +122,7 @@ def w3_wait_for_block(w3, height, timeout=240):
 def wait_for_block_time(cli, t):
     print("wait for block time", t)
     while True:
-        now = isoparse((cli.status())["SyncInfo"]["latest_block_time"])
+        now = isoparse(get_sync_info(cli.status())["latest_block_time"])
         print("block time now: ", now)
         if now >= t:
             break
@@ -205,3 +209,99 @@ def derive_new_account(n=1):
     account_path = f"m/44'/60'/0'/0/{n}"
     mnemonic = os.getenv("COMMUNITY_MNEMONIC")
     return Account.from_mnemonic(mnemonic, account_path=account_path)
+
+
+def derive_random_account():
+    return derive_new_account(secrets.randbelow(10000) + 1)
+
+
+def send_raw_transactions(w3, raw_transactions):
+    with ThreadPoolExecutor(len(raw_transactions)) as exec:
+        tasks = [
+            exec.submit(w3.eth.send_raw_transaction, raw) for raw in raw_transactions
+        ]
+        sended_hash_set = {future.result() for future in as_completed(tasks)}
+    return sended_hash_set
+
+
+def modify_command_in_supervisor_config(ini: Path, fn, **kwargs):
+    "replace the first node with the instrumented binary"
+    ini.write_text(
+        re.sub(
+            r"^command = (ethermintd .*$)",
+            lambda m: f"command = {fn(m.group(1))}",
+            ini.read_text(),
+            flags=re.M,
+            **kwargs,
+        )
+    )
+
+
+def build_batch_tx(w3, cli, txs, key=KEYS["validator"]):
+    "return cosmos batch tx and eth tx hashes"
+    signed_txs = [sign_transaction(w3, tx, key) for tx in txs]
+    tmp_txs = [cli.build_evm_tx(signed.rawTransaction.hex()) for signed in signed_txs]
+
+    msgs = [tx["body"]["messages"][0] for tx in tmp_txs]
+    fee = sum(int(tx["auth_info"]["fee"]["amount"][0]["amount"]) for tx in tmp_txs)
+    gas_limit = sum(int(tx["auth_info"]["fee"]["gas_limit"]) for tx in tmp_txs)
+
+    tx_hashes = [signed.hash for signed in signed_txs]
+
+    # build batch cosmos tx
+    return {
+        "body": {
+            "messages": msgs,
+            "memo": "",
+            "timeout_height": "0",
+            "extension_options": [
+                {"@type": "/ethermint.evm.v1.ExtensionOptionsEthereumTx"}
+            ],
+            "non_critical_extension_options": [],
+        },
+        "auth_info": {
+            "signer_infos": [],
+            "fee": {
+                "amount": [{"denom": "aphoton", "amount": str(fee)}],
+                "gas_limit": str(gas_limit),
+                "payer": "",
+                "granter": "",
+            },
+        },
+        "signatures": [],
+    }, tx_hashes
+
+
+def find_log_event_attrs(events, ev_type, cond=None):
+    for ev in events:
+        if ev["type"] == ev_type:
+            attrs = {attr["key"]: attr["value"] for attr in ev["attributes"]}
+            if cond is None or cond(attrs):
+                return attrs
+    return None
+
+
+def approve_proposal(n, rsp, status="PROPOSAL_STATUS_PASSED"):
+    cli = n.cosmos_cli()
+    rsp = cli.event_query_tx_for(rsp["txhash"])
+    # get proposal_id
+
+    def cb(attrs):
+        return "proposal_id" in attrs
+
+    ev = find_log_event_attrs(rsp["events"], "submit_proposal", cb)
+    proposal_id = ev["proposal_id"]
+    for i in range(len(n.config["validators"])):
+        rsp = n.cosmos_cli(i).gov_vote("validator", proposal_id, "yes", gas=100000)
+        assert rsp["code"] == 0, rsp["raw_log"]
+    wait_for_new_blocks(cli, 1)
+    res = cli.query_tally(proposal_id)
+    res = res.get("tally") or res
+    assert (
+        int(res["yes_count"]) == cli.staking_pool()
+    ), "all validators should have voted yes"
+    print("wait for proposal to be activated")
+    proposal = cli.query_proposal(proposal_id)
+    wait_for_block_time(cli, isoparse(proposal["voting_end_time"]))
+    proposal = cli.query_proposal(proposal_id)
+    assert proposal["status"] == status, proposal

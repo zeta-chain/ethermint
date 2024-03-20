@@ -7,14 +7,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/holiman/uint256"
 
-	"github.com/zeta-chain/ethermint/app/ante"
-	"github.com/zeta-chain/ethermint/server/config"
-	"github.com/zeta-chain/ethermint/tests"
-	ethermint "github.com/zeta-chain/ethermint/types"
-	"github.com/zeta-chain/ethermint/x/evm/statedb"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-
+	storetypes "cosmossdk.io/store/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/evmos/ethermint/app/ante"
+	"github.com/evmos/ethermint/server/config"
+	"github.com/evmos/ethermint/tests"
+	ethermint "github.com/evmos/ethermint/types"
+	"github.com/evmos/ethermint/x/evm/statedb"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
 func (suite AnteTestSuite) TestNewEthAccountVerificationDecorator() {
@@ -173,7 +173,7 @@ func (suite AnteTestSuite) TestEthGasConsumeDecorator() {
 	ethCfg := suite.app.EvmKeeper.GetParams(suite.ctx).
 		ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
 	baseFee := suite.app.EvmKeeper.GetBaseFee(suite.ctx, ethCfg)
-	suite.Require().Equal(int64(1000000000), baseFee.Int64())
+	suite.Require().Equal(int64(765625000), baseFee.Int64())
 
 	gasPrice := new(big.Int).Add(baseFee, evmtypes.DefaultPriorityReduction.BigInt())
 
@@ -252,8 +252,8 @@ func (suite AnteTestSuite) TestEthGasConsumeDecorator() {
 			tx2,
 			0,
 			func() {
-				vmdb.AddBalance(addr, uint256.NewInt(1000000))
-				suite.ctx = suite.ctx.WithBlockGasMeter(sdk.NewGasMeter(1))
+				vmdb.AddBalance(addr, big.NewInt(1000000))
+				suite.ctx = suite.ctx.WithBlockGasMeter(storetypes.NewGasMeter(1))
 			},
 			false, true,
 			0,
@@ -263,8 +263,8 @@ func (suite AnteTestSuite) TestEthGasConsumeDecorator() {
 			tx2,
 			tx2GasLimit, // it's capped
 			func() {
-				vmdb.AddBalance(addr, uint256.NewInt(1001000000000000))
-				suite.ctx = suite.ctx.WithBlockGasMeter(sdk.NewGasMeter(10000000000000000000))
+				vmdb.AddBalance(addr, big.NewInt(1001000000000000))
+				suite.ctx = suite.ctx.WithBlockGasMeter(storetypes.NewGasMeter(10000000000000000000))
 			},
 			true, false,
 			tx2Priority,
@@ -274,8 +274,8 @@ func (suite AnteTestSuite) TestEthGasConsumeDecorator() {
 			dynamicFeeTx,
 			tx2GasLimit, // it's capped
 			func() {
-				vmdb.AddBalance(addr, uint256.NewInt(1001000000000000))
-				suite.ctx = suite.ctx.WithBlockGasMeter(sdk.NewGasMeter(10000000000000000000))
+				vmdb.AddBalance(addr, big.NewInt(1001000000000000))
+				suite.ctx = suite.ctx.WithBlockGasMeter(storetypes.NewGasMeter(10000000000000000000))
 			},
 			true, false,
 			dynamicFeeTxPriority,
@@ -301,12 +301,18 @@ func (suite AnteTestSuite) TestEthGasConsumeDecorator() {
 
 			if tc.expPanic {
 				suite.Require().Panics(func() {
-					_, _ = dec.AnteHandle(suite.ctx.WithIsCheckTx(true).WithGasMeter(sdk.NewGasMeter(1)), tc.tx, false, NextFn)
+					_, _ = ante.CheckEthGasConsume(
+						suite.ctx.WithIsCheckTx(true).WithGasMeter(storetypes.NewGasMeter(1)), tc.tx,
+						ethCfg, suite.app.EvmKeeper, baseFee, config.DefaultMaxTxGasWanted, evmtypes.DefaultEVMDenom,
+					)
 				})
 				return
 			}
 
-			ctx, err := dec.AnteHandle(suite.ctx.WithIsCheckTx(true).WithGasMeter(sdk.NewInfiniteGasMeter()), tc.tx, false, NextFn)
+			ctx, err := ante.CheckEthGasConsume(
+				suite.ctx.WithIsCheckTx(true).WithGasMeter(storetypes.NewInfiniteGasMeter()), tc.tx,
+				ethCfg, suite.app.EvmKeeper, baseFee, config.DefaultMaxTxGasWanted, evmtypes.DefaultEVMDenom,
+			)
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().Equal(tc.expPriority, ctx.Priority())

@@ -9,7 +9,7 @@ from pystarport import ports
 from web3.middleware import geth_poa_middleware
 
 from .cosmoscli import CosmosCLI
-from .utils import wait_for_port
+from .utils import supervisorctl, w3_wait_for_block, wait_for_port
 
 DEFAULT_CHAIN_BINARY = "ethermintd"
 
@@ -133,9 +133,11 @@ def setup_custom_ethermint(
         if wait_port:
             wait_for_port(ports.evmrpc_port(base_port))
             wait_for_port(ports.evmrpc_ws_port(base_port))
-        yield Ethermint(
+        e = Ethermint(
             path / "ethermint_9000-1", chain_binary=chain_binary or DEFAULT_CHAIN_BINARY
         )
+        w3_wait_for_block(e.w3, 1)
+        yield e
     finally:
         os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
         proc.wait()

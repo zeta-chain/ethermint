@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math/big"
 
+	sdkmath "cosmossdk.io/math"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -13,19 +14,12 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/zeta-chain/ethermint/app"
-	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
-	"github.com/zeta-chain/ethermint/encoding"
-	"github.com/zeta-chain/ethermint/tests"
-	"github.com/zeta-chain/ethermint/testutil"
-	"github.com/zeta-chain/ethermint/x/feemarket/types"
+	"github.com/evmos/ethermint/app"
+	"github.com/evmos/ethermint/tests"
+	"github.com/evmos/ethermint/testutil"
 
-	dbm "github.com/cometbft/cometbft-db"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 )
 
 var _ = Describe("Feemarket", func() {
@@ -55,7 +49,7 @@ var _ = Describe("Feemarket", func() {
 				// 100_000`. With the fee calculation `Fee = (baseFee + tip) * gasLimit`,
 				// a `minGasPrices = 5_000_000_000` results in `minGlobalFee =
 				// 500_000_000_000_000`
-				privKey, _ = setupTestWithContext("1", sdk.NewDec(minGasPrices), sdk.NewInt(baseFee))
+				setupTest(sdkmath.LegacyNewDec(minGasPrices), big.NewInt(baseFee))
 			})
 
 			Context("during CheckTx", func() {
@@ -140,28 +134,31 @@ func setupTestWithContext(valMinGasPrice string, minGasPrice sdk.Dec, baseFee sd
 	return privKey, msg
 }
 
-func setupTest(localMinGasPrices string) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
-	setupChain(localMinGasPrices)
-
-	privKey, address := generateKey()
-	amount, ok := sdk.NewIntFromString("10000000000000000000")
+func setupTest(minGasPrice sdkmath.LegacyDec, baseFee *big.Int) {
+	t := s.T()
+	s.SetupTestWithCbAndOpts(
+		t,
+		func(app *app.EthermintApp, genesis app.GenesisState) app.GenesisState {
+			feemarketGenesis := feemarkettypes.DefaultGenesisState()
+			feemarketGenesis.Params.NoBaseFee = true
+			genesis[feemarkettypes.ModuleName] = app.AppCodec().MustMarshalJSON(feemarketGenesis)
+			return genesis
+		},
+		simtestutil.AppOptionsMap{server.FlagMinGasPrices: "1" + evmtypes.DefaultEVMDenom},
+	)
+	amount, ok := sdkmath.NewIntFromString("10000000000000000000")
 	s.Require().True(ok)
 	initBalance := sdk.Coins{sdk.Coin{
 		Denom:  s.denom,
 		Amount: amount,
 	}}
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, address, initBalance)
-
-	msg := banktypes.MsgSend{
-		FromAddress: address.String(),
-		ToAddress:   address.String(),
-		Amount: sdk.Coins{sdk.Coin{
-			Denom:  s.denom,
-			Amount: sdk.NewInt(10000),
-		}},
-	}
-	s.Commit()
-	return privKey, msg
+	testutil.FundAccount(s.App.BankKeeper, s.Ctx, sdk.AccAddress(s.Address.Bytes()), initBalance)
+	s.Commit(t)
+	params := feemarkettypes.DefaultParams()
+	params.MinGasPrice = minGasPrice
+	s.App.FeeMarketKeeper.SetParams(s.Ctx, params)
+	s.App.FeeMarketKeeper.SetBaseFee(s.Ctx, baseFee)
+	s.Commit(t)
 }
 
 func setupChain(localMinGasPricesStr string) {

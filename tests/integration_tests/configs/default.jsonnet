@@ -3,12 +3,6 @@
   'ethermint_9000-1': {
     cmd: 'ethermintd',
     'start-flags': '--trace',
-    config: {
-      mempool: {
-        // use v1 mempool to enable tx prioritization
-        version: 'v1',
-      },
-    },
     'app-config': {
       'minimum-gas-prices': '0aphoton',
       'index-events': ['ethereum_tx.ethereumTxHash'],
@@ -27,7 +21,7 @@
       staked: '1000000000000000000stake',
       mnemonic: mnemonic,
       client_config: {
-        'broadcast-mode': 'block',
+        'broadcast-mode': 'sync',
       },
     } for mnemonic in ['${VALIDATOR1_MNEMONIC}', '${VALIDATOR2_MNEMONIC}']],
     accounts: [{
@@ -44,10 +38,15 @@
       mnemonic: '${SIGNER2_MNEMONIC}',
     }],
     genesis: {
-      consensus_params: {
-        block: {
-          max_bytes: '1048576',
-          max_gas: '81500000',
+      consensus: {
+        params: {
+          block: {
+            max_bytes: '1048576',
+            max_gas: '81500000',
+          },
+          abci: {
+            vote_extensions_enable_height: '1',
+          },
         },
       },
       app_state: {
@@ -57,7 +56,8 @@
           },
         },
         gov: {
-          voting_params: {
+          params: {
+            expedited_voting_period: '1s',
             voting_period: '10s',
           },
           deposit_params: {

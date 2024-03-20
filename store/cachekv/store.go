@@ -4,9 +4,9 @@ import (
 	"io"
 	"sync"
 
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
-	"github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/zeta-chain/ethermint/store/cachekv/internal"
+	"cosmossdk.io/store/tracekv"
+	"cosmossdk.io/store/types"
+	"github.com/evmos/ethermint/store/cachekv/internal"
 )
 
 // Store wraps an in-memory cache around an underlying types.KVStore.

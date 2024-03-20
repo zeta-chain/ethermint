@@ -8,9 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/holiman/uint256"
-	"github.com/zeta-chain/ethermint/app"
-	"github.com/zeta-chain/ethermint/types"
+	sdkmath "cosmossdk.io/math"
+	"github.com/evmos/ethermint/app"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -29,7 +28,7 @@ import (
 	ethparams "github.com/ethereum/go-ethereum/params"
 	ethrlp "github.com/ethereum/go-ethereum/rlp"
 
-	abcitypes "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmversion "github.com/cometbft/cometbft/proto/tendermint/version"
@@ -65,7 +64,7 @@ func (suite *ImporterTestSuite) DoSetupTest(t require.TestingT) {
 	priv, err := ethsecp256k1.GenerateKey()
 	require.NoError(t, err)
 	consAddress := sdk.ConsAddress(priv.PubKey().Address())
-	suite.ctx = suite.app.BaseApp.NewContext(checkTx, tmproto.Header{
+	suite.ctx = suite.app.BaseApp.NewUncachedContext(checkTx, tmproto.Header{
 		Height:          1,
 		ChainID:         "ethermint_9000-1",
 		Time:            time.Now().UTC(),
@@ -87,7 +86,7 @@ func (suite *ImporterTestSuite) DoSetupTest(t require.TestingT) {
 		NextValidatorsHash: tmhash.Sum([]byte("next_validators")),
 		ConsensusHash:      tmhash.Sum([]byte("consensus")),
 		LastResultsHash:    tmhash.Sum([]byte("last_result")),
-	})
+	}).WithConsensusParams(*app.DefaultConsensusParams)
 }
 
 func (suite *ImporterTestSuite) SetupTest() {
@@ -136,12 +135,9 @@ func (suite *ImporterTestSuite) TestImportBlocks() {
 		tmheader := suite.ctx.BlockHeader()
 		// fix due to that begin block can't have height 0
 		tmheader.Height = int64(block.NumberU64()) + 1
-		suite.app.BeginBlock(abcitypes.RequestBeginBlock{
-			Header: tmheader,
-		})
-		ctx := suite.app.NewContext(false, tmheader)
-		ctx = ctx.WithBlockHeight(tmheader.Height)
-		vmdb := statedb.New(ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(ctx.HeaderHash().Bytes())))
+		ctx := suite.app.NewUncachedContext(false, tmheader).WithConsensusParams(*app.DefaultConsensusParams)
+		suite.app.BeginBlocker(ctx)
+		vmdb := statedb.New(ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(ctx.HeaderHash())))
 
 		if chainConfig.DAOForkSupport && chainConfig.DAOForkBlock != nil && chainConfig.DAOForkBlock.Cmp(block.Number()) == 0 {
 			applyDAOHardFork(vmdb)
@@ -160,8 +156,13 @@ func (suite *ImporterTestSuite) TestImportBlocks() {
 		accumulateRewards(chainConfig, vmdb, header, block.Uncles())
 
 		// simulate BaseApp EndBlocker commitment
-		endBR := abcitypes.RequestEndBlock{Height: tmheader.Height}
-		suite.app.EndBlocker(ctx, endBR)
+		suite.app.EndBlocker(ctx)
+		if _, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: suite.app.LastBlockHeight() + 1,
+			Hash:   suite.app.LastCommitID().Hash,
+		}); err != nil {
+			panic(err)
+		}
 		suite.app.Commit()
 
 		// block debugging output
@@ -231,7 +232,7 @@ func applyTransaction(
 	gp *ethcore.GasPool, evmKeeper *evmkeeper.Keeper, vmdb *statedb.StateDB, header *ethtypes.Header,
 	tx *ethtypes.Transaction, usedGas *uint64, cfg ethvm.Config,
 ) (*ethtypes.Receipt, uint64, error) {
-	msg, err := ethcore.TransactionToMessage(tx, types.MakeSigner(config, header.Number), sdk.ZeroInt().BigInt())
+	msg, err := ethcore.TransactionToMessage(tx, ethtypes.MakeSigner(config, header.Number), sdkmath.ZeroInt().BigInt())
 	if err != nil {
 		return nil, 0, err
 	}

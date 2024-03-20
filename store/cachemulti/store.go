@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
-	"github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/zeta-chain/ethermint/store/cachekv"
+	"cosmossdk.io/store/tracekv"
+	"cosmossdk.io/store/types"
+	"github.com/evmos/ethermint/store/cachekv"
 )
 
 // storeNameCtxKey is the TraceContext metadata key that identifies

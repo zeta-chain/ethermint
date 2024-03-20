@@ -1,16 +1,16 @@
 let
   pkgs = import ../../../nix { };
-  fetchEthermint = rev: builtins.fetchTarball "https://github.com/zeta-chain/ethermint/archive/${rev}.tar.gz";
-  released = pkgs.buildGo119Module rec {
-    name = "ethermintd";
-    src = fetchEthermint "5db67f17e6a0a87ea580841be0266f898e3d63d9";
-    subPackages = [ "cmd/ethermintd" ];
-    vendorSha256 = "sha256-6EHCw0/Lo1JfDOEfsn/NufRco0zgebCo0hwwm5wJoFU=";
-    doCheck = false;
-  };
+  fetchFlake = repo: rev: (pkgs.flake-compat {
+    src = {
+      outPath = builtins.fetchTarball "https://github.com/${repo}/archive/${rev}.tar.gz";
+      inherit rev;
+      shortRev = builtins.substring 0 7 rev;
+    };
+  }).defaultNix;
+  released = (fetchFlake "crypto-org-chain/ethermint" "b216a320ac6a60b019c1cbe5a6b730856482f071").default;
   current = pkgs.callPackage ../../../. { };
 in
 pkgs.linkFarm "upgrade-test-package" [
   { name = "genesis"; path = released; }
-  { name = "integration-test-upgrade"; path = current; }
+  { name = "sdk50"; path = current; }
 ]

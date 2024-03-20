@@ -21,13 +21,17 @@ import (
 	"path"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/spf13/viper"
 
 	"github.com/cometbft/cometbft/libs/strings"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/rosetta"
 )
 
 const (
@@ -75,9 +79,32 @@ const (
 
 	// DefaultMaxOpenConnections represents the amount of open connections (unlimited = 0)
 	DefaultMaxOpenConnections = 0
+
+	// DefaultReturnDataLimit is maximum number of bytes returned from eth_call or similar invocations
+	DefaultReturnDataLimit = 100000
+
+	// DefaultRosettaEnable is the default value for the parameter that defines if the Rosetta API server is enabled
+	DefaultRosettaEnable = false
+
+	// DefaultRosettaBlockchain defines the default blockchain name for the rosetta server
+	DefaultRosettaBlockchain = "evmos"
+
+	// DefaultRosettaNetwork defines the default network name for the rosetta server
+	DefaultRosettaNetwork = "evmos"
+
+	// DefaultRosettaGasToSuggest defines the default gas to suggest for the rosetta server
+	DefaultRosettaGasToSuggest = 300_000
+
+	// DefaultRosettaDenomToSuggest defines the default denom for fee suggestion
+	DefaultRosettaDenomToSuggest = "basecro"
 )
 
-var evmTracers = []string{"json", "markdown", "struct", "access_list"}
+var (
+	// DefaultRosettaGasPrices defines the default list of prices to suggest
+	DefaultRosettaGasPrices = sdk.NewDecCoins(sdk.NewDecCoin(DefaultRosettaDenomToSuggest, sdkmath.NewInt(4_000_000)))
+
+	evmTracers = []string{"json", "markdown", "struct", "access_list"}
+)
 
 // Config defines the server's top level configuration. It includes the default app config
 // from the SDK as well as the EVM configuration to enable the JSON-RPC APIs.
@@ -87,6 +114,7 @@ type Config struct {
 	EVM     EVMConfig     `mapstructure:"evm"`
 	JSONRPC JSONRPCConfig `mapstructure:"json-rpc"`
 	TLS     TLSConfig     `mapstructure:"tls"`
+	Rosetta RosettaConfig `mapstructure:"rosetta"`
 }
 
 // EVMConfig defines the application configuration values for the EVM.
@@ -148,6 +176,13 @@ type TLSConfig struct {
 	KeyPath string `mapstructure:"key-path"`
 }
 
+// RosettaConfig defines configuration for the Rosetta server.
+type RosettaConfig struct {
+	rosetta.Config
+	// Enable defines if the Rosetta server should be enabled.
+	Enable bool `mapstructure:"enable"`
+}
+
 // AppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
 func AppConfig(denom string) (string, interface{}) {
@@ -190,6 +225,7 @@ func DefaultConfig() *Config {
 		EVM:     *DefaultEVMConfig(),
 		JSONRPC: *DefaultJSONRPCConfig(),
 		TLS:     *DefaultTLSConfig(),
+		Rosetta: *DefaultRosettaConfig(),
 	}
 }
 
@@ -300,6 +336,26 @@ func DefaultTLSConfig() *TLSConfig {
 	return &TLSConfig{
 		CertificatePath: "",
 		KeyPath:         "",
+	}
+}
+
+// DefaultEVMConfig returns the default EVM configuration
+func DefaultRosettaConfig() *RosettaConfig {
+	return &RosettaConfig{
+		Config: rosetta.Config{
+			Blockchain:          DefaultRosettaBlockchain,
+			Network:             DefaultRosettaNetwork,
+			TendermintRPC:       rosetta.DefaultCometEndpoint,
+			GRPCEndpoint:        rosetta.DefaultGRPCEndpoint,
+			Addr:                rosetta.DefaultAddr,
+			Retries:             rosetta.DefaultRetries,
+			Offline:             rosetta.DefaultOffline,
+			EnableFeeSuggestion: rosetta.DefaultEnableFeeSuggestion,
+			GasToSuggest:        DefaultRosettaGasToSuggest,
+			DenomToSuggest:      DefaultRosettaDenomToSuggest,
+			GasPrices:           DefaultRosettaGasPrices,
+		},
+		Enable: DefaultRosettaEnable,
 	}
 }
 

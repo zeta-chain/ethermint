@@ -18,14 +18,13 @@ package keeper
 import (
 	"math/big"
 
+	corestoretypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -48,7 +47,8 @@ type EventConverter = func([]abci.EventAttribute) []*ethtypes.Log
 // Keeper grants access to the EVM module state and implements the go-ethereum StateDB interface.
 type Keeper struct {
 	// Protobuf codec
-	cdc codec.BinaryCodec
+	cdc          codec.Codec
+	storeService corestoretypes.KVStoreService
 	// Store key required for the EVM Prefix KVStore. It is required by:
 	// - storing account's Storage State
 	// - storing account's Code
@@ -79,10 +79,6 @@ type Keeper struct {
 	// EVM Hooks for tx post-processing
 	hooks types.EvmHooks
 
-	// Legacy subspace
-	ss paramstypes.Subspace
-
-	// customContractFns is the list of precompiled stateful contract functions.
 	customContractFns []CustomContractFn
 
 	ck consensusparamkeeper.Keeper
@@ -94,7 +90,8 @@ type Keeper struct {
 
 // NewKeeper generates new evm module keeper
 func NewKeeper(
-	cdc codec.BinaryCodec,
+	cdc codec.Codec,
+	storeService corestoretypes.KVStoreService,
 	storeKey, transientKey storetypes.StoreKey,
 	authority sdk.AccAddress,
 	ak types.AccountKeeper,
@@ -102,7 +99,6 @@ func NewKeeper(
 	sk types.StakingKeeper,
 	fmk types.FeeMarketKeeper,
 	tracer string,
-	ss paramstypes.Subspace,
 	customContractFns []CustomContractFn,
 	ck consensusparamkeeper.Keeper,
 	keys map[string]storetypes.StoreKey,
@@ -120,6 +116,7 @@ func NewKeeper(
 	// NOTE: we pass in the parameter space to the CommitStateDB in order to use custom denominations for the EVM operations
 	return &Keeper{
 		cdc:               cdc,
+		storeService:      storeService,
 		authority:         authority,
 		accountKeeper:     ak,
 		bankKeeper:        bankKeeper,
@@ -128,7 +125,6 @@ func NewKeeper(
 		storeKey:          storeKey,
 		transientKey:      transientKey,
 		tracer:            tracer,
-		ss:                ss,
 		customContractFns: customContractFns,
 		ck:                ck,
 		keys:              keys,
@@ -141,7 +137,8 @@ func (k Keeper) StoreKeys() map[string]storetypes.StoreKey {
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // WithChainID sets the chain id to the local variable in the keeper

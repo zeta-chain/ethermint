@@ -15,9 +15,7 @@ def geth(tmp_path_factory):
     yield from setup_geth(path, 8545)
 
 
-@pytest.fixture(
-    scope="session", params=["ethermint", "ethermint-ws"]
-)
+@pytest.fixture(scope="session", params=["ethermint", "ethermint-ws"])
 def ethermint_rpc_ws(request, ethermint):
     """
     run on both ethermint and ethermint websocket

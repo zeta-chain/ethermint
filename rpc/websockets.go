@@ -37,9 +37,7 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 
-	"github.com/cometbft/cometbft/libs/log"
-	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
-	tmtypes "github.com/cometbft/cometbft/types"
+	"cosmossdk.io/log"
 
 	"github.com/zeta-chain/ethermint/rpc/ethereum/pubsub"
 	rpcfilters "github.com/zeta-chain/ethermint/rpc/namespaces/ethereum/eth/filters"

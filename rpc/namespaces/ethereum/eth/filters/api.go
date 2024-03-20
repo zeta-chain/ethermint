@@ -24,7 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/zeta-chain/ethermint/rpc/types"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"

@@ -3,10 +3,10 @@ package cachekv_test
 import (
 	"testing"
 
-	dbm "github.com/cometbft/cometbft-db"
+	dbm "github.com/cosmos/cosmos-db"
 
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/zeta-chain/ethermint/store/cachekv"
+	"cosmossdk.io/store/dbadapter"
+	"github.com/evmos/ethermint/store/cachekv"
 )
 
 var sink interface{}

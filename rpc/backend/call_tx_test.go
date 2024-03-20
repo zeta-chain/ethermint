@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -18,7 +18,7 @@ import (
 
 func (suite *BackendTestSuite) TestResend() {
 	txNonce := (hexutil.Uint64)(1)
-	baseFee := sdk.NewInt(1)
+	baseFee := sdkmath.NewInt(1)
 	gasPrice := new(hexutil.Big)
 	toAddr := tests.GenerateAddress()
 	chainID := (*hexutil.Big)(suite.backend.chainID)
@@ -453,7 +453,7 @@ func (suite *BackendTestSuite) TestGasPrice() {
 				RegisterParams(queryClient, &header, 1)
 				RegisterBlock(client, 1, nil)
 				RegisterBlockResults(client, 1)
-				RegisterBaseFee(queryClient, sdk.NewInt(1))
+				RegisterBaseFee(queryClient, sdkmath.NewInt(1))
 			},
 			defaultGasPrice,
 			true,
@@ -469,7 +469,7 @@ func (suite *BackendTestSuite) TestGasPrice() {
 				RegisterParams(queryClient, &header, 1)
 				RegisterBlock(client, 1, nil)
 				RegisterBlockResults(client, 1)
-				RegisterBaseFee(queryClient, sdk.NewInt(1))
+				RegisterBaseFee(queryClient, sdkmath.NewInt(1))
 			},
 			defaultGasPrice,
 			false,
