@@ -52,9 +52,8 @@ func AddCommands(
 		sdkserver.ShowValidatorCmd(),
 		sdkserver.ShowAddressCmd(),
 		sdkserver.VersionCmd(),
-		tcmd.ResetAllCmd,
-		tcmd.ResetStateCmd,
-		sdkserver.BootstrapStateCmd(opts.AppCreator),
+		tmcmd.ResetAllCmd,
+		tmcmd.ResetStateCmd,
 	)
 
 	startCmd := StartCmd(opts)
