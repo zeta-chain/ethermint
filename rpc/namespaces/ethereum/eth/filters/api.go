@@ -414,12 +414,15 @@ func (api *PublicFilterAPI) Logs(ctx context.Context, crit filters.FilterCriteri
 					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", ev.Data))
 					continue
 				}
-				txLogs, err := evmtypes.DecodeTxLogsFromEvents(dataTx.TxResult.Result.Data)
+
+				txResponse, err := evmtypes.DecodeTxResponse(dataTx.TxResult.Result.Data)
 				if err != nil {
-					api.logger.Error("fail to decode tx response", "error", err.Error())
+					api.logger.Error("fail to decode tx response", "error", err)
 					return
 				}
-				logs := FilterLogs(txLogs, crit.FromBlock, crit.ToBlock, crit.Addresses, crit.Topics)
+
+				logs := FilterLogs(evmtypes.LogsToEthereum(txResponse.Logs), crit.FromBlock, crit.ToBlock, crit.Addresses, crit.Topics)
+
 				for _, log := range logs {
 					_ = notifier.Notify(rpcSub.ID, log)
 				}
@@ -494,12 +497,14 @@ func (api *PublicFilterAPI) NewFilter(criteria filters.FilterCriteria) (rpc.ID, 
 					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", ev.Data))
 					continue
 				}
-				txLogs, err := evmtypes.DecodeTxLogsFromEvents(dataTx.TxResult.Result.Data)
+
+				txResponse, err := evmtypes.DecodeTxResponse(dataTx.TxResult.Result.Data)
 				if err != nil {
-					api.logger.Error("fail to decode tx response", "error", err.Error())
+					api.logger.Error("fail to decode tx response", "error", err)
 					return
 				}
-				logs := FilterLogs(txLogs, criteria.FromBlock, criteria.ToBlock, criteria.Addresses, criteria.Topics)
+
+				logs := FilterLogs(evmtypes.LogsToEthereum(txResponse.Logs), criteria.FromBlock, criteria.ToBlock, criteria.Addresses, criteria.Topics)
 
 				api.filtersMu.Lock()
 				if f, found := api.filters[filterID]; found {

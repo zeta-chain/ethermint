@@ -361,9 +361,6 @@ func (suite *BackendTestSuite) TestFeeHistory() {
 			func(validator sdk.AccAddress) {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				suite.backend.cfg.JSONRPC.FeeHistoryCap = 2
-				var header metadata.MD
-				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterParams(queryClient, &header, 1)
 				RegisterBlockError(client, ethrpc.BlockNumber(1).Int64())
 			},
 			1,
@@ -377,9 +374,6 @@ func (suite *BackendTestSuite) TestFeeHistory() {
 			func(validator sdk.AccAddress) {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				suite.backend.cfg.JSONRPC.FeeHistoryCap = 2
-				var header metadata.MD
-				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterParams(queryClient, &header, 1)
 				RegisterBlock(client, ethrpc.BlockNumber(1).Int64(), nil)
 				RegisterBlockResultsError(client, 1)
 			},
@@ -396,8 +390,6 @@ func (suite *BackendTestSuite) TestFeeHistory() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				suite.backend.cfg.JSONRPC.FeeHistoryCap = 2
-				var header metadata.MD
-				RegisterParams(queryClient, &header, 1)
 				RegisterBlock(client, ethrpc.BlockNumber(1).Int64(), nil)
 				RegisterBlockResults(client, 1)
 				RegisterBaseFeeError(queryClient)
@@ -416,7 +408,6 @@ func (suite *BackendTestSuite) TestFeeHistory() {
 				var header metadata.MD
 				baseFee := sdk.NewInt(1)
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				fQueryClient := suite.backend.queryClient.FeeMarket.(*mocks.FeeMarketQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				suite.backend.cfg.JSONRPC.FeeHistoryCap = 2
 				RegisterBlock(client, ethrpc.BlockNumber(1).Int64(), nil)
@@ -426,7 +417,6 @@ func (suite *BackendTestSuite) TestFeeHistory() {
 				RegisterConsensusParams(client, 1)
 				RegisterParams(queryClient, &header, 1)
 				RegisterParamsWithoutHeader(queryClient, 1)
-				RegisterFeeMarketParams(fQueryClient, 1)
 			},
 			1,
 			1,
