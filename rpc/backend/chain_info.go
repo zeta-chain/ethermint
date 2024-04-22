@@ -17,10 +17,8 @@ package backend
 
 import (
 	"fmt"
-	"math"
 	"math/big"
 	"strconv"
-	"sync"
 
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -161,34 +159,20 @@ func (b *Backend) GetCoinbase() (sdk.AccAddress, error) {
 	return address, nil
 }
 
-var (
-	errInvalidPercentile = fmt.Errorf("invalid reward percentile")
-	errRequestBeyondHead = fmt.Errorf("request beyond head block")
-)
-
 // FeeHistory returns data relevant for fee estimation based on the specified range of blocks.
 func (b *Backend) FeeHistory(
 	userBlockCount rpc.DecimalOrHex, // number blocks to fetch, maximum is 100
 	lastBlock rpc.BlockNumber, // the block to start search , to oldest
 	rewardPercentiles []float64, // percentiles to fetch reward
 ) (*rpctypes.FeeHistoryResult, error) {
-	for i, p := range rewardPercentiles {
-		if p < 0 || p > 100 {
-			return nil, fmt.Errorf("%w: %f", errInvalidPercentile, p)
-		}
-		if i > 0 && p < rewardPercentiles[i-1] {
-			return nil, fmt.Errorf("%w: #%d:%f > #%d:%f", errInvalidPercentile, i-1, rewardPercentiles[i-1], i, p)
-		}
-	}
-	blockNumber, err := b.BlockNumber()
-	if err != nil {
-		return nil, err
-	}
 	blockEnd := int64(lastBlock)
+
 	if blockEnd < 0 {
+		blockNumber, err := b.BlockNumber()
+		if err != nil {
+			return nil, err
+		}
 		blockEnd = int64(blockNumber)
-	} else if int64(blockNumber) < blockEnd {
-		return nil, fmt.Errorf("%w: requested %d, head %d", errRequestBeyondHead, blockEnd, int64(blockNumber))
 	}
 
 	blocks := int64(userBlockCount)
@@ -196,7 +180,8 @@ func (b *Backend) FeeHistory(
 	if blocks > maxBlockCount {
 		return nil, fmt.Errorf("FeeHistory user block count %d higher than %d", blocks, maxBlockCount)
 	}
-	if blockEnd < math.MaxInt64 && blockEnd+1 < blocks {
+
+	if blockEnd+1 < blocks {
 		blocks = blockEnd + 1
 	}
 	// Ensure not trying to retrieve before genesis.
@@ -215,71 +200,46 @@ func (b *Backend) FeeHistory(
 
 	// rewards should only be calculated if reward percentiles were included
 	calculateRewards := rewardCount != 0
-	const maxBlockFetchers = 4
-	for blockID := blockStart; blockID <= blockEnd; blockID += maxBlockFetchers {
-		wg := sync.WaitGroup{}
-		wgDone := make(chan bool)
-		chanErr := make(chan error)
-		for i := 0; i < maxBlockFetchers; i++ {
-			if blockID+int64(i) >= blockEnd+1 {
-				break
-			}
-			wg.Add(1)
-			go func(index int32) {
-				defer wg.Done()
-				// fetch block
-				// tendermint block
-				blockNum := rpctypes.BlockNumber(blockStart + int64(index))
-				tendermintblock, err := b.TendermintBlockByNumber(blockNum)
-				if tendermintblock == nil {
-					chanErr <- err
-					return
-				}
 
-				// eth block
-				ethBlock, err := b.GetBlockByNumber(blockNum, true)
-				if ethBlock == nil {
-					chanErr <- err
-					return
-				}
-
-				// tendermint block result
-				tendermintBlockResult, err := b.TendermintBlockResultByNumber(&tendermintblock.Block.Height)
-				if tendermintBlockResult == nil {
-					b.logger.Debug("block result not found", "height", tendermintblock.Block.Height, "error", err.Error())
-					chanErr <- err
-					return
-				}
-
-				oneFeeHistory := rpctypes.OneFeeHistory{}
-				err = b.processBlock(tendermintblock, &ethBlock, rewardPercentiles, tendermintBlockResult, &oneFeeHistory)
-				if err != nil {
-					chanErr <- err
-					return
-				}
-
-				// copy
-				thisBaseFee[index] = (*hexutil.Big)(oneFeeHistory.BaseFee)
-				thisBaseFee[index+1] = (*hexutil.Big)(oneFeeHistory.NextBaseFee)
-				thisGasUsedRatio[index] = oneFeeHistory.GasUsedRatio
-				if calculateRewards {
-					for j := 0; j < rewardCount; j++ {
-						reward[index][j] = (*hexutil.Big)(oneFeeHistory.Reward[j])
-						if reward[index][j] == nil {
-							reward[index][j] = (*hexutil.Big)(big.NewInt(0))
-						}
-					}
-				}
-			}(int32(blockID - blockStart + int64(i)))
-		}
-		go func() {
-			wg.Wait()
-			close(wgDone)
-		}()
-		select {
-		case <-wgDone:
-		case err := <-chanErr:
+	// fetch block
+	for blockID := blockStart; blockID <= blockEnd; blockID++ {
+		index := int32(blockID - blockStart)
+		// tendermint block
+		tendermintblock, err := b.TendermintBlockByNumber(rpctypes.BlockNumber(blockID))
+		if tendermintblock == nil {
 			return nil, err
+		}
+
+		// eth block
+		ethBlock, err := b.GetBlockByNumber(rpctypes.BlockNumber(blockID), true)
+		if ethBlock == nil {
+			return nil, err
+		}
+
+		// tendermint block result
+		tendermintBlockResult, err := b.TendermintBlockResultByNumber(&tendermintblock.Block.Height)
+		if tendermintBlockResult == nil {
+			b.logger.Debug("block result not found", "height", tendermintblock.Block.Height, "error", err.Error())
+			return nil, err
+		}
+
+		oneFeeHistory := rpctypes.OneFeeHistory{}
+		err = b.processBlock(tendermintblock, &ethBlock, rewardPercentiles, tendermintBlockResult, &oneFeeHistory)
+		if err != nil {
+			return nil, err
+		}
+
+		// copy
+		thisBaseFee[index] = (*hexutil.Big)(oneFeeHistory.BaseFee)
+		thisBaseFee[index+1] = (*hexutil.Big)(oneFeeHistory.NextBaseFee)
+		thisGasUsedRatio[index] = oneFeeHistory.GasUsedRatio
+		if calculateRewards {
+			for j := 0; j < rewardCount; j++ {
+				reward[index][j] = (*hexutil.Big)(oneFeeHistory.Reward[j])
+				if reward[index][j] == nil {
+					reward[index][j] = (*hexutil.Big)(big.NewInt(0))
+				}
+			}
 		}
 	}
 
