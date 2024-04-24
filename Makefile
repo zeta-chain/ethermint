@@ -241,7 +241,7 @@ endif
 
 ifeq (, $(shell which go-bindata))
 	@echo "Installing go-bindata..."
-	@go get github.com/kevinburke/go-bindata/go-bindata
+	@go get github.com/kevinburke/go-bindata/go-bindata@latest
 else
 	@echo "go-bindata already installed; skipping..."
 endif
@@ -357,7 +357,7 @@ test-solidity:
 	./scripts/run-solidity-tests.sh
 
 
-.PHONY: run-tests test test-all test-import test-rpc test-contract test-solidity $(TEST_TARGETS)
+.PHONY: run-tests test test-all test-import test-rpc test-solidity $(TEST_TARGETS)
 
 
 benchmark:
