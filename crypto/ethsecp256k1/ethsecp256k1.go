@@ -36,7 +36,7 @@ const (
 	// PubKeySize defines the size of the PubKey bytes
 	PubKeySize = 33
 	// KeyType is the string constant for the Secp256k1 algorithm
-	KeyType = "eth_secp256k1"
+	KeyType = "eth_secp256k1" //gitleaks:allow
 )
 
 // Amino encoding names

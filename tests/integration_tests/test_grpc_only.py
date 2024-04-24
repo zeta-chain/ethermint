@@ -77,13 +77,13 @@ def test_grpc_mode(custom_ethermint):
     }
     api_port = ports.api_port(custom_ethermint.base_port(1))
 
-    def expect_cb(rsp):
+    def expect_cb_initial(rsp):
         ret = rsp["ret"]
         valid = ret is not None
         return valid and 9000 == int.from_bytes(base64.b64decode(ret.encode()), "big")
 
     # in normal mode, grpc query works even if we don't pass chain_id explicitly
-    grpc_eth_call(api_port, msg, expect_cb)
+    grpc_eth_call(api_port, msg, expect_cb_initial)
     # wait 1 more block for both nodes to avoid node stopped before tnx get included
     for i in range(2):
         wait_for_block(custom_ethermint.cosmos_cli(i), 1)
@@ -110,18 +110,18 @@ def test_grpc_mode(custom_ethermint):
             wait_for_port(grpc_port)
             wait_for_port(api_port)
 
-            def expect_cb(rsp):
+            def expect_cb_error(rsp):
                 assert rsp["code"] != 0, str(rsp)
                 return "validator does not exist" in rsp["message"]
 
             # it don't works without proposer address neither
-            grpc_eth_call(api_port, msg, expect_cb, chain_id=9000)
+            grpc_eth_call(api_port, msg, expect_cb_error, chain_id=9000)
 
             # pass the first validator's consensus address to grpc query
             addr = custom_ethermint.cosmos_cli(0).consensus_address()
             cons_addr = decode_bech32(addr)
 
-            def expect_cb(rsp):
+            def expect_cb_success(rsp):
                 ret = base64.b64decode(rsp["ret"].encode())
                 return "code" not in rsp and 100 == int.from_bytes(ret, "big")
 
@@ -129,7 +129,7 @@ def test_grpc_mode(custom_ethermint):
             grpc_eth_call(
                 api_port,
                 msg,
-                expect_cb,
+                expect_cb_success,
                 chain_id=100,
                 proposer_address=base64.b64encode(cons_addr).decode(),
             )
