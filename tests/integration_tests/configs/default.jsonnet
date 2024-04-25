@@ -25,12 +25,11 @@
     validators: [{
       coins: '1000000000000000000stake,10000000000000000000000aphoton',
       staked: '1000000000000000000stake',
-      mnemonic: '${VALIDATOR1_MNEMONIC}',
-    }, {
-      coins: '1000000000000000000stake,10000000000000000000000aphoton',
-      staked: '1000000000000000000stake',
-      mnemonic: '${VALIDATOR2_MNEMONIC}',
-    }],
+      mnemonic: mnemonic,
+      client_config: {
+        'broadcast-mode': 'block',
+      },
+    } for mnemonic in ['${VALIDATOR1_MNEMONIC}', '${VALIDATOR2_MNEMONIC}']],
     accounts: [{
       name: 'community',
       coins: '10000000000000000000000aphoton',
