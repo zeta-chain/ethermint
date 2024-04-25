@@ -170,3 +170,11 @@ def test_cosmovisor_upgrade(custom_ethermint: Ethermint):
     assert old_erc20_balance == contract.caller(
         block_identifier=target_height - 2
     ).balanceOf(ADDRS["validator"])
+    p = json.loads(cli.raw(
+        "query",
+        "ibc",
+        "client",
+        "params",
+        home=cli.data_dir,
+    ))
+    assert p == {"allowed_clients": ["06-solomachine", "07-tendermint", "09-localhost"]}
