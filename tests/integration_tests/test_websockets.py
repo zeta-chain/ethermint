@@ -70,4 +70,5 @@ def test_web3_client_version(ethermint):
                 # allow retry
                 pass
 
-    loop.run_until_complete(async_test(), 50)
+    timeout = 50
+    loop.run_until_complete(asyncio.wait_for(async_test(), timeout))
