@@ -19,6 +19,7 @@ import (
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -29,8 +30,8 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/params"
-	"github.com/tendermint/tendermint/libs/log"
 
+	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
@@ -78,6 +79,7 @@ type Keeper struct {
 	evmConstructor evm.Constructor
 	// Legacy subspace
 	ss paramstypes.Subspace
+	ck consensusparamkeeper.Keeper
 }
 
 // NewKeeper generates new evm module keeper
@@ -93,6 +95,7 @@ func NewKeeper(
 	evmConstructor evm.Constructor,
 	tracer string,
 	ss paramstypes.Subspace,
+	ck consensusparamkeeper.Keeper,
 ) *Keeper {
 	// ensure evm module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -118,12 +121,13 @@ func NewKeeper(
 		evmConstructor:    evmConstructor,
 		tracer:            tracer,
 		ss:                ss,
+		ck:                ck,
 	}
 }
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", types.ModuleName)
+	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // WithChainID sets the chain id to the local variable in the keeper

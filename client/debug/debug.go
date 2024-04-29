@@ -21,8 +21,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/libs/bytes"
 
 	"github.com/ethereum/go-ethereum/common"
 
@@ -60,7 +60,7 @@ func PubkeyCmd() *cobra.Command {
 		Short: "Decode a pubkey from proto JSON",
 		Long:  "Decode a pubkey from proto JSON and display it's address",
 		Example: fmt.Sprintf(
-			`"$ %s debug pubkey '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ"}'`,
+			`"$ %s debug pubkey '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ"}'`, //gitleaks:allow
 			version.AppName,
 		),
 		Args: cobra.ExactArgs(1),

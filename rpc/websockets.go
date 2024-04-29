@@ -37,9 +37,9 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 
-	"github.com/tendermint/tendermint/libs/log"
-	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
-	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/cometbft/cometbft/libs/log"
+	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/evmos/ethermint/rpc/ethereum/pubsub"
 	rpcfilters "github.com/evmos/ethermint/rpc/namespaces/ethereum/eth/filters"
@@ -109,10 +109,11 @@ func (s *websocketsServer) Start() {
 
 	go func() {
 		var err error
-		/* #nosec G114 -- http functions have no support for timeouts */
 		if s.certFile == "" || s.keyFile == "" {
+			//#nosec G114 -- http functions have no support for timeouts
 			err = http.ListenAndServe(s.wsAddr, ws)
 		} else {
+			//#nosec G114 -- http functions have no support for timeouts
 			err = http.ListenAndServeTLS(s.wsAddr, s.certFile, s.keyFile, ws)
 		}
 
@@ -128,7 +129,7 @@ func (s *websocketsServer) Start() {
 
 func (s *websocketsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
+		CheckOrigin: func(_ *http.Request) bool {
 			return true
 		},
 	}

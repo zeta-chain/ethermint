@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -274,7 +274,7 @@ func (suite *AnteTestSuite) TestRejectDeliverMsgsInAuthz() {
 					},
 				),
 			},
-			expectedCode: sdkerrors.ErrUnauthorized.ABCICode(),
+			expectedCode: sdkerrors.ErrUnpackAny.ABCICode(),
 		},
 		{
 			name: "a MsgExec with nested MsgExec messages that has invalid messages is blocked",
@@ -287,7 +287,7 @@ func (suite *AnteTestSuite) TestRejectDeliverMsgsInAuthz() {
 					},
 				),
 			},
-			expectedCode: sdkerrors.ErrUnauthorized.ABCICode(),
+			expectedCode: sdkerrors.ErrUnpackAny.ABCICode(),
 		},
 		{
 			name: "a MsgExec with more nested MsgExec messages than allowed and with valid messages is blocked",

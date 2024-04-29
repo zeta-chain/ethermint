@@ -22,12 +22,12 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
+	tmcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/evmos/ethermint/ethereum/eip712"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 )
 
 const (
@@ -36,7 +36,7 @@ const (
 	// PubKeySize defines the size of the PubKey bytes
 	PubKeySize = 33
 	// KeyType is the string constant for the Secp256k1 algorithm
-	KeyType = "eth_secp256k1"
+	KeyType = "eth_secp256k1" //gitleaks:allow
 )
 
 // Amino encoding names

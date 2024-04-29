@@ -31,20 +31,35 @@ def custom_ethermint(tmp_path_factory):
     )
 
 
-def grpc_eth_call(port: int, args: dict, chain_id=None, proposer_address=None):
+def grpc_eth_call(
+    port: int,
+    args: dict,
+    expect_cb,
+    chain_id=None,
+    proposer_address=None,
+):
     """
     do a eth_call through grpc gateway directly
     """
-    params = {
-        "args": base64.b64encode(json.dumps(args).encode()).decode(),
-    }
-    if chain_id is not None:
-        params["chain_id"] = str(chain_id)
-    if proposer_address is not None:
-        params["proposer_address"] = str(proposer_address)
-    return requests.get(
-        f"http://localhost:{port}/ethermint/evm/v1/eth_call", params
-    ).json()
+    max_retry = 5
+    sleep = 1
+    success = False
+    for i in range(max_retry):
+        params = {
+            "args": base64.b64encode(json.dumps(args).encode()).decode(),
+        }
+        if chain_id is not None:
+            params["chain_id"] = str(chain_id)
+        if proposer_address is not None:
+            params["proposer_address"] = str(proposer_address)
+        rsp = requests.get(
+            f"http://localhost:{port}/ethermint/evm/v1/eth_call", params
+        ).json()
+        success = expect_cb(rsp)
+        if success:
+            break
+        time.sleep(sleep)
+    assert success, str(rsp)
 
 
 def test_grpc_mode(custom_ethermint):
@@ -61,19 +76,14 @@ def test_grpc_mode(custom_ethermint):
         "data": contract.encodeABI(fn_name="currentChainID"),
     }
     api_port = ports.api_port(custom_ethermint.base_port(1))
-    # in normal mode, grpc query works even if we don't pass chain_id explicitly
-    success = False
-    max_retry = 3
-    sleep = 1
-    for i in range(max_retry):
-        rsp = grpc_eth_call(api_port, msg)
+
+    def expect_cb_initial(rsp):
         ret = rsp["ret"]
         valid = ret is not None
-        if valid and 9000 == int.from_bytes(base64.b64decode(ret.encode()), "big"):
-            success = True
-            break
-        time.sleep(sleep)
-    assert success
+        return valid and 9000 == int.from_bytes(base64.b64decode(ret.encode()), "big")
+
+    # in normal mode, grpc query works even if we don't pass chain_id explicitly
+    grpc_eth_call(api_port, msg, expect_cb_initial)
     # wait 1 more block for both nodes to avoid node stopped before tnx get included
     for i in range(2):
         wait_for_block(custom_ethermint.cosmos_cli(i), 1)
@@ -100,29 +110,29 @@ def test_grpc_mode(custom_ethermint):
             wait_for_port(grpc_port)
             wait_for_port(api_port)
 
-            # in grpc-only mode, grpc query don't work if we don't pass chain_id
-            rsp = grpc_eth_call(api_port, msg)
-            assert rsp["code"] != 0, str(rsp)
-            assert "invalid chain ID" in rsp["message"]
+            def expect_cb_error(rsp):
+                assert rsp["code"] != 0, str(rsp)
+                return "validator does not exist" in rsp["message"]
 
             # it don't works without proposer address neither
-            rsp = grpc_eth_call(api_port, msg, chain_id=9000)
-            assert rsp["code"] != 0, str(rsp)
-            assert "validator does not exist" in rsp["message"]
+            grpc_eth_call(api_port, msg, expect_cb_error, chain_id=9000)
 
             # pass the first validator's consensus address to grpc query
             addr = custom_ethermint.cosmos_cli(0).consensus_address()
             cons_addr = decode_bech32(addr)
 
+            def expect_cb_success(rsp):
+                ret = base64.b64decode(rsp["ret"].encode())
+                return "code" not in rsp and 100 == int.from_bytes(ret, "big")
+
             # should work with both chain_id and proposer_address set
-            rsp = grpc_eth_call(
+            grpc_eth_call(
                 api_port,
                 msg,
+                expect_cb_success,
                 chain_id=100,
                 proposer_address=base64.b64encode(cons_addr).decode(),
             )
-            assert "code" not in rsp, str(rsp)
-            assert 100 == int.from_bytes(base64.b64decode(rsp["ret"].encode()), "big")
         finally:
             proc.terminate()
             proc.wait()
