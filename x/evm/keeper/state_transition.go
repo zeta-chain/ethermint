@@ -16,6 +16,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -157,6 +158,8 @@ func (k *Keeper) ApplyTransaction(ctx sdk.Context, msgEth *types.MsgEthereumTx) 
 		return nil, errorsmod.Wrap(err, "failed to load evm config")
 	}
 	ethTx := msgEth.AsTransaction()
+	fmt.Println("regular ethermint tx", ethTx.Hash())
+
 	txConfig := k.TxConfig(ctx, ethTx.Hash())
 
 	// get the signer according to the chain rules from the config and block height
