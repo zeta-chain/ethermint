@@ -437,21 +437,8 @@ func (k Keeper) TraceTx(c context.Context, req *types.QueryTraceTxRequest) (*typ
 			if err != nil {
 				continue
 			}
-			// tx.From = m.From().String()
 		} else {
-			msg = ethtypes.NewMessage(
-				common.HexToAddress(tx.From),
-				ethTx.To(),
-				ethTx.Nonce(),
-				ethTx.Value(),
-				ethTx.Gas(),
-				new(big.Int).Set(ethTx.GasPrice()),
-				new(big.Int).Set(ethTx.GasFeeCap()),
-				new(big.Int).Set(ethTx.GasTipCap()),
-				ethTx.Data(),
-				ethTx.AccessList(),
-				false, // isFake
-			)
+			msg = unsignedTxAsMessage(msg.From(), ethTx)
 		}
 		if err != nil {
 			continue
@@ -499,7 +486,7 @@ func (k Keeper) TraceTx(c context.Context, req *types.QueryTraceTxRequest) (*typ
 func isUnsigned(ethTx *ethtypes.Transaction) bool {
 	r, v, s := ethTx.RawSignatureValues()
 
-	return (r == nil && v == nil && s == nil) || (r.Cmp(big.NewInt(0)) == 0 && v.Cmp(big.NewInt(0)) == 0 && s.Cmp(big.NewInt(0)) == 0)
+	return (r == nil && v == nil && s == nil) || (r.Int64() == 0 && v.Int64() == 0 && s.Int64() == 0)
 }
 
 // TraceBlock configures a new tracer according to the provided configuration, and
@@ -593,23 +580,7 @@ func (k *Keeper) traceTx(
 		}
 		from = common.HexToAddress(m.From().String())
 	}
-	msg := ethtypes.NewMessage(
-		from,
-		tx.To(),
-		tx.Nonce(),
-		tx.Value(),
-		tx.Gas(),
-		new(big.Int).Set(tx.GasPrice()),
-		new(big.Int).Set(tx.GasFeeCap()),
-		new(big.Int).Set(tx.GasTipCap()),
-		tx.Data(),
-		tx.AccessList(),
-		false, // isFake
-	)
-
-	if err != nil {
-		return nil, 0, status.Error(codes.Internal, err.Error())
-	}
+	msg := unsignedTxAsMessage(from, tx)
 
 	if traceConfig == nil {
 		traceConfig = &types.TraceConfig{}
@@ -698,4 +669,21 @@ func getChainID(ctx sdk.Context, chainID int64) (*big.Int, error) {
 		return ethermint.ParseChainID(ctx.ChainID())
 	}
 	return big.NewInt(chainID), nil
+}
+
+// same as ethTx.AsMessage, just from is provided instead of calculated from signature
+func unsignedTxAsMessage(from common.Address, ethTx *ethtypes.Transaction) ethtypes.Message {
+	return ethtypes.NewMessage(
+		from,
+		ethTx.To(),
+		ethTx.Nonce(),
+		ethTx.Value(),
+		ethTx.Gas(),
+		new(big.Int).Set(ethTx.GasPrice()),
+		new(big.Int).Set(ethTx.GasFeeCap()),
+		new(big.Int).Set(ethTx.GasTipCap()),
+		ethTx.Data(),
+		ethTx.AccessList(),
+		false, // isFake
+	)
 }
