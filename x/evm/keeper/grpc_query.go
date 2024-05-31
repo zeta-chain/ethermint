@@ -424,12 +424,22 @@ func (k Keeper) TraceTx(c context.Context, req *types.QueryTraceTxRequest) (*typ
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to load evm config: %s", err.Error())
 	}
-	signer := ethtypes.MakeSigner(cfg.ChainConfig, big.NewInt(ctx.BlockHeight()))
 
 	txConfig := statedb.NewEmptyTxConfig(common.BytesToHash(ctx.HeaderHash().Bytes()))
+
 	for i, tx := range req.Predecessors {
 		ethTx := tx.AsTransaction()
-		msg, err := ethTx.AsMessage(signer, cfg.BaseFee)
+		var msg ethtypes.Message
+		// if tx is not unsigned, from field should be derived from signer, which can be done using AsMessage function
+		if !isUnsigned(ethTx) {
+			signer := ethtypes.MakeSigner(cfg.ChainConfig, big.NewInt(ctx.BlockHeight()))
+			msg, err = ethTx.AsMessage(signer, cfg.BaseFee)
+			if err != nil {
+				continue
+			}
+		} else {
+			msg = unsignedTxAsMessage(msg.From(), ethTx)
+		}
 		if err != nil {
 			continue
 		}
@@ -454,7 +464,10 @@ func (k Keeper) TraceTx(c context.Context, req *types.QueryTraceTxRequest) (*typ
 		_ = json.Unmarshal([]byte(req.TraceConfig.TracerJsonConfig), &tracerConfig)
 	}
 
-	result, _, err := k.traceTx(ctx, cfg, txConfig, signer, tx, req.TraceConfig, false, tracerConfig)
+	result, _, err := k.traceTx(
+		ctx, cfg, txConfig, common.HexToAddress(req.Msg.From), tx,
+		req.TraceConfig, false, tracerConfig,
+	)
 	if err != nil {
 		// error will be returned with detail status from traceTx
 		return nil, err
@@ -468,6 +481,12 @@ func (k Keeper) TraceTx(c context.Context, req *types.QueryTraceTxRequest) (*typ
 	return &types.QueryTraceTxResponse{
 		Data: resultData,
 	}, nil
+}
+
+func isUnsigned(ethTx *ethtypes.Transaction) bool {
+	r, v, s := ethTx.RawSignatureValues()
+
+	return (r == nil && v == nil && s == nil) || (r.Int64() == 0 && v.Int64() == 0 && s.Int64() == 0)
 }
 
 // TraceBlock configures a new tracer according to the provided configuration, and
@@ -502,7 +521,6 @@ func (k Keeper) TraceBlock(c context.Context, req *types.QueryTraceBlockRequest)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to load evm config")
 	}
-	signer := ethtypes.MakeSigner(cfg.ChainConfig, big.NewInt(ctx.BlockHeight()))
 	txsLength := len(req.Txs)
 	results := make([]*types.TxTraceResult, 0, txsLength)
 
@@ -512,7 +530,10 @@ func (k Keeper) TraceBlock(c context.Context, req *types.QueryTraceBlockRequest)
 		ethTx := tx.AsTransaction()
 		txConfig.TxHash = ethTx.Hash()
 		txConfig.TxIndex = uint(i)
-		traceResult, logIndex, err := k.traceTx(ctx, cfg, txConfig, signer, ethTx, req.TraceConfig, true, nil)
+		traceResult, logIndex, err := k.traceTx(
+			ctx, cfg, txConfig, common.HexToAddress(tx.From),
+			ethTx, req.TraceConfig, true, nil,
+		)
 		if err != nil {
 			result.Error = err.Error()
 		} else {
@@ -537,7 +558,7 @@ func (k *Keeper) traceTx(
 	ctx sdk.Context,
 	cfg *statedb.EVMConfig,
 	txConfig statedb.TxConfig,
-	signer ethtypes.Signer,
+	from common.Address,
 	tx *ethtypes.Transaction,
 	traceConfig *types.TraceConfig,
 	commitMessage bool,
@@ -550,10 +571,16 @@ func (k *Keeper) traceTx(
 		err       error
 		timeout   = defaultTraceTimeout
 	)
-	msg, err := tx.AsMessage(signer, cfg.BaseFee)
-	if err != nil {
-		return nil, 0, status.Error(codes.Internal, err.Error())
+	// if tx is not unsigned, from field should be derived from signer, which can be done using AsMessage function
+	if !isUnsigned(tx) {
+		signer := ethtypes.MakeSigner(cfg.ChainConfig, big.NewInt(ctx.BlockHeight()))
+		m, err := tx.AsMessage(signer, cfg.BaseFee)
+		if err != nil {
+			return nil, 0, status.Error(codes.Internal, err.Error())
+		}
+		from = common.HexToAddress(m.From().String())
 	}
+	msg := unsignedTxAsMessage(from, tx)
 
 	if traceConfig == nil {
 		traceConfig = &types.TraceConfig{}
@@ -642,4 +669,21 @@ func getChainID(ctx sdk.Context, chainID int64) (*big.Int, error) {
 		return ethermint.ParseChainID(ctx.ChainID())
 	}
 	return big.NewInt(chainID), nil
+}
+
+// same as ethTx.AsMessage, just from is provided instead of calculated from signature
+func unsignedTxAsMessage(from common.Address, ethTx *ethtypes.Transaction) ethtypes.Message {
+	return ethtypes.NewMessage(
+		from,
+		ethTx.To(),
+		ethTx.Nonce(),
+		ethTx.Value(),
+		ethTx.Gas(),
+		new(big.Int).Set(ethTx.GasPrice()),
+		new(big.Int).Set(ethTx.GasFeeCap()),
+		new(big.Int).Set(ethTx.GasTipCap()),
+		ethTx.Data(),
+		ethTx.AccessList(),
+		false, // isFake
+	)
 }
