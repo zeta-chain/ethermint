@@ -16,7 +16,9 @@
 package keeper
 
 import (
+	"bytes"
 	"math/big"
+	"sort"
 
 	tmtypes "github.com/cometbft/cometbft/types"
 
@@ -26,7 +28,6 @@ import (
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
-	evm "github.com/evmos/ethermint/x/evm/vm"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -51,7 +52,7 @@ func (k *Keeper) NewEVM(
 	cfg *statedb.EVMConfig,
 	tracer vm.EVMLogger,
 	stateDB vm.StateDB,
-) evm.EVM {
+) *vm.EVM {
 	blockCtx := vm.BlockContext{
 		CanTransfer: core.CanTransfer,
 		Transfer:    core.Transfer,
@@ -70,7 +71,25 @@ func (k *Keeper) NewEVM(
 		tracer = k.Tracer(ctx, msg, cfg.ChainConfig)
 	}
 	vmConfig := k.VMConfig(ctx, msg, cfg, tracer)
-	return k.evmConstructor(blockCtx, txCtx, stateDB, cfg.ChainConfig, vmConfig, k.customPrecompiles)
+	rules := cfg.ChainConfig.Rules(big.NewInt(ctx.BlockHeight()), cfg.ChainConfig.MergeNetsplitBlock != nil)
+	contracts := make(map[common.Address]vm.PrecompiledContract)
+	active := make([]common.Address, 0)
+	for addr, c := range vm.DefaultPrecompiles(rules) {
+		contracts[addr] = c
+		active = append(active, addr)
+	}
+	for _, fn := range k.customContractFns {
+		c := fn(rules)
+		addr := c.Address()
+		contracts[addr] = c
+		active = append(active, addr)
+	}
+	sort.SliceStable(active, func(i, j int) bool {
+		return bytes.Compare(active[i].Bytes(), active[j].Bytes()) < 0
+	})
+	evm := vm.NewEVM(blockCtx, txCtx, stateDB, cfg.ChainConfig, vmConfig)
+	evm.WithPrecompiles(contracts, active)
+	return evm
 }
 
 // GetHashFn implements vm.GetHashFunc for Ethermint. It handles 3 cases:
@@ -337,7 +356,7 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 	leftoverGas := msg.Gas()
 
 	// Allow the tracer captures the tx level events, mainly the gas consumption.
-	vmCfg := evm.Config()
+	vmCfg := evm.Config
 	if vmCfg.Debug {
 		vmCfg.Tracer.CaptureTxStart(leftoverGas)
 		defer func() {
@@ -347,7 +366,7 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 
 	sender := vm.AccountRef(msg.From())
 	contractCreation := msg.To() == nil
-	isLondon := cfg.ChainConfig.IsLondon(evm.Context().BlockNumber)
+	isLondon := cfg.ChainConfig.IsLondon(evm.Context.BlockNumber)
 
 	intrinsicGas, err := k.GetEthIntrinsicGas(ctx, msg, cfg.ChainConfig, contractCreation)
 	if err != nil {
