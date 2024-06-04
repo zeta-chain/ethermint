@@ -19,6 +19,7 @@ import (
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -35,8 +36,12 @@ import (
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
-	evm "github.com/evmos/ethermint/x/evm/vm"
 )
+
+// CustomContractFn defines a custom precompiled contract generator with rules and returns a precompiled contract.
+type CustomContractFn func(params.Rules) vm.PrecompiledContract
+
+type EventConverter = func([]abci.EventAttribute) []*ethtypes.Log
 
 // Keeper grants access to the EVM module state and implements the go-ethereum StateDB interface.
 type Keeper struct {
@@ -72,14 +77,15 @@ type Keeper struct {
 	// EVM Hooks for tx post-processing
 	hooks types.EvmHooks
 
-	// custom stateless precompiled smart contracts
-	customPrecompiles evm.PrecompiledContracts
-
-	// evm constructor function
-	evmConstructor evm.Constructor
 	// Legacy subspace
-	ss paramstypes.Subspace
+	ss                paramstypes.Subspace
+	customContractFns []CustomContractFn
+
 	ck consensusparamkeeper.Keeper
+
+	// a set of store keys that should cover all the precompile use cases,
+	// or ideally just pass the application's all stores.
+	keys map[string]storetypes.StoreKey
 }
 
 // NewKeeper generates new evm module keeper
@@ -91,11 +97,11 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	sk types.StakingKeeper,
 	fmk types.FeeMarketKeeper,
-	customPrecompiles evm.PrecompiledContracts,
-	evmConstructor evm.Constructor,
 	tracer string,
 	ss paramstypes.Subspace,
+	customContractFns []CustomContractFn,
 	ck consensusparamkeeper.Keeper,
+	keys map[string]storetypes.StoreKey,
 ) *Keeper {
 	// ensure evm module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -117,12 +123,16 @@ func NewKeeper(
 		feeMarketKeeper:   fmk,
 		storeKey:          storeKey,
 		transientKey:      transientKey,
-		customPrecompiles: customPrecompiles,
-		evmConstructor:    evmConstructor,
 		tracer:            tracer,
 		ss:                ss,
+		customContractFns: customContractFns,
 		ck:                ck,
+		keys:              keys,
 	}
+}
+
+func (k Keeper) StoreKeys() map[string]storetypes.StoreKey {
+	return k.keys
 }
 
 // Logger returns a module-specific logger.

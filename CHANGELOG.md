@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* (evm) [#328](https://github.com/crypto-org-chain/ethermint/pull/328) Support precompile interface.
+
 ### State Machine Breaking
 
 - (deps) [#1168](https://github.com/evmos/ethermint/pull/1716) Bump Cosmos-SDK to v0.46.11, Tendermint to v0.34.27, IAVL v0.19.5 and btcd to v0.23.4
@@ -54,6 +58,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 - (ante) [#1717](https://github.com/evmos/ethermint/pull/1717) Reuse sender recovery result.
 - (cli) [#246](https://github.com/crypto-org-chain/ethermint/pull/246) Call app.Close to cleanup resource on graceful shutdown.
+- (precompile) [#380](https://github.com/crypto-org-chain/ethermint/pull/380) Allow init precompiled contract with rules when new evm.
+- (statedb) [#359](https://github.com/crypto-org-chain/ethermint/pull/359) Add `CacheContext` method to StateDB, to support efficient read-only native actions.
+- (evm) [#343](https://github.com/crypto-org-chain/ethermint/pull/343) Add native event converter APIs.
 
 
 ## [v0.21.0] - 2023-01-26

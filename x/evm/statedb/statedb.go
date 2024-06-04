@@ -26,7 +26,14 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
+
+	"github.com/evmos/ethermint/store/cachemulti"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
+
+const StateDBContextKey = "statedb"
+
+type EventConverter = func(sdk.Event) (*ethtypes.Log, error)
 
 // revision is the identifier of a version of state.
 // it consists of an auto-increment id and a journal index.
@@ -44,8 +51,9 @@ var _ vm.StateDB = &StateDB{}
 // * Contracts
 // * Accounts
 type StateDB struct {
-	keeper Keeper
-	ctx    sdk.Context
+	keeper   Keeper
+	ctx      sdk.Context
+	cacheCtx sdk.Context
 
 	// Journal of state modifications. This is the backbone of
 	// Snapshot and RevertToSnapshot.
@@ -65,19 +73,48 @@ type StateDB struct {
 
 	// Per-transaction access list
 	accessList *accessList
+
+	// Transient storage
+	transientStorage transientStorage
+
+	// events emitted by native action
+	nativeEvents sdk.Events
+
+	// handle balances natively
+	evmDenom string
+	err      error
 }
 
 // New creates a new state from a given trie.
 func New(ctx sdk.Context, keeper Keeper, txConfig TxConfig) *StateDB {
-	return &StateDB{
+	return NewWithParams(ctx, keeper, txConfig, keeper.GetParams(ctx))
+}
+
+func NewWithParams(ctx sdk.Context, keeper Keeper, txConfig TxConfig, params evmtypes.Params) *StateDB {
+	db := &StateDB{
 		keeper:       keeper,
-		ctx:          ctx,
 		stateObjects: make(map[common.Address]*stateObject),
 		journal:      newJournal(),
 		accessList:   newAccessList(),
 
 		txConfig: txConfig,
+
+		nativeEvents: sdk.Events{},
 	}
+	db.ctx = ctx.WithValue(StateDBContextKey, db)
+	db.cacheCtx = db.ctx.WithMultiStore(cachemulti.NewStore(ctx.MultiStore(), keeper.StoreKeys()))
+	return db
+}
+
+func (s *StateDB) NativeEvents() sdk.Events {
+	return s.nativeEvents
+}
+
+// cacheMultiStore cast the multistore to *cachemulti.Store.
+// invariant: the multistore must be a `cachemulti.Store`,
+// prove: it's set in constructor and only modified in `restoreNativeState` which keeps the invariant.
+func (s *StateDB) cacheMultiStore() cachemulti.Store {
+	return s.cacheCtx.MultiStore().(cachemulti.Store)
 }
 
 // Keeper returns the underlying `Keeper`
@@ -298,6 +335,39 @@ func (s *StateDB) setStateObject(object *stateObject) {
 	s.stateObjects[object.Address()] = object
 }
 
+func (s *StateDB) cloneNativeState() sdk.MultiStore {
+	return s.cacheMultiStore().Clone()
+}
+
+func (s *StateDB) restoreNativeState(ms sdk.MultiStore) {
+	manager := sdk.NewEventManager()
+	s.cacheCtx = s.cacheCtx.WithMultiStore(ms).WithEventManager(manager)
+}
+
+// ExecuteNativeAction executes native action in isolate,
+// the writes will be revert when either the native action itself fail
+// or the wrapping message call reverted.
+func (s *StateDB) ExecuteNativeAction(contract common.Address, converter EventConverter, action func(ctx sdk.Context) error) error {
+	snapshot := s.cloneNativeState()
+	eventManager := sdk.NewEventManager()
+
+	if err := action(s.cacheCtx.WithEventManager(eventManager)); err != nil {
+		s.restoreNativeState(snapshot)
+		return err
+	}
+
+	events := eventManager.Events()
+	s.emitNativeEvents(contract, converter, events)
+	s.nativeEvents = s.nativeEvents.AppendEvents(events)
+	s.journal.append(nativeChange{snapshot: snapshot, events: len(events)})
+	return nil
+}
+
+// CacheContext returns a branched state context for executing read-only native actions.
+func (s *StateDB) CacheContext() sdk.Context {
+	return s.cacheCtx.WithMultiStore(s.cloneNativeState())
+}
+
 /*
  * SETTERS
  */
@@ -451,6 +521,13 @@ func (s *StateDB) RevertToSnapshot(revid int) {
 // Commit writes the dirty states to keeper
 // the StateDB object should be discarded after committed.
 func (s *StateDB) Commit() error {
+	// commit the native cache store first,
+	// the states managed by precompiles and the other part of StateDB must not overlap.
+	s.cacheMultiStore().Write()
+	if len(s.nativeEvents) > 0 {
+		s.ctx.EventManager().EmitEvents(s.nativeEvents)
+	}
+
 	for _, addr := range s.journal.sortedDirties() {
 		obj := s.stateObjects[addr]
 		if obj.suicided {
@@ -475,4 +552,28 @@ func (s *StateDB) Commit() error {
 		}
 	}
 	return nil
+}
+
+func (s *StateDB) emitNativeEvents(contract common.Address, converter EventConverter, events []sdk.Event) {
+	if converter == nil {
+		return
+	}
+
+	if len(events) == 0 {
+		return
+	}
+
+	for _, event := range events {
+		log, err := converter(event)
+		if err != nil {
+			s.ctx.Logger().Error("failed to convert event", "err", err)
+			continue
+		}
+		if log == nil {
+			continue
+		}
+
+		log.Address = contract
+		s.AddLog(log)
+	}
 }

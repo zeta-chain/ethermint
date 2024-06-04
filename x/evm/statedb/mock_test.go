@@ -3,8 +3,10 @@ package statedb_test
 import (
 	"bytes"
 	"errors"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"math/big"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -23,15 +25,35 @@ type MockAcount struct {
 }
 
 type MockKeeper struct {
-	accounts map[common.Address]MockAcount
-	codes    map[common.Hash][]byte
+	accounts        map[common.Address]MockAcount
+	codes           map[common.Hash][]byte
+	keys            map[string]storetypes.StoreKey
+	eventConverters map[string]statedb.EventConverter
+}
+
+func NewMockKeeperWith(keys map[string]storetypes.StoreKey, eventConverters map[string]statedb.EventConverter) *MockKeeper {
+	return &MockKeeper{
+		accounts:        make(map[common.Address]MockAcount),
+		codes:           make(map[common.Hash][]byte),
+		keys:            keys,
+		eventConverters: eventConverters,
+	}
 }
 
 func NewMockKeeper() *MockKeeper {
-	return &MockKeeper{
-		accounts: make(map[common.Address]MockAcount),
-		codes:    make(map[common.Hash][]byte),
-	}
+	return NewMockKeeperWith(nil, nil)
+}
+
+func (k MockKeeper) GetParams(_ sdk.Context) evmtypes.Params {
+	return evmtypes.Params{}
+}
+
+func (k MockKeeper) StoreKeys() map[string]storetypes.StoreKey {
+	return k.keys
+}
+
+func (k MockKeeper) EventConverters() map[string]statedb.EventConverter {
+	return k.eventConverters
 }
 
 func (k MockKeeper) GetAccount(ctx sdk.Context, addr common.Address) *statedb.Account {
@@ -110,5 +132,13 @@ func (k MockKeeper) Clone() *MockKeeper {
 	for k, v := range k.codes {
 		codes[k] = v
 	}
-	return &MockKeeper{accounts, codes}
+	keys := make(map[string]storetypes.StoreKey, len(k.keys))
+	for k, v := range k.keys {
+		keys[k] = v
+	}
+	eventConverters := make(map[string]statedb.EventConverter, len(k.eventConverters))
+	for k, v := range k.eventConverters {
+		eventConverters[k] = v
+	}
+	return &MockKeeper{accounts, codes, keys, eventConverters}
 }
