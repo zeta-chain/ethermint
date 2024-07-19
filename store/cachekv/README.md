@@ -7,8 +7,8 @@ The core goals the CacheKVStore seeks to solve are:
 * Buffer all writes to the parent store, so they can be dropped if they need to be reverted
 * Allow iteration over contiguous spans of keys
 * Act as a cache, improving access time for reads that have already been done (by replacing tree access with hashtable access, avoiding disk I/O)
-  * Note: We actually fail to achieve this for iteration right now
-  * Note: Need to consider this getting too large and dropping some cached reads
+    * Note: We actually fail to achieve this for iteration right now
+    * Note: Need to consider this getting too large and dropping some cached reads
 * Make subsequent reads account for prior buffered writes
 * Write all buffered changes to the parent store
 
@@ -70,19 +70,19 @@ The `Set`, `Get`, and `Delete` functions all call `setCacheValue()`, which is th
 
 ### `Set`
 
-New values are written by setting or updating the value of a key in `cache`. `Set` does not write to `parent`. 
+New values are written by setting or updating the value of a key in `cache`. `Set` does not write to `parent`.
 
 Calls `setCacheValue()` with `deleted=false` and `dirty=true`.
 
 ### `Delete`
 
-A value being deleted from the `KVStore` is represented with a `nil` value in `cache`, and an insertion of the key into the `deleted` set. `Delete` does not write to `parent`. 
+A value being deleted from the `KVStore` is represented with a `nil` value in `cache`, and an insertion of the key into the `deleted` set. `Delete` does not write to `parent`.
 
 Calls `setCacheValue()` with `deleted=true` and `dirty=true`.
 
 ### `Write`
 
-Key-value pairs in the cache are written to `parent` in ascending order of their keys. 
+Key-value pairs in the cache are written to `parent` in ascending order of their keys.
 
 A slice of all dirty keys in `cache` is made, then sorted in increasing order. These keys are iterated over to update `parent`.
 
@@ -90,7 +90,7 @@ If a key is marked for deletion (checked with `isDeleted()`), then `parent.Delet
 
 ## Iteration
 
-Efficient iteration over keys in `KVStore` is important for generating Merkle range proofs. Iteration over `CacheKVStore` requires producing all key-value pairs from the underlying `KVStore` while taking into account updated values from the cache. 
+Efficient iteration over keys in `KVStore` is important for generating Merkle range proofs. Iteration over `CacheKVStore` requires producing all key-value pairs from the underlying `KVStore` while taking into account updated values from the cache.
 
 In the current implementation, there is no guarantee that all values in `parent` have been cached. As a result, iteration is achieved by interleaved iteration through both `parent` and the cache (failing to actually benefit from caching).
 
@@ -129,12 +129,12 @@ if n < minSortSize {
 }
 ```
 
-Here, we iterate through all the keys in `unsortedCache` (i.e., the dirty cache keys), collecting those within the requested range in an unsorted slice called `unsorted`. 
+Here, we iterate through all the keys in `unsortedCache` (i.e., the dirty cache keys), collecting those within the requested range in an unsorted slice called `unsorted`.
 
 At this point, part 3. is achieved in `clearUnsortedCacheSubset()`. This function iterates through `unsorted`, removing each key from `unsortedCache`. Afterwards, `unsorted` is sorted. Lastly, it iterates through the now sorted slice, inserting key-value pairs into `sortedCache`. Any key marked for deletion is mapped to an arbitrary value (`[]byte{}`).
 
-In the case that the size of `unsortedCache` is larger than `minSortSize`, a linear time approach to finding keys within the desired range is too slow to use. Instead, a slice of all keys in `unsortedCache` is sorted, and binary search is used to find the beginning and ending indices of the desired range. This produces an already-sorted slice that is passed into the same `clearUnsortedCacheSubset()` function. An iota identifier (`sortedState`) is used to skip the sorting step in the function. 
+In the case that the size of `unsortedCache` is larger than `minSortSize`, a linear time approach to finding keys within the desired range is too slow to use. Instead, a slice of all keys in `unsortedCache` is sorted, and binary search is used to find the beginning and ending indices of the desired range. This produces an already-sorted slice that is passed into the same `clearUnsortedCacheSubset()` function. An iota identifier (`sortedState`) is used to skip the sorting step in the function.
 
-Finally, part 4. is achieved with `memIterator`, which implements an iterator over the items in `sortedCache`. 
+Finally, part 4. is achieved with `memIterator`, which implements an iterator over the items in `sortedCache`.
 
 As of [PR #12885](https://github.com/cosmos/cosmos-sdk/pull/12885), an optimization to the binary search case mitigates the overhead of sorting the entirety of the key set in `unsortedCache`. To avoid wasting the compute spent sorting, we should ensure that a reasonable amount of values are removed from `unsortedCache`. If the length of the range for iteration is less than `minSortedCache`, we widen the range of values for removal from `unsortedCache` to be up to `minSortedCache` in length. This amortizes the cost of processing elements across multiple calls.
