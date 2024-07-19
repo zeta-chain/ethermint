@@ -225,5 +225,5 @@ replace (
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
 
-// Zeta-chain maintained replacements
+// ZetaChain maintained replacements
 replace github.com/ethereum/go-ethereum => github.com/zeta-chain/go-ethereum v1.10.26-spc
