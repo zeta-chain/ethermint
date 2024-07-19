@@ -21,14 +21,17 @@ import (
 )
 
 // transientStorage is a representation of EIP-1153 "Transient Storage".
+//nolint
 type transientStorage map[common.Address]Storage
 
 // newTransientStorage creates a new instance of a transientStorage.
+//nolint
 func newTransientStorage() transientStorage {
 	return make(transientStorage)
 }
 
 // Set sets the transient-storage `value` for `key` at the given `addr`.
+//nolint
 func (t transientStorage) Set(addr common.Address, key, value common.Hash) {
 	if _, ok := t[addr]; !ok {
 		t[addr] = make(Storage)
@@ -37,6 +40,7 @@ func (t transientStorage) Set(addr common.Address, key, value common.Hash) {
 }
 
 // Get gets the transient storage for `key` at the given `addr`.
+//nolint
 func (t transientStorage) Get(addr common.Address, key common.Hash) common.Hash {
 	val, ok := t[addr]
 	if !ok {
@@ -46,6 +50,7 @@ func (t transientStorage) Get(addr common.Address, key common.Hash) common.Hash 
 }
 
 // Copy does a deep copy of the transientStorage
+//nolint
 func (t transientStorage) Copy() transientStorage {
 	storage := make(transientStorage)
 	for key, value := range t {

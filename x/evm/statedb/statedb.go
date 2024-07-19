@@ -75,13 +75,16 @@ type StateDB struct {
 	accessList *accessList
 
 	// Transient storage
+	//nolint
 	transientStorage transientStorage
 
 	// events emitted by native action
 	nativeEvents sdk.Events
 
 	// handle balances natively
+	//nolint
 	evmDenom string
+	//nolint
 	err      error
 }
 
@@ -90,6 +93,7 @@ func New(ctx sdk.Context, keeper Keeper, txConfig TxConfig) *StateDB {
 	return NewWithParams(ctx, keeper, txConfig, keeper.GetParams(ctx))
 }
 
+//nolint
 func NewWithParams(ctx sdk.Context, keeper Keeper, txConfig TxConfig, params evmtypes.Params) *StateDB {
 	db := &StateDB{
 		keeper:       keeper,
