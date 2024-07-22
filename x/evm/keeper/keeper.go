@@ -41,6 +41,7 @@ import (
 // CustomContractFn defines a custom precompiled contract generator with ctx, rules and returns a precompiled contract.
 type CustomContractFn func(sdk.Context, params.Rules) vm.PrecompiledContract
 
+// EventConverter type represents a function that parses a list of EventAttributes to a list of Ethereum Log objects.
 type EventConverter = func([]abci.EventAttribute) []*ethtypes.Log
 
 // Keeper grants access to the EVM module state and implements the go-ethereum StateDB interface.
@@ -78,7 +79,9 @@ type Keeper struct {
 	hooks types.EvmHooks
 
 	// Legacy subspace
-	ss                paramstypes.Subspace
+	ss paramstypes.Subspace
+
+	// customContractFns is the list of precompiled stateful contract functions.
 	customContractFns []CustomContractFn
 
 	ck consensusparamkeeper.Keeper

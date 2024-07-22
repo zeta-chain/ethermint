@@ -70,25 +70,41 @@ func (k *Keeper) NewEVM(
 	if tracer == nil {
 		tracer = k.Tracer(ctx, msg, cfg.ChainConfig)
 	}
+
 	vmConfig := k.VMConfig(ctx, msg, cfg, tracer)
 	rules := cfg.ChainConfig.Rules(big.NewInt(ctx.BlockHeight()), cfg.ChainConfig.MergeNetsplitBlock != nil)
 	contracts := make(map[common.Address]vm.PrecompiledContract)
 	active := make([]common.Address, 0)
+
+	// Creates the list of **default** precompiled contracts (not stateful) for this set of rules.
+	// contracts hold the list of all contracts, while active holds the list of all active addresses.
+	// i.e create the list of contracts for Berlin.
 	for addr, c := range vm.DefaultPrecompiles(rules) {
 		contracts[addr] = c
 		active = append(active, addr)
 	}
+
+	// Add the custom stateful precompiled contracts and their addresses to the list.
+	// Then, mark them as active.
 	for _, fn := range k.customContractFns {
 		c := fn(ctx, rules)
 		addr := c.Address()
 		contracts[addr] = c
 		active = append(active, addr)
 	}
+
+	// Sort the active slice in address ascending order.
 	sort.SliceStable(active, func(i, j int) bool {
 		return bytes.Compare(active[i].Bytes(), active[j].Bytes()) < 0
 	})
+
 	evm := vm.NewEVM(blockCtx, txCtx, stateDB, cfg.ChainConfig, vmConfig)
+
+	// Set the precompiled contracts:
+	// - contracts contains all the contracts.
+	// - active contains the addresses of the active contracts.
 	evm.WithPrecompiles(contracts, active)
+
 	return evm
 }
 

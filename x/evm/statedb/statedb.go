@@ -33,6 +33,7 @@ import (
 
 const StateDBContextKey = "statedb"
 
+// EventConverter represents a function able to parse a sdk.Event into an ethtypes.Log.
 type EventConverter = func(sdk.Event) (*ethtypes.Log, error)
 
 // revision is the identifier of a version of state.
@@ -43,7 +44,7 @@ type revision struct {
 	journalIndex int
 }
 
-var _ vm.StateDB = &StateDB{}
+var _ vm.StateDB = (*StateDB)(nil)
 
 // StateDB structs within the ethereum protocol are used to store anything
 // within the merkle trie. StateDBs take care of caching and storing
@@ -85,7 +86,7 @@ type StateDB struct {
 	//nolint
 	evmDenom string
 	//nolint
-	err      error
+	err error
 }
 
 // New creates a new state from a given trie.
