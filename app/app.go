@@ -461,6 +461,8 @@ func NewEthermintApp(
 
 	// Set authority to x/gov module account to only expect the module account to update params
 	evmSs := app.GetSubspace(evmtypes.ModuleName)
+
+	// allKeys contain all the application stores, so it covers all the stateful precompiled contract use cases.
 	allKeys := make(map[string]storetypes.StoreKey, len(keys)+len(tkeys)+len(memKeys))
 	for k, v := range keys {
 		allKeys[k] = v
@@ -471,6 +473,7 @@ func NewEthermintApp(
 	for k, v := range memKeys {
 		allKeys[k] = v
 	}
+
 	app.EvmKeeper = evmkeeper.NewKeeper(
 		appCodec, keys[evmtypes.StoreKey], tkeys[evmtypes.TransientKey], authtypes.NewModuleAddress(govtypes.ModuleName),
 		app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.FeeMarketKeeper,
