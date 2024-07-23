@@ -14,6 +14,7 @@ import (
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/evmos/ethermint/rpc/backend/mocks"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
@@ -322,7 +323,7 @@ func (suite *BackendTestSuite) TestFeeHistory() {
 	testCases := []struct {
 		name           string
 		registerMock   func(validator sdk.AccAddress)
-		userBlockCount ethrpc.DecimalOrHex
+		userBlockCount math.HexOrDecimal64
 		latestBlock    ethrpc.BlockNumber
 		expFeeHistory  *rpc.FeeHistoryResult
 		validator      sdk.AccAddress

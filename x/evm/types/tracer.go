@@ -18,7 +18,6 @@ package types
 import (
 	"math/big"
 	"os"
-	"time"
 
 	"github.com/ethereum/go-ethereum/eth/tracers/logger"
 
@@ -37,7 +36,7 @@ const (
 
 // NewTracer creates a new Logger tracer to collect execution traces from an
 // EVM transaction.
-func NewTracer(tracer string, msg core.Message, cfg *params.ChainConfig, height int64) vm.EVMLogger {
+func NewTracer(tracer string, msg *core.Message, cfg *params.ChainConfig, height int64) vm.EVMLogger {
 	// TODO: enable additional log configuration
 	logCfg := &logger.Config{
 		Debug: true,
@@ -45,8 +44,8 @@ func NewTracer(tracer string, msg core.Message, cfg *params.ChainConfig, height 
 
 	switch tracer {
 	case TracerAccessList:
-		preCompiles := vm.ActivePrecompiles(cfg.Rules(big.NewInt(height), cfg.MergeNetsplitBlock != nil))
-		return logger.NewAccessListTracer(msg.AccessList(), msg.From(), *msg.To(), preCompiles)
+		preCompiles := vm.ActivePrecompiles(cfg.Rules(big.NewInt(height), cfg.MergeNetsplitBlock != nil, 0))
+		return logger.NewAccessListTracer(msg.AccessList, msg.From, *msg.To, preCompiles)
 	case TracerJSON:
 		return logger.NewJSONLogger(logCfg, os.Stderr)
 	case TracerMarkdown:
@@ -93,7 +92,7 @@ func (dt NoOpTracer) CaptureFault(_ uint64, _ vm.OpCode, _, _ uint64, _ *vm.Scop
 }
 
 // CaptureEnd implements vm.Tracer interface
-func (dt NoOpTracer) CaptureEnd(_ []byte, _ uint64, _ time.Duration, _ error) {}
+func (dt NoOpTracer) CaptureEnd(_ []byte, _ uint64, _ error) {}
 
 // CaptureEnter implements vm.Tracer interface
 func (dt NoOpTracer) CaptureEnter(_ vm.OpCode, _ common.Address, _ common.Address, _ []byte, _ uint64, _ *big.Int) {

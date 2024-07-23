@@ -102,7 +102,7 @@ func (cc *ChainContext) CalcDifficulty(_ ethcons.ChainHeaderReader, _ uint64, _ 
 // TODO: Figure out if this needs to be hooked up to any part of the ABCI?
 func (cc *ChainContext) Finalize(
 	_ ethcons.ChainHeaderReader, _ *ethtypes.Header, _ *ethstate.StateDB,
-	_ []*ethtypes.Transaction, _ []*ethtypes.Header) {
+	_ []*ethtypes.Transaction, _ []*ethtypes.Header, _ []*ethtypes.Withdrawal) {
 }
 
 // FinalizeAndAssemble runs any post-transaction state modifications (e.g. block
@@ -117,6 +117,7 @@ func (cc *ChainContext) FinalizeAndAssemble(_ ethcons.ChainHeaderReader,
 	_ []*ethtypes.Transaction,
 	_ []*ethtypes.Header,
 	_ []*ethtypes.Receipt,
+	_ []*ethtypes.Withdrawal,
 ) (*ethtypes.Block, error) {
 	return nil, nil
 }

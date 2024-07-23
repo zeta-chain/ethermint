@@ -434,27 +434,6 @@ func (suite *StateDBTestSuite) TestAccessList() {
 			suite.Require().True(addrPresent)
 			suite.Require().True(slotPresent)
 		}},
-		{"prepare access list", func(db vm.StateDB) {
-			al := ethtypes.AccessList{{
-				Address:     address3,
-				StorageKeys: []common.Hash{value1},
-			}}
-			db.PrepareAccessList(address, &address2, vm.PrecompiledAddressesBerlin, al)
-
-			// check sender and dst
-			suite.Require().True(db.AddressInAccessList(address))
-			suite.Require().True(db.AddressInAccessList(address2))
-			// check precompiles
-			suite.Require().True(db.AddressInAccessList(common.BytesToAddress([]byte{1})))
-			// check AccessList
-			suite.Require().True(db.AddressInAccessList(address3))
-			addrPresent, slotPresent := db.SlotInAccessList(address3, value1)
-			suite.Require().True(addrPresent)
-			suite.Require().True(slotPresent)
-			addrPresent, slotPresent = db.SlotInAccessList(address3, value2)
-			suite.Require().True(addrPresent)
-			suite.Require().False(slotPresent)
-		}},
 	}
 
 	for _, tc := range testCases {
@@ -565,7 +544,7 @@ func (suite *StateDBTestSuite) TestIterateStorage() {
 	suite.Require().Equal(1, len(storage))
 }
 
-func CollectContractStorage(db vm.StateDB) statedb.Storage {
+func CollectContractStorage(db *statedb.StateDB) statedb.Storage {
 	storage := make(statedb.Storage)
 	db.ForEachStorage(address, func(k, v common.Hash) bool {
 		storage[k] = v

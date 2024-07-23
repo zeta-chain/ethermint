@@ -17,6 +17,7 @@ package statedb
 
 import (
 	"bytes"
+	"maps"
 	"math/big"
 	"sort"
 
@@ -49,6 +50,10 @@ func (acct Account) IsContract() bool {
 
 // Storage represents in-memory cache/buffer of contract storage.
 type Storage map[common.Hash]common.Hash
+
+func (s Storage) Copy() Storage {
+	return maps.Clone(s)
+}
 
 // SortedKeys sort the keys for deterministic iteration
 func (s Storage) SortedKeys() []common.Hash {
