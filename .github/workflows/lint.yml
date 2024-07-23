@@ -81,6 +81,9 @@ jobs:
         with:
           PATTERNS: |
             **/**.py
+            go.mod
+            go.sum
+            gomod2nix.toml
       - name: run gomod2nix
         run: |
           nix run -f ./nix gomod2nix
