@@ -72,7 +72,11 @@ func (k *Keeper) NewEVM(
 	}
 
 	vmConfig := k.VMConfig(ctx, msg, cfg, tracer)
+
+	// rules are used to determine the active precompiles for the current block height.
+	// i.e rules.IsByzantium, rules.IsConstantinople, etc.
 	rules := cfg.ChainConfig.Rules(big.NewInt(ctx.BlockHeight()), cfg.ChainConfig.MergeNetsplitBlock != nil)
+
 	contracts := make(map[common.Address]vm.PrecompiledContract)
 	active := make([]common.Address, 0)
 
@@ -101,8 +105,8 @@ func (k *Keeper) NewEVM(
 	evm := vm.NewEVM(blockCtx, txCtx, stateDB, cfg.ChainConfig, vmConfig)
 
 	// Set the precompiled contracts:
-	// - contracts contains all the contracts.
-	// - active contains the addresses of the active contracts.
+	// - contracts contains all the precompiled contracts.
+	// - active contains *only* the addresses of the active precompiled contracts.
 	evm.WithPrecompiles(contracts, active)
 
 	return evm

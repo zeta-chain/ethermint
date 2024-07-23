@@ -7,6 +7,8 @@ import (
 
 var _ JournalEntry = nativeChange{}
 
+// nativeChange represents a state change originated by an action executed by the EVM.
+// It has to implement JournalEntry interface, so it can be appended to the chain journal.
 type nativeChange struct {
 	snapshot types.MultiStore
 	events   int
