@@ -200,8 +200,9 @@ schema = 3
     version = "v1.0.0"
     hash = "sha256-k1DYvCqO3BKNcGEve/nMW0RxzMkK2tGfXbUbycqcVSo="
   [mod."github.com/ethereum/go-ethereum"]
-    version = "v1.10.26"
-    hash = "sha256-gkMEwJ4rOgn12amD4QpZ4th/10uyTTeoFmpseuKDQPs="
+    version = "v1.10.26-spc"
+    hash = "sha256-Xzp0RdXEo7a1IaZ2feEEGQnSdtL2xjLm8Ldhb6+oiHU="
+    replaced = "github.com/zeta-chain/go-ethereum"
   [mod."github.com/felixge/httpsnoop"]
     version = "v1.0.2"
     hash = "sha256-hj6FZQ1fDAV+1wGIViAt8XaAkWZ1I5vJzgjIJa7XRBA="

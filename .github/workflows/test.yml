@@ -101,6 +101,7 @@ jobs:
             go.mod
             go.sum
             tests/integration_tests/**
+            *.nix
       - name: Run integration tests
         run: make run-integration-tests
         if: env.GIT_DIFF
