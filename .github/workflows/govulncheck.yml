@@ -1,0 +1,31 @@
+name: 'Go vulnerability check'
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run govulncheck
+        id: govulncheck
+        uses: golang/govulncheck-action@v1
+        with:
+          check-latest: true
+          go-version-input: 1.22
+          go-package: ./...
+          output-format: sarif
+          output-file: govulncheck.sarif
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: govulncheck.sarif
