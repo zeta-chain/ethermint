@@ -10,7 +10,6 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	"github.com/evmos/ethermint/encoding"
 )
 
 func BenchmarkEthermintApp_ExportAppStateAndValidators(b *testing.B) {
@@ -20,10 +19,6 @@ func BenchmarkEthermintApp_ExportAppStateAndValidators(b *testing.B) {
 		db,
 		nil,
 		true,
-		map[int64]bool{},
-		DefaultNodeHome,
-		0,
-		encoding.MakeConfig(ModuleBasics),
 		simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome),
 		baseapp.SetChainID(ChainID),
 	)
@@ -53,10 +48,6 @@ func BenchmarkEthermintApp_ExportAppStateAndValidators(b *testing.B) {
 			db,
 			nil,
 			true,
-			map[int64]bool{},
-			DefaultNodeHome,
-			0,
-			encoding.MakeConfig(ModuleBasics),
 			simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome),
 			baseapp.SetChainID(ChainID),
 		)

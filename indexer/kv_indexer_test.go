@@ -4,7 +4,6 @@ import (
 	"math/big"
 	"testing"
 
-	"cosmossdk.io/simapp/params"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmlog "github.com/cometbft/cometbft/libs/log"
@@ -17,6 +16,7 @@ import (
 	evmenc "github.com/evmos/ethermint/encoding"
 	"github.com/evmos/ethermint/indexer"
 	"github.com/evmos/ethermint/tests"
+	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/require"
 )
@@ -184,6 +184,6 @@ func TestKVIndexer(t *testing.T) {
 }
 
 // MakeEncodingConfig creates the EncodingConfig
-func MakeEncodingConfig() params.EncodingConfig {
+func MakeEncodingConfig() ethermint.EncodingConfig {
 	return evmenc.MakeConfig(app.ModuleBasics)
 }

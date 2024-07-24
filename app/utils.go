@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -30,8 +29,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/evmos/ethermint/encoding"
-
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
@@ -40,6 +37,8 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+type GenesisState map[string]json.RawMessage
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // EthermintApp testing.
@@ -61,22 +60,18 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 }
 
 // Setup initializes a new EthermintApp. A Nop logger is set in EthermintApp.
-func Setup(isCheckTx bool, patchGenesis func(*EthermintApp, simapp.GenesisState) simapp.GenesisState) *EthermintApp {
+func Setup(isCheckTx bool, patchGenesis func(*EthermintApp, GenesisState) GenesisState) *EthermintApp {
 	return SetupWithDB(isCheckTx, patchGenesis, dbm.NewMemDB())
 }
 
 const ChainID = "ethermint_9000-1"
 
 // SetupWithDB initializes a new EthermintApp. A Nop logger is set in EthermintApp.
-func SetupWithDB(isCheckTx bool, patchGenesis func(*EthermintApp, simapp.GenesisState) simapp.GenesisState, db dbm.DB) *EthermintApp {
+func SetupWithDB(isCheckTx bool, patchGenesis func(*EthermintApp, GenesisState) GenesisState, db dbm.DB) *EthermintApp {
 	app := NewEthermintApp(log.NewNopLogger(),
 		db,
 		nil,
 		true,
-		map[int64]bool{},
-		DefaultNodeHome,
-		5,
-		encoding.MakeConfig(ModuleBasics),
 		simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome),
 		baseapp.SetChainID(ChainID),
 	)
@@ -108,7 +103,7 @@ func SetupWithDB(isCheckTx bool, patchGenesis func(*EthermintApp, simapp.Genesis
 }
 
 // NewTestGenesisState generate genesis state with single validator
-func NewTestGenesisState(codec codec.Codec) simapp.GenesisState {
+func NewTestGenesisState(codec codec.Codec) GenesisState {
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	if err != nil {
@@ -130,10 +125,10 @@ func NewTestGenesisState(codec codec.Codec) simapp.GenesisState {
 	return genesisStateWithValSet(codec, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 }
 
-func genesisStateWithValSet(codec codec.Codec, genesisState simapp.GenesisState,
+func genesisStateWithValSet(codec codec.Codec, genesisState GenesisState,
 	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
-) simapp.GenesisState {
+) GenesisState {
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = codec.MustMarshalJSON(authGenesis)
