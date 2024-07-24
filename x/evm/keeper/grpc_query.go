@@ -420,7 +420,7 @@ func (k Keeper) TraceTx(c context.Context, req *types.QueryTraceTxRequest) (*typ
 
 		var msg *core.Message
 		if !isUnsigned(ethTx) {
-			signer := ethtypes.MakeSigner(cfg.ChainConfig, big.NewInt(ctx.BlockHeight()))
+			signer := ethermint.MakeSigner(cfg.ChainConfig, big.NewInt(ctx.BlockHeight()))
 			msg, err = core.TransactionToMessage(ethTx, signer, cfg.BaseFee)
 			if err != nil {
 				return nil, fmt.Errorf("transaction to message: %w", err)
@@ -556,7 +556,7 @@ func (k *Keeper) traceTx(
 		err       error
 		timeout   = defaultTraceTimeout
 	)
-	signer := ethtypes.MakeSigner(cfg.ChainConfig, big.NewInt(ctx.BlockHeight()))
+	signer := ethermint.MakeSigner(cfg.ChainConfig, big.NewInt(ctx.BlockHeight()))
 	var msg *core.Message
 	if !isUnsigned(tx) {
 		msg, err = core.TransactionToMessage(tx, signer, cfg.BaseFee)

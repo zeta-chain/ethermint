@@ -92,14 +92,14 @@ func TestChainContextSeal(t *testing.T) {
 func TestChainContextVerifyHeader(t *testing.T) {
 	cc := NewChainContext()
 
-	err := cc.VerifyHeader(nil, nil, false)
+	err := cc.VerifyHeader(nil, nil)
 	require.Nil(t, err)
 }
 
 func TestChainContextVerifyHeaders(t *testing.T) {
 	cc := NewChainContext()
 
-	ch, err := cc.VerifyHeaders(nil, nil, []bool{false})
+	ch, err := cc.VerifyHeaders(nil, nil)
 	require.Nil(t, err)
 	require.Nil(t, ch)
 }

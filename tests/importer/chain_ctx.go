@@ -149,7 +149,7 @@ func (cc *ChainContext) SealHash(_ *ethtypes.Header) common.Hash {
 //
 // TODO: Figure out if this needs to be hooked up to any part of the Cosmos SDK
 // handlers?
-func (cc *ChainContext) VerifyHeader(_ ethcons.ChainHeaderReader, _ *ethtypes.Header, _ bool) error {
+func (cc *ChainContext) VerifyHeader(_ ethcons.ChainHeaderReader, _ *ethtypes.Header) error {
 	return nil
 }
 
@@ -158,7 +158,7 @@ func (cc *ChainContext) VerifyHeader(_ ethcons.ChainHeaderReader, _ *ethtypes.He
 //
 // TODO: Figure out if this needs to be hooked up to any part of the Cosmos SDK
 // handlers?
-func (cc *ChainContext) VerifyHeaders(_ ethcons.ChainHeaderReader, _ []*ethtypes.Header, _ []bool) (chan<- struct{}, <-chan error) {
+func (cc *ChainContext) VerifyHeaders(_ ethcons.ChainHeaderReader, _ []*ethtypes.Header) (chan<- struct{}, <-chan error) {
 	return nil, nil
 }
 

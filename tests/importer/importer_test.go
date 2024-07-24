@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/evmos/ethermint/app"
+	"github.com/evmos/ethermint/types"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -28,7 +29,7 @@ import (
 	ethparams "github.com/ethereum/go-ethereum/params"
 	ethrlp "github.com/ethereum/go-ethereum/rlp"
 
-	"github.com/cometbft/cometbft/abci/types"
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmversion "github.com/cometbft/cometbft/proto/tendermint/version"
@@ -135,7 +136,7 @@ func (suite *ImporterTestSuite) TestImportBlocks() {
 		tmheader := suite.ctx.BlockHeader()
 		// fix due to that begin block can't have height 0
 		tmheader.Height = int64(block.NumberU64()) + 1
-		suite.app.BeginBlock(types.RequestBeginBlock{
+		suite.app.BeginBlock(abcitypes.RequestBeginBlock{
 			Header: tmheader,
 		})
 		ctx := suite.app.NewContext(false, tmheader)
@@ -159,7 +160,7 @@ func (suite *ImporterTestSuite) TestImportBlocks() {
 		accumulateRewards(chainConfig, vmdb, header, block.Uncles())
 
 		// simulate BaseApp EndBlocker commitment
-		endBR := types.RequestEndBlock{Height: tmheader.Height}
+		endBR := abcitypes.RequestEndBlock{Height: tmheader.Height}
 		suite.app.EndBlocker(ctx, endBR)
 		suite.app.Commit()
 
@@ -229,7 +230,7 @@ func applyTransaction(
 	gp *ethcore.GasPool, evmKeeper *evmkeeper.Keeper, vmdb *statedb.StateDB, header *ethtypes.Header,
 	tx *ethtypes.Transaction, usedGas *uint64, cfg ethvm.Config,
 ) (*ethtypes.Receipt, uint64, error) {
-	msg, err := ethcore.TransactionToMessage(tx, ethtypes.MakeSigner(config, header.Number), sdk.ZeroInt().BigInt())
+	msg, err := ethcore.TransactionToMessage(tx, types.MakeSigner(config, header.Number), sdk.ZeroInt().BigInt())
 	if err != nil {
 		return nil, 0, err
 	}
