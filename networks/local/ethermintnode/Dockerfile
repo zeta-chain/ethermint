@@ -2,7 +2,10 @@ FROM golang:stretch as build-env
 
 # Install minimum necessary dependencies
 ENV PACKAGES curl make git libc-dev bash gcc
-RUN apt-get update && apt-get upgrade -y && \
+
+# hadolint ignore=DL3018
+RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y $PACKAGES
 
 # Set working directory for the build
