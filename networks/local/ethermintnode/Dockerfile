@@ -3,7 +3,7 @@ FROM golang:stretch as build-env
 # Install minimum necessary dependencies
 ENV PACKAGES curl make git libc-dev bash gcc
 
-# hadolint ignore=DL3018
+# hadolint ignore=DL3008
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y $PACKAGES
