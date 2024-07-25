@@ -21,8 +21,7 @@ paths = [
     '''init.sh'''
 ]
 regexes = [
-    '''#nosec''',
-    '''//nosec'''
+    '''(EthSecp256k1)'''
     ]
 
 [[rules]]
