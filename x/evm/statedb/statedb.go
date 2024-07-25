@@ -12,7 +12,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
+// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package statedb
 
 import (
@@ -27,8 +27,8 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/evmos/ethermint/store/cachemulti"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/ethermint/store/cachemulti"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
 
 const StateDBContextKey = "statedb"
@@ -94,7 +94,7 @@ func New(ctx sdk.Context, keeper Keeper, txConfig TxConfig) *StateDB {
 	return NewWithParams(ctx, keeper, txConfig, keeper.GetParams(ctx))
 }
 
-//nolint
+// nolint
 func NewWithParams(ctx sdk.Context, keeper Keeper, txConfig TxConfig, params evmtypes.Params) *StateDB {
 	db := &StateDB{
 		keeper:       keeper,

@@ -6,7 +6,7 @@ import (
 	dbm "github.com/cometbft/cometbft-db"
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/evmos/ethermint/store/cachekv"
+	"github.com/zeta-chain/ethermint/store/cachekv"
 )
 
 var sink interface{}

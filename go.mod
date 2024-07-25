@@ -1,4 +1,4 @@
-module github.com/evmos/ethermint
+module github.com/zeta-chain/ethermint
 
 go 1.19
 

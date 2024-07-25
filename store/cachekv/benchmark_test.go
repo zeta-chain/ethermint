@@ -6,8 +6,8 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/evmos/ethermint/store/cachekv"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/ethermint/store/cachekv"
 )
 
 func DoBenchmarkDeepCacheStack(b *testing.B, depth int) {

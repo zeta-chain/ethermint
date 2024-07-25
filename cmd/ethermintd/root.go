@@ -12,7 +12,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
+// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package main
 
 import (
@@ -49,16 +49,16 @@ import (
 
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/evmos/ethermint/app"
-	ethermintclient "github.com/evmos/ethermint/client"
-	"github.com/evmos/ethermint/client/debug"
-	"github.com/evmos/ethermint/crypto/hd"
-	"github.com/evmos/ethermint/encoding"
-	"github.com/evmos/ethermint/ethereum/eip712"
-	"github.com/evmos/ethermint/server"
-	servercfg "github.com/evmos/ethermint/server/config"
-	srvflags "github.com/evmos/ethermint/server/flags"
-	ethermint "github.com/evmos/ethermint/types"
+	"github.com/zeta-chain/ethermint/app"
+	ethermintclient "github.com/zeta-chain/ethermint/client"
+	"github.com/zeta-chain/ethermint/client/debug"
+	"github.com/zeta-chain/ethermint/crypto/hd"
+	"github.com/zeta-chain/ethermint/encoding"
+	"github.com/zeta-chain/ethermint/ethereum/eip712"
+	"github.com/zeta-chain/ethermint/server"
+	servercfg "github.com/zeta-chain/ethermint/server/config"
+	srvflags "github.com/zeta-chain/ethermint/server/flags"
+	ethermint "github.com/zeta-chain/ethermint/types"
 )
 
 const EnvPrefix = "ETHERMINT"

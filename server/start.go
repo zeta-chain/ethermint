@@ -12,7 +12,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
+// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package server
 
 import (
@@ -62,11 +62,11 @@ import (
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/evmos/ethermint/indexer"
-	ethdebug "github.com/evmos/ethermint/rpc/namespaces/ethereum/debug"
-	"github.com/evmos/ethermint/server/config"
-	srvflags "github.com/evmos/ethermint/server/flags"
-	ethermint "github.com/evmos/ethermint/types"
+	"github.com/zeta-chain/ethermint/indexer"
+	ethdebug "github.com/zeta-chain/ethermint/rpc/namespaces/ethereum/debug"
+	"github.com/zeta-chain/ethermint/server/config"
+	srvflags "github.com/zeta-chain/ethermint/server/flags"
+	ethermint "github.com/zeta-chain/ethermint/types"
 )
 
 // DBOpener is a function to open `application.db`, potentially with customized options.

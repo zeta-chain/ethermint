@@ -10,11 +10,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	proto "github.com/cosmos/gogoproto/proto"
-	"github.com/evmos/ethermint/app"
-	"github.com/evmos/ethermint/encoding"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/ethermint/app"
+	"github.com/zeta-chain/ethermint/encoding"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	"github.com/evmos/ethermint/tests"
+	"github.com/zeta-chain/ethermint/tests"
 
 	"github.com/stretchr/testify/require"
 

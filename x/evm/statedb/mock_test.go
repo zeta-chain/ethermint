@@ -3,14 +3,15 @@ package statedb_test
 import (
 	"bytes"
 	"errors"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"math/big"
+
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/evmos/ethermint/x/evm/statedb"
+	"github.com/zeta-chain/ethermint/x/evm/statedb"
 )
 
 var (
