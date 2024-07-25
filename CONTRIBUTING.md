@@ -1,23 +1,5 @@
 # Contributing
 
-- [Contributing](#contributing)
-  - [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
-  - [Pull Requests](#pull-requests)
-    - [Pull Request Templates](#pull-request-templates)
-    - [Requesting Reviews](#requesting-reviews)
-    - [Reviewing Pull Requests](#reviewing-pull-requests)
-  - [Forking](#forking)
-  - [Dependencies](#dependencies)
-  - [Protobuf](#protobuf)
-  - [Testing](#testing)
-  - [Branching Model and Release](#branching-model-and-release)
-    - [PR Targeting](#pr-targeting)
-    - [Development Procedure](#development-procedure)
-    - [Pull Merge Procedure](#pull-merge-procedure)
-    - [Release Procedure](#release-procedure)
-  - [Point Release Procedure](#point-release-procedure)
-  - [Code Owner Membership](#code-owner-membership)
-
 Thank you for considering making contributions to Ethermint!
 
 Contributing to this repo can mean many things such as participating in
@@ -35,10 +17,9 @@ contributors, the general procedure for contributing has been established:
       make a comment on the issue to inform the community of your intentions
       to begin work
    4. Follow standard GitHub best practices: fork the repo, branch from the
-      HEAD of `main`, make some commits, and submit a PR to `main`
-      - For core developers working within the ethermint repo, to ensure a clear
-        ownership of branches, branches must be named with the convention
-        `{moniker}/{issue#}-branch-name`
+      HEAD of `main`, make some commits, and submit a PR to `main` - For core developers working within the ethermint repo, to ensure a clear
+      ownership of branches, branches must be named with the convention
+      `{moniker}/{issue#}-branch-name`
    5. Be sure to submit the PR in `Draft` mode submit your PR early, even if
       it's incomplete as this indicates to the community you're working on
       something and allows them to provide comments early in the development process
@@ -68,7 +49,7 @@ When proposing an architecture decision for Ethermint, please start by opening a
 ## Pull Requests
 
 PRs should be categorically broken up based on the type of changes being made (for example, `fix`, `feat`,
-`refactor`, `docs`, and so on). The _type_ must be included in the PR title as a prefix (for example,
+`refactor`, `docs`, and so on). The **type** must be included in the PR title as a prefix (for example,
 `fix: <description>`). This convention ensures that all changes that are committed to the base branch follow the
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 Additionally, each PR should only address a single issue.
@@ -95,13 +76,7 @@ for all checked items unless they have indicated otherwise by leaving their hand
 items. In addition, use the following review explanations:
 
 - `LGTM` without an explicit approval means that the changes look good, but you haven't thoroughly reviewed the reviewer checklist items.
-- `Approval` means that you have completed some or all of the reviewer checklist items. If you only reviewed selected items, you must add your handle next to the items that you have reviewed. In addition, follow these guidelines:
-  - You must also think through anything which ought to be included but is not
-  - You must think through whether any added code could be partially combined (DRYed) with existing code
-  - You must think through any potential security issues or incentive-compatibility flaws introduced by the changes
-  - Naming must be consistent with conventions and the rest of the codebase
-  - Code must live in a reasonable location, considering dependency structures (for example, not importing testing modules in production code, or including example code modules in production code).
-  - If you approve the PR, you are responsible for any issues mentioned here and any issues that should have been addressed after thoroughly reviewing the reviewer checklist items in the pull request template.
+- `Approval` means that you have completed some or all of the reviewer checklist items. If you only reviewed selected items, you must add your handle next to the items that you have reviewed. In addition, follow these guidelines: - You must also think through anything which ought to be included but is not - You must think through whether any added code could be partially combined (DRYed) with existing code - You must think through any potential security issues or incentive-compatibility flaws introduced by the changes - Naming must be consistent with conventions and the rest of the codebase - Code must live in a reasonable location, considering dependency structures (for example, not importing testing modules in production code, or including example code modules in production code). - If you approve the PR, you are responsible for any issues mentioned here and any issues that should have been addressed after thoroughly reviewing the reviewer checklist items in the pull request template.
 - If you sat down with the PR submitter and did a pairing review, add this information in the `Approval` or your PR comments.
 - If you are only making "surface level" reviews, submit any notes as `Comments` without adding a review.
 
@@ -192,10 +167,10 @@ Here is an example check:
 ```go
 <some table>
 for tcIndex, tc := range cases {
-  <some code>
-  for i := 0; i < tc.numTxsToTest; i++ {
-      <some code>
-      require.Equal(t, expectedTx[:32], calculatedTx[:32], "First 32 bytes of the txs differed. tc #%d, i #%d", tcIndex, i)
+    <some code>
+    for i := 0; i < tc.numTxsToTest; i++ {
+            <some code>
+            require.Equal(t, expectedTx[:32], calculatedTx[:32], "First 32 bytes of the txs differed. tc #%d, i #%d", tcIndex, i)
 ```
 
 ## Branching Model and Release
@@ -233,11 +208,8 @@ should be targeted against the release candidate branch.
 - Start on `main`
 - Create the release candidate branch `release/v<major>.<minor>.x` (going forward known as **RC**)
   and ensure it's protected against pushing from anyone except the release
-  manager/coordinator
-  - **no PRs targeting this branch should be merged unless exceptional circumstances arise**
-- On the `RC` branch, prepare a new version section in the `CHANGELOG.md`
-  - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
-  - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on GitHub.
+  manager/coordinator - **no PRs targeting this branch should be merged unless exceptional circumstances arise**
+- On the `RC` branch, prepare a new version section in the `CHANGELOG.md` - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md` - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on GitHub.
 - Kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
 - If errors are found during the simulation testing, commit the fixes to `main`
   and push the changes to the `RC` branch
@@ -381,9 +353,7 @@ Members must:
   meetings
 - Be active contributors to Ethermint, and furthermore should be continuously making substantial contributions
   to the project's codebase, review process, documentation and ADRs
-- Have stake in Ethermint, represented by:
-  - Being a client / user of Ethermint
-  - "[giving back](https://www.debian.org/social_contract)" to the software
+- Have stake in Ethermint, represented by: - Being a client / user of Ethermint - "[giving back](https://www.debian.org/social_contract)" to the software
 - Delegate representation in case of vacation or absence
 
 Code owners need to maintain participation in the process, ideally as members of **Concept Approval Committee**

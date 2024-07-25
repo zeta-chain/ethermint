@@ -94,7 +94,7 @@ func New(ctx sdk.Context, keeper Keeper, txConfig TxConfig) *StateDB {
 	return NewWithParams(ctx, keeper, txConfig, keeper.GetParams(ctx))
 }
 
-// nolint
+//nolint
 func NewWithParams(ctx sdk.Context, keeper Keeper, txConfig TxConfig, params evmtypes.Params) *StateDB {
 	db := &StateDB{
 		keeper:       keeper,

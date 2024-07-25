@@ -34,9 +34,9 @@ The EVM operates as a stack-based machine. It's main architecture components con
 
 - Virtual ROM: contract code is pulled into this read only memory when processing txs
 - Machine state (volatile): changes as the EVM runs and is wiped clean after processing each tx
-  - Program counter (PC)
-  - Gas: keeps track of how much gas is used
-  - Stack and Memory: compute state changes
+    - Program counter (PC)
+    - Gas: keeps track of how much gas is used
+    - Stack and Memory: compute state changes
 - Access to account storage (persistent)
 
 ### State Transitions with Smart Contracts
