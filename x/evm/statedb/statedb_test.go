@@ -25,14 +25,14 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/evmos/ethermint/app"
-	"github.com/evmos/ethermint/encoding"
-	ethermint "github.com/evmos/ethermint/types"
-	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
-	"github.com/evmos/ethermint/x/evm/statedb"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/zeta-chain/ethermint/app"
+	"github.com/zeta-chain/ethermint/encoding"
+	ethermint "github.com/zeta-chain/ethermint/types"
+	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
+	"github.com/zeta-chain/ethermint/x/evm/statedb"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
 
 var (

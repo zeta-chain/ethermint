@@ -7,7 +7,7 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/evmos/ethermint/app"
+	"github.com/zeta-chain/ethermint/app"
 )
 
 // Commit commits a block at a given time. Reminder: At the end of each

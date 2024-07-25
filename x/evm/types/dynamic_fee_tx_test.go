@@ -10,8 +10,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/evmos/ethermint/tests"
 	"github.com/stretchr/testify/suite"
+	"github.com/zeta-chain/ethermint/tests"
 )
 
 type TxDataTestSuite struct {

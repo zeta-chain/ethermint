@@ -11,14 +11,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/evmos/ethermint/app"
-	"github.com/evmos/ethermint/crypto/ethsecp256k1"
-	evmenc "github.com/evmos/ethermint/encoding"
-	"github.com/evmos/ethermint/indexer"
-	"github.com/evmos/ethermint/tests"
-	ethermint "github.com/evmos/ethermint/types"
-	"github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/ethermint/app"
+	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
+	evmenc "github.com/zeta-chain/ethermint/encoding"
+	"github.com/zeta-chain/ethermint/indexer"
+	"github.com/zeta-chain/ethermint/tests"
+	ethermint "github.com/zeta-chain/ethermint/types"
+	"github.com/zeta-chain/ethermint/x/evm/types"
 )
 
 func TestKVIndexer(t *testing.T) {

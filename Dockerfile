@@ -1,14 +1,13 @@
 FROM golang:alpine AS build-env
 
 # Set up dependencies
-ENV PACKAGES git build-base
+ENV PACKAGES git build-base linux-headers
 
 # Set working directory for the build
-WORKDIR /go/src/github.com/evmos/ethermint
+WORKDIR /go/src/github.com/zeta-chain/ethermint
 
-# Install dependencies
-RUN apk add --update $PACKAGES
-RUN apk add linux-headers
+# hadolint ignore=DL3018
+RUN apk add --no-cache $PACKAGES
 
 # Add source files
 COPY . .
@@ -19,12 +18,13 @@ RUN make build
 # Final image
 FROM alpine:3.20.1
 
-# Install ca-certificates
-RUN apk add --update ca-certificates jq
 WORKDIR /
 
+# hadolint ignore=DL3018
+RUN apk add --no-cache ca-certificates jq
+
 # Copy over binaries from the build-env
-COPY --from=build-env /go/src/github.com/evmos/ethermint/build/ethermintd /usr/bin/ethermintd
+COPY --from=build-env /go/src/github.com/zeta-chain/ethermint/build/ethermintd /usr/bin/ethermintd
 
 # Run ethermintd by default
 CMD ["ethermintd"]

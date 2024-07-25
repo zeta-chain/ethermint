@@ -12,7 +12,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
+// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package app
 
 import (
@@ -28,7 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/evmos/ethermint/encoding"
+	"github.com/zeta-chain/ethermint/encoding"
 )
 
 // NewDefaultGenesisState generates the default state for the application.

@@ -12,7 +12,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
+// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package encoding
 
 import (
@@ -21,8 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	enccodec "github.com/evmos/ethermint/encoding/codec"
-	ethermint "github.com/evmos/ethermint/types"
+	enccodec "github.com/zeta-chain/ethermint/encoding/codec"
+	ethermint "github.com/zeta-chain/ethermint/types"
 )
 
 // MakeConfig creates an EncodingConfig for testing

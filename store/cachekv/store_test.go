@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/evmos/ethermint/store/cachekv"
+	"github.com/zeta-chain/ethermint/store/cachekv"
 )
 
 func newCacheKVStore() types.CacheKVStore {

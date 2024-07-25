@@ -10,30 +10,30 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
-	"github.com/evmos/ethermint/ethereum/eip712"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+	"github.com/zeta-chain/ethermint/ethereum/eip712"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/evmos/ethermint/crypto/ethsecp256k1"
+	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
 
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/evmos/ethermint/app"
-	"github.com/evmos/ethermint/cmd/config"
-	"github.com/evmos/ethermint/encoding"
-	"github.com/evmos/ethermint/testutil"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/ethermint/app"
+	"github.com/zeta-chain/ethermint/cmd/config"
+	"github.com/zeta-chain/ethermint/encoding"
+	"github.com/zeta-chain/ethermint/testutil"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ethermint "github.com/evmos/ethermint/types"
 	"github.com/stretchr/testify/suite"
+	ethermint "github.com/zeta-chain/ethermint/types"
 )
 
 // Unit tests for single-signer EIP-712 signature verification. Multi-signature key verification tests are out-of-scope

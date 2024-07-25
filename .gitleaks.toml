@@ -20,6 +20,9 @@ paths = [
     '''vendor''',
     '''init.sh'''
 ]
+regexes = [
+    '''(EthSecp256k1)'''
+    ]
 
 [[rules]]
 description = "Adafruit API Key"

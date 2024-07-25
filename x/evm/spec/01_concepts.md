@@ -10,8 +10,8 @@ The Ethereum Virtual Machine (EVM) is a computation engine which can be thought 
 
 The EVM is considered to be the part of the Ethereum protocol that handles the deployment and execution of [smart contracts](https://ethereum.org/en/developers/docs/smart-contracts/). To make a clear distinction:
 
-* The Ethereum protocol describes a blockchain, in which all Ethereum accounts and smart contracts live. It has only one canonical state (a data structure, which keeps all accounts) at any given block in the chain.
-* The EVM, however, is the [state machine](https://en.wikipedia.org/wiki/Finite-state_machine) that defines the rules for computing a new valid state from block to block. It is an isolated runtime, which means that code running inside the EVM has no access to network, filesystem, or other processes (not external APIs).
+- The Ethereum protocol describes a blockchain, in which all Ethereum accounts and smart contracts live. It has only one canonical state (a data structure, which keeps all accounts) at any given block in the chain.
+- The EVM, however, is the [state machine](https://en.wikipedia.org/wiki/Finite-state_machine) that defines the rules for computing a new valid state from block to block. It is an isolated runtime, which means that code running inside the EVM has no access to network, filesystem, or other processes (not external APIs).
 
 The `x/evm` module implements the EVM as a Cosmos SDK module. It allows users to interact with the EVM by submitting Ethereum txs and executing their containing messages on the given state to evoke a state transition.
 
@@ -23,8 +23,8 @@ The Ethereum state is a data structure, implemented as a [Merkle Patricia Trie](
 
 There are two types of accounts that can be stored in state at a given address:
 
-* **Externally Owned Account (EOA)**: Has nonce (tx counter) and balance
-* **Smart Contract**: Has nonce, balance, (immutable) code hash, storage root (another Merkle Patricia Trie)
+- **Externally Owned Account (EOA)**: Has nonce (tx counter) and balance
+- **Smart Contract**: Has nonce, balance, (immutable) code hash, storage root (another Merkle Patricia Trie)
 
 Smart contracts are just like regular accounts on the blockchain, which additionally store executable code in an Ethereum-specific binary format, known as **EVM bytecode**. They are typically written in an Ethereum high level language such as Solidity which is compiled down to EVM bytecode and deployed on the blockchain, by submitting a tx using an Ethereum client.
 
@@ -32,12 +32,12 @@ Smart contracts are just like regular accounts on the blockchain, which addition
 
 The EVM operates as a stack-based machine. It's main architecture components consist of:
 
-* Virtual ROM: contract code is pulled into this read only memory when processing txs
-* Machine state (volatile): changes as the EVM runs and is wiped clean after processing each tx
-    * Program counter (PC)
-    * Gas: keeps track of how much gas is used
-    * Stack and Memory: compute state changes
-* Access to account storage (persistent)
+- Virtual ROM: contract code is pulled into this read only memory when processing txs
+- Machine state (volatile): changes as the EVM runs and is wiped clean after processing each tx
+    - Program counter (PC)
+    - Gas: keeps track of how much gas is used
+    - Stack and Memory: compute state changes
+- Access to account storage (persistent)
 
 ### State Transitions with Smart Contracts
 
@@ -51,10 +51,10 @@ Smart contracts can also call other smart contracts. Each call to a new contract
 
 For further reading, please refer to:
 
-* [EVM](https://eth.wiki/concepts/evm/evm)
-* [EVM Architecture](https://cypherpunks-core.github.io/ethereumbook/13evm.html#evm_architecture)
-* [What is Ethereum](https://ethdocs.org/en/latest/introduction/what-is-ethereum.html#what-is-ethereum)
-* [Opcodes](https://www.ethervm.io/)
+- [EVM](https://eth.wiki/concepts/evm/evm)
+- [EVM Architecture](https://cypherpunks-core.github.io/ethereumbook/13evm.html#evm_architecture)
+- [What is Ethereum](https://ethdocs.org/en/latest/introduction/what-is-ethereum.html#what-is-ethereum)
+- [Opcodes](https://www.ethervm.io/)
 
 ## Ethermint as Geth implementation
 
@@ -81,10 +81,10 @@ In the Geth implementation, calling the endpoint roughly goes through the follow
 The ethermint implementatiom is similar and makes use of the gRPC query client which is included in the Cosmos SDK:
 
 1. `eth_call` request is transformed to call the `func (e *PublicAPI) Call` function using the `eth` namespace
-2. [`Call()`](https://github.com/evmos/ethermint/blob/main/rpc/namespaces/ethereum/eth/api.go#L639) calls `doCall()`
-3. [`doCall()`](https://github.com/evmos/ethermint/blob/main/rpc/namespaces/ethereum/eth/api.go#L656) transforms the arguments into a `EthCallRequest` and calls `EthCall()` using the query client of the evm module.
-4. [`EthCall()`](https://github.com/evmos/ethermint/blob/main/x/evm/keeper/grpc_query.go#L212) transforms the arguments into a `ethtypes.message` and calls `ApplyMessageWithConfig()
-5. [`ApplyMessageWithConfig()`](https://github.com/evmos/ethermint/blob/d5598932a7f06158b7a5e3aa031bbc94eaaae32c/x/evm/keeper/state_transition.go#L341) instantiates an EVM and either `Create()`s a new contract or `Call()`s a contract using the Geth implementation.
+2. [`Call()`](https://github.com/zeta-chain/ethermint/blob/main/rpc/namespaces/ethereum/eth/api.go#L639) calls `doCall()`
+3. [`doCall()`](https://github.com/zeta-chain/ethermint/blob/main/rpc/namespaces/ethereum/eth/api.go#L656) transforms the arguments into a `EthCallRequest` and calls `EthCall()` using the query client of the evm module.
+4. [`EthCall()`](https://github.com/zeta-chain/ethermint/blob/main/x/evm/keeper/grpc_query.go#L212) transforms the arguments into a `ethtypes.message` and calls `ApplyMessageWithConfig()
+5. [`ApplyMessageWithConfig()`](https://github.com/zeta-chain/ethermint/blob/d5598932a7f06158b7a5e3aa031bbc94eaaae32c/x/evm/keeper/state_transition.go#L341) instantiates an EVM and either `Create()`s a new contract or `Call()`s a contract using the Geth implementation.
 
 ### StateDB
 

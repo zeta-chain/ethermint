@@ -26,10 +26,10 @@ import (
 
 	"github.com/ethereum/go-ethereum/core/types"
 	ethparams "github.com/ethereum/go-ethereum/params"
-	"github.com/evmos/ethermint/app/ante"
-	"github.com/evmos/ethermint/crypto/ethsecp256k1"
-	"github.com/evmos/ethermint/tests"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/ethermint/app/ante"
+	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
+	"github.com/zeta-chain/ethermint/tests"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	amino "github.com/cosmos/cosmos-sdk/codec"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
