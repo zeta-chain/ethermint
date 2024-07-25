@@ -9,10 +9,10 @@ parent:
 
 <div align="center">
   <a href="https://github.com/zeta-chain/ethermint/releases/latest">
-    <img alt="Version" src="https://img.shields.io/github/tag/evmos/ethermint.svg" />
+    <img alt="Version" src="https://img.shields.io/github/tag/zeta-chain/ethermint.svg" />
   </a>
   <a href="https://github.com/zeta-chain/ethermint/blob/main/LICENSE">
-    <img alt="License: LGPL-v3" src="https://img.shields.io/github/license/evmos/ethermint.svg" />
+    <img alt="License: LGPL-v3" src="https://img.shields.io/github/license/zeta-chain/ethermint.svg" />
   </a>
   <a href="https://pkg.go.dev/github.com/zeta-chain/ethermint">
     <img alt="GoDoc" src="https://godoc.org/github.com/zeta-chain/ethermint?status.svg" />
