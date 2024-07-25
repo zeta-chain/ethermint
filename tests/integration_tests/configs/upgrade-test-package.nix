@@ -3,9 +3,9 @@ let
   fetchEthermint = rev: builtins.fetchTarball "https://github.com/zeta-chain/ethermint/archive/${rev}.tar.gz";
   released = pkgs.buildGo118Module rec {
     name = "ethermintd";
-    src = fetchEthermint "d29cdad6e667f6089dfecbedd36bb8d3a2a7d025";
+    src = fetchEthermint "5db67f17e6a0a87ea580841be0266f898e3d63d9";
     subPackages = [ "cmd/ethermintd" ];
-    vendorSha256 = "sha256-cQAol54b6hNzsA4Q3MP9mTqFWM1MvR5uMPrYpaoj3SY=";
+    vendorSha256 = "sha256-6EHCw0/Lo1JfDOEfsn/NufRco0zgebCo0hwwm5wJoFU=";
     doCheck = false;
   };
   current = pkgs.callPackage ../../../. { };
