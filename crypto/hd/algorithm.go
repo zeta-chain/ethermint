@@ -56,6 +56,7 @@ func EthSecp256k1Option() keyring.Option {
 }
 
 var (
+	//nosec
 	_ keyring.SignatureAlgo = EthSecp256k1
 
 	// EthSecp256k1 uses the Bitcoin secp256k1 ECDSA parameters.

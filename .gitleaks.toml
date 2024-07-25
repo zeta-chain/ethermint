@@ -20,6 +20,10 @@ paths = [
     '''vendor''',
     '''init.sh'''
 ]
+regexes = [
+    '''#nosec''',
+    '''//nosec'''
+    ]
 
 [[rules]]
 description = "Adafruit API Key"
