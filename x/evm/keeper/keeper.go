@@ -410,3 +410,11 @@ func (k Keeper) AddTransientGasUsed(ctx sdk.Context, gasUsed uint64) (uint64, er
 	k.SetTransientGasUsed(ctx, result)
 	return result, nil
 }
+
+// ----------------------------------------------------------------------------
+// Stateful Precompiled Contracts sectopn
+// ----------------------------------------------------------------------------
+
+func (k *Keeper) WithStatefulPrecompiledContracts(contracts []CustomContractFn) {
+	k.customContractFns = contracts
+}
