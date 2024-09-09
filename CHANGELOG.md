@@ -54,6 +54,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 - (rpc) [#1688](https://github.com/zeta-chain/ethermint/pull/1688) Align filter rule for `debug_traceBlockByNumber`
 
+- (evm) [#112](https://github.com/zeta-chain/ethermint/pull/112) Avoid duplicate cache events emitted from evm hooks.
+
 ### Improvements
 
 - (ante) [#1717](https://github.com/zeta-chain/ethermint/pull/1717) Reuse sender recovery result.
