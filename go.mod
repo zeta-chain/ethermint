@@ -29,7 +29,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/rs/cors v1.8.3
-	github.com/spf13/cast v1.5.1
+	github.com/spf13/cast v1.7.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
 	github.com/status-im/keycard-go v0.0.0-20200402102358-957c09536969
