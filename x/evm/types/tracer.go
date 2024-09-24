@@ -17,15 +17,10 @@ package types
 
 import (
 	"math/big"
-	"os"
 	"time"
 
-	"github.com/ethereum/go-ethereum/eth/tracers/logger"
-
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/params"
 )
 
 const (
@@ -34,29 +29,6 @@ const (
 	TracerStruct     = "struct"
 	TracerMarkdown   = "markdown"
 )
-
-// NewTracer creates a new Logger tracer to collect execution traces from an
-// EVM transaction.
-func NewTracer(tracer string, msg core.Message, cfg *params.ChainConfig, height int64) vm.EVMLogger {
-	// TODO: enable additional log configuration
-	logCfg := &logger.Config{
-		Debug: true,
-	}
-
-	switch tracer {
-	case TracerAccessList:
-		preCompiles := vm.DefaultActivePrecompiles(cfg.Rules(big.NewInt(height), cfg.MergeNetsplitBlock != nil))
-		return logger.NewAccessListTracer(msg.AccessList(), msg.From(), *msg.To(), preCompiles)
-	case TracerJSON:
-		return logger.NewJSONLogger(logCfg, os.Stderr)
-	case TracerMarkdown:
-		return logger.NewMarkdownLogger(logCfg, os.Stdout) // TODO: Stderr ?
-	case TracerStruct:
-		return logger.NewStructLogger(logCfg)
-	default:
-		return NewNoOpTracer()
-	}
-}
 
 // TxTraceResult is the result of a single transaction trace during a block trace.
 type TxTraceResult struct {
