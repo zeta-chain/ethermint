@@ -3,7 +3,7 @@ module github.com/zeta-chain/ethermint
 go 1.19
 
 require (
-	cosmossdk.io/api v0.3.1
+	cosmossdk.io/api v0.7.6
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/tools/rosetta v0.2.1
