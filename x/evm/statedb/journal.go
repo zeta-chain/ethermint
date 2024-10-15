@@ -139,6 +139,12 @@ type (
 		address *common.Address
 		slot    *common.Hash
 	}
+
+	// Changes to transient storage
+	transientStorageChange struct {
+		account       *common.Address
+		key, prevalue common.Hash
+	}
 )
 
 func (ch createObjectChange) Revert(s *StateDB) {
@@ -207,6 +213,22 @@ func (ch refundChange) Revert(s *StateDB) {
 
 func (ch refundChange) Dirtied() *common.Address {
 	return nil
+}
+
+func (ch transientStorageChange) Revert(s *StateDB) {
+	s.setTransientState(*ch.account, ch.key, ch.prevalue)
+}
+
+func (ch transientStorageChange) Dirtied() *common.Address {
+	return nil
+}
+
+func (ch transientStorageChange) copy() JournalEntry {
+	return transientStorageChange{
+		account:  ch.account,
+		key:      ch.key,
+		prevalue: ch.prevalue,
+	}
 }
 
 func (ch addLogChange) Revert(s *StateDB) {
