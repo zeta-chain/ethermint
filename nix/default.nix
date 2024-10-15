@@ -1,9 +1,16 @@
 { sources ? import ./sources.nix, system ? builtins.currentSystem, ... }:
 
+let
+  # use latest version of nixpkgs just for golang
+  # upgrading this in sources.json breaks poetry2nix in incomprehensible ways
+  nixpkgsUrl = "https://github.com/NixOS/nixpkgs/archive/e544a67ebac014e7932840e277363b0b46bac751.tar.gz";
+  nixpkgs = import (fetchTarball nixpkgsUrl) {};
+  go_1_22 = nixpkgs.pkgs.go_1_22;
+in
 import sources.nixpkgs {
   overlays = [
     (_: pkgs: {
-      go = pkgs.go_1_18;
+      go = go_1_22;
       go-ethereum = pkgs.callPackage ./go-ethereum.nix {
         inherit (pkgs.darwin) libobjc;
         inherit (pkgs.darwin.apple_sdk.frameworks) IOKit;
@@ -11,7 +18,6 @@ import sources.nixpkgs {
       };
     }) # update to a version that supports eip-1559
     # https://github.com/NixOS/nixpkgs/pull/179622
-    (import ./go_1_18_overlay.nix)
     (final: prev:
       (import "${sources.gomod2nix}/overlay.nix")
         (final // {

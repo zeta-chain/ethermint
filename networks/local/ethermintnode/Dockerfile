@@ -18,7 +18,7 @@ COPY . .
 RUN make build-linux
 
 # Final image
-FROM golang:1.19 as final
+FROM golang:1.22 as final
 
 WORKDIR /
 
