@@ -18,8 +18,8 @@ package miner
 import (
 	"github.com/cosmos/cosmos-sdk/server"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common/hexutil"
 
 	"github.com/cometbft/cometbft/libs/log"
 

@@ -32,11 +32,11 @@ import (
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/common/math"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common/hexutil"
+	"github.com/zeta-chain/go-ethereum/common/math"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/params"
 )
 
 // ExceedBlockGasLimitError defines the error message when tx execution exceeds the block gas limit.

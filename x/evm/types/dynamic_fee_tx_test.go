@@ -7,9 +7,9 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common/hexutil"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/ethermint/tests"
 )

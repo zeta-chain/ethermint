@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common"
 	//"github.com/ethereum/go-ethereum/common/hexutil"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 )
 
 func (suite *TxDataTestSuite) TestTxArgsString() {

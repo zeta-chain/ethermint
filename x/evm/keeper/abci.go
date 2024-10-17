@@ -20,7 +20,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 )
 
 // BeginBlock sets the sdk Context and EIP155 chain id to the Keeper.

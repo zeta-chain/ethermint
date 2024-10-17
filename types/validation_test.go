@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/ethermint/tests"
 	"github.com/zeta-chain/ethermint/types"

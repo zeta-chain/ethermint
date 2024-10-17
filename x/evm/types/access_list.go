@@ -16,8 +16,8 @@
 package types
 
 import (
-	"github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/common"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 )
 
 // AccessList is an EIP-2930 access list that represents the slice of

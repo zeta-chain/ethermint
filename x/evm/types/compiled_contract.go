@@ -22,7 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/zeta-chain/go-ethereum/accounts/abi"
 )
 
 // HexString is a byte array that serializes to hex

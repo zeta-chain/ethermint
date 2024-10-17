@@ -8,8 +8,8 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+	"github.com/zeta-chain/go-ethereum/crypto"
+	"github.com/zeta-chain/go-ethereum/signer/core/apitypes"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"github.com/zeta-chain/ethermint/ethereum/eip712"

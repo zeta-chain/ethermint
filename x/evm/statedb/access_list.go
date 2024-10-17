@@ -17,7 +17,7 @@
 package statedb
 
 import (
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common"
 )
 
 type accessList struct {

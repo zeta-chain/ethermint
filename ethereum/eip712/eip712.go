@@ -16,7 +16,7 @@
 package eip712
 
 import (
-	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+	"github.com/zeta-chain/go-ethereum/signer/core/apitypes"
 )
 
 // WrapTxToTypedData wraps an Amino-encoded Cosmos Tx JSON SignDoc

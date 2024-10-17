@@ -18,9 +18,9 @@ package types
 import (
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common/hexutil"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 )
 
 // Copied the Account and StorageResult types since they are registered under an

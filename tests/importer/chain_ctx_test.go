@@ -9,10 +9,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ethereum/go-ethereum/common"
-	ethcons "github.com/ethereum/go-ethereum/consensus"
-	ethcore "github.com/ethereum/go-ethereum/core"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/common"
+	ethcons "github.com/zeta-chain/go-ethereum/consensus"
+	ethcore "github.com/zeta-chain/go-ethereum/core"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 )
 
 func TestChainContextInterface(t *testing.T) {
@@ -72,7 +72,7 @@ func TestChainContextCalcDifficulty(t *testing.T) {
 func TestChainContextFinalize(t *testing.T) {
 	cc := NewChainContext()
 
-	cc.Finalize(nil, nil, nil, nil, nil)
+	cc.Finalize(nil, nil, nil, nil, nil, nil)
 }
 
 func TestChainContextPrepare(t *testing.T) {
@@ -92,14 +92,14 @@ func TestChainContextSeal(t *testing.T) {
 func TestChainContextVerifyHeader(t *testing.T) {
 	cc := NewChainContext()
 
-	err := cc.VerifyHeader(nil, nil, false)
+	err := cc.VerifyHeader(nil, nil)
 	require.Nil(t, err)
 }
 
 func TestChainContextVerifyHeaders(t *testing.T) {
 	cc := NewChainContext()
 
-	ch, err := cc.VerifyHeaders(nil, nil, []bool{false})
+	ch, err := cc.VerifyHeaders(nil, nil)
 	require.Nil(t, err)
 	require.Nil(t, ch)
 }

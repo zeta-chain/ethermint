@@ -7,12 +7,12 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/crypto"
-	ethlogger "github.com/ethereum/go-ethereum/eth/tracers/logger"
-	ethparams "github.com/ethereum/go-ethereum/params"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common/hexutil"
+	"github.com/zeta-chain/go-ethereum/core/vm"
+	"github.com/zeta-chain/go-ethereum/crypto"
+	ethlogger "github.com/zeta-chain/go-ethereum/eth/tracers/logger"
+	ethparams "github.com/zeta-chain/go-ethereum/params"
 	"github.com/zeta-chain/ethermint/tests"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 
@@ -1095,7 +1095,7 @@ func (suite *KeeperTestSuite) TestTraceBlock() {
 				}
 			},
 			expPass:       true,
-			traceResponse: "[{\"error\":\"rpc error: code = Internal desc = tracer not found\"}]",
+			traceResponse: "[{\"error\":\"rpc error: code = Internal desc = ReferenceError: invalid_tracer is not defined at \\u003ceval\\u003e:1:2(0)\"}]",
 		},
 		{
 			msg: "invalid chain id",
@@ -1105,7 +1105,7 @@ func (suite *KeeperTestSuite) TestTraceBlock() {
 				chainID = &tmp
 			},
 			expPass:       true,
-			traceResponse: "[{\"error\":\"rpc error: code = Internal desc = invalid chain id for signer\"}]",
+			traceResponse: "[{\"error\":\"rpc error: code = InvalidArgument desc = transaction to message: invalid chain id for signer: have 9000 want 1\"}]",
 		},
 	}
 

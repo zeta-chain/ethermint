@@ -2,7 +2,7 @@ package statedb
 
 import (
 	"github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common"
 )
 
 var _ JournalEntry = nativeChange{}

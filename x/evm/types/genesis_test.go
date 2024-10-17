@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"

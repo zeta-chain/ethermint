@@ -18,7 +18,7 @@ package types
 import (
 	"sync"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common"
 )
 
 // AddrLocker is a mutex structure used to avoid querying outdated account data

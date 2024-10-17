@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 
 	"github.com/zeta-chain/ethermint/app"
 	"github.com/zeta-chain/ethermint/encoding"

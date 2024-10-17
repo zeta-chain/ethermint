@@ -30,9 +30,9 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
 
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/crypto/secp256k1"
-	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+	ethcrypto "github.com/zeta-chain/go-ethereum/crypto"
+	"github.com/zeta-chain/go-ethereum/crypto/secp256k1"
+	"github.com/zeta-chain/go-ethereum/signer/core/apitypes"
 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
 	"github.com/zeta-chain/ethermint/ethereum/eip712"
 	ethermint "github.com/zeta-chain/ethermint/types"

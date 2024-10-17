@@ -19,8 +19,8 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/core/vm"
 )
 
 // GetTxPriority returns the priority of a given Ethereum tx. It relies of the

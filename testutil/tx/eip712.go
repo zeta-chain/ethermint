@@ -25,7 +25,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/go-ethereum/crypto"
 	cryptocodec "github.com/zeta-chain/ethermint/crypto/codec"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
@@ -33,7 +33,7 @@ import (
 	"github.com/zeta-chain/ethermint/ethereum/eip712"
 
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+	"github.com/zeta-chain/go-ethereum/signer/core/apitypes"
 
 	"github.com/zeta-chain/ethermint/types"
 

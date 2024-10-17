@@ -143,8 +143,8 @@ import (
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
 	// Force-load the tracer engines to trigger registration due to Go-Ethereum v1.10.15 changes
-	_ "github.com/ethereum/go-ethereum/eth/tracers/js"
-	_ "github.com/ethereum/go-ethereum/eth/tracers/native"
+	_ "github.com/zeta-chain/go-ethereum/eth/tracers/js"
+	_ "github.com/zeta-chain/go-ethereum/eth/tracers/native"
 )
 
 func init() {

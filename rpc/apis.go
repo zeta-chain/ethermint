@@ -21,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/zeta-chain/go-ethereum/rpc"
 
 	"github.com/zeta-chain/ethermint/rpc/backend"
 	"github.com/zeta-chain/ethermint/rpc/namespaces/ethereum/debug"

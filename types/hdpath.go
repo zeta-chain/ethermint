@@ -16,7 +16,7 @@
 package types
 
 import (
-	ethaccounts "github.com/ethereum/go-ethereum/accounts"
+	ethaccounts "github.com/zeta-chain/go-ethereum/accounts"
 )
 
 var (

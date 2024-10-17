@@ -24,8 +24,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ethereum/go-ethereum/core/types"
-	ethparams "github.com/ethereum/go-ethereum/params"
+	"github.com/zeta-chain/go-ethereum/core/types"
+	ethparams "github.com/zeta-chain/go-ethereum/params"
 	"github.com/zeta-chain/ethermint/app/ante"
 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
 	"github.com/zeta-chain/ethermint/tests"
