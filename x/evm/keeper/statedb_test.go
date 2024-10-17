@@ -11,6 +11,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/holiman/uint256"
 
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -33,11 +34,11 @@ func (suite *KeeperTestSuite) TestCreateAccount() {
 			"reset account (keep balance)",
 			suite.address,
 			func(vmdb vm.StateDB, addr common.Address) {
-				vmdb.AddBalance(addr, big.NewInt(100))
-				suite.Require().NotZero(vmdb.GetBalance(addr).Int64())
+				vmdb.AddBalance(addr, uint256.NewInt(100))
+				suite.Require().NotZero(vmdb.GetBalance(addr).ToBig().Int64())
 			},
 			func(vmdb vm.StateDB, addr common.Address) {
-				suite.Require().Equal(vmdb.GetBalance(addr).Int64(), int64(100))
+				suite.Require().Equal(vmdb.GetBalance(addr).ToBig().Int64(), int64(100))
 			},
 		},
 		{
@@ -65,23 +66,18 @@ func (suite *KeeperTestSuite) TestCreateAccount() {
 func (suite *KeeperTestSuite) TestAddBalance() {
 	testCases := []struct {
 		name   string
-		amount *big.Int
+		amount *uint256.Int
 		isNoOp bool
 	}{
 		{
 			"positive amount",
-			big.NewInt(100),
+			uint256.NewInt(100),
 			false,
 		},
 		{
 			"zero amount",
-			big.NewInt(0),
+			uint256.NewInt(0),
 			true,
-		},
-		{
-			"negative amount",
-			big.NewInt(-1),
-			false, // seems to be consistent with go-ethereum's implementation
 		},
 	}
 
@@ -93,9 +89,9 @@ func (suite *KeeperTestSuite) TestAddBalance() {
 			post := vmdb.GetBalance(suite.address)
 
 			if tc.isNoOp {
-				suite.Require().Equal(prev.Int64(), post.Int64())
+				suite.Require().Equal(prev.String(), post.String())
 			} else {
-				suite.Require().Equal(new(big.Int).Add(prev, tc.amount).Int64(), post.Int64())
+				suite.Require().Equal(new(uint256.Int).Add(prev, tc.amount).String(), post.String())
 			}
 		})
 	}
@@ -104,35 +100,29 @@ func (suite *KeeperTestSuite) TestAddBalance() {
 func (suite *KeeperTestSuite) TestSubBalance() {
 	testCases := []struct {
 		name     string
-		amount   *big.Int
+		amount   *uint256.Int
 		malleate func(vm.StateDB)
 		isNoOp   bool
 	}{
 		{
 			"positive amount, below zero",
-			big.NewInt(100),
+			uint256.NewInt(100),
 			func(vm.StateDB) {},
 			false,
 		},
 		{
 			"positive amount, above zero",
-			big.NewInt(50),
+			uint256.NewInt(50),
 			func(vmdb vm.StateDB) {
-				vmdb.AddBalance(suite.address, big.NewInt(100))
+				vmdb.AddBalance(suite.address, uint256.NewInt(100))
 			},
 			false,
 		},
 		{
 			"zero amount",
-			big.NewInt(0),
+			uint256.NewInt(0),
 			func(vm.StateDB) {},
 			true,
-		},
-		{
-			"negative amount",
-			big.NewInt(-1),
-			func(vm.StateDB) {},
-			false,
 		},
 	}
 
@@ -146,9 +136,9 @@ func (suite *KeeperTestSuite) TestSubBalance() {
 			post := vmdb.GetBalance(suite.address)
 
 			if tc.isNoOp {
-				suite.Require().Equal(prev.Int64(), post.Int64())
+				suite.Require().Equal(prev.String(), post.String())
 			} else {
-				suite.Require().Equal(new(big.Int).Sub(prev, tc.amount).Int64(), post.Int64())
+				suite.Require().Equal(new(uint256.Int).Sub(prev, tc.amount).String(), post.String())
 			}
 		})
 	}
@@ -528,7 +518,7 @@ func (suite *KeeperTestSuite) TestEmpty() {
 		{
 			"not empty, positive balance",
 			suite.address,
-			func(vmdb vm.StateDB) { vmdb.AddBalance(suite.address, big.NewInt(100)) },
+			func(vmdb vm.StateDB) { vmdb.AddBalance(suite.address, uint256.NewInt(100)) },
 			false,
 		},
 		{"empty, account doesn't exist", tests.GenerateAddress(), func(vm.StateDB) {}, true},

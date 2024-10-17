@@ -31,6 +31,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/holiman/uint256"
 
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	ethermint "github.com/zeta-chain/ethermint/types"
@@ -39,7 +40,7 @@ import (
 )
 
 // CustomContractFn defines a custom precompiled contract generator with ctx, rules and returns a precompiled contract.
-type CustomContractFn func(sdk.Context, params.Rules) vm.PrecompiledContract
+type CustomContractFn func(sdk.Context, params.Rules) vm.StatefulPrecompiledContract
 
 // EventConverter type represents a function that parses a list of EventAttributes to a list of Ethereum Log objects.
 type EventConverter = func([]abci.EventAttribute) []*ethtypes.Log
@@ -319,7 +320,7 @@ func (k *Keeper) GetAccountOrEmpty(ctx sdk.Context, addr common.Address) statedb
 
 	// empty account
 	return statedb.Account{
-		Balance:  new(big.Int),
+		Balance:  new(uint256.Int),
 		CodeHash: types.EmptyCodeHash,
 	}
 }

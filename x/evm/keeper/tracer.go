@@ -36,7 +36,7 @@ func NewTracer(tracer string, msg *core.Message, cfg *params.ChainConfig, height
 
 	switch tracer {
 	case types.TracerAccessList:
-		preCompiles := vm.DefaultActivePrecompiles(cfg.Rules(big.NewInt(height), cfg.MergeNetsplitBlock != nil, 1))
+		preCompiles := vm.ActivePrecompiles(cfg.Rules(big.NewInt(height), cfg.MergeNetsplitBlock != nil, 1))
 		return logger.NewAccessListTracer(msg.AccessList, msg.From, *msg.To, preCompiles)
 	case types.TracerJSON:
 		return logger.NewJSONLogger(logCfg, os.Stderr)

@@ -1,9 +1,8 @@
 package evm_test
 
 import (
-	"math/big"
-
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/holiman/uint256"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
@@ -36,7 +35,7 @@ func (suite *EvmTestSuite) TestInitGenesis() {
 		{
 			"valid account",
 			func() {
-				vmdb.AddBalance(address, big.NewInt(1))
+				vmdb.AddBalance(address, uint256.NewInt(1))
 			},
 			&types.GenesisState{
 				Params: types.DefaultParams(),
