@@ -24,7 +24,7 @@ import (
 	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/spf13/cobra"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

@@ -19,10 +19,10 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/zeta-chain/go-ethereum/params"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/zeta-chain/go-ethereum/core/vm"
 	"github.com/zeta-chain/ethermint/types"
 )
 

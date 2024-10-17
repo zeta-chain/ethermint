@@ -18,8 +18,8 @@ package keeper
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/core"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/core"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 	"github.com/zeta-chain/ethermint/x/evm/types"
 )
 

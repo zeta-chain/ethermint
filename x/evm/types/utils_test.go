@@ -18,7 +18,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common"
 )
 
 func TestEvmDataEncoding(t *testing.T) {

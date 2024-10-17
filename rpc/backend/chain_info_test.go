@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/common/math"
-	ethrpc "github.com/ethereum/go-ethereum/rpc"
+	"github.com/zeta-chain/go-ethereum/common/hexutil"
+	"github.com/zeta-chain/go-ethereum/common/math"
+	ethrpc "github.com/zeta-chain/go-ethereum/rpc"
 	rpc "github.com/zeta-chain/ethermint/rpc/types"
 	"github.com/zeta-chain/ethermint/tests"
 	"google.golang.org/grpc/metadata"

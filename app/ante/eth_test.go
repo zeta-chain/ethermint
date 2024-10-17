@@ -14,7 +14,7 @@ import (
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 )
 
 func (suite AnteTestSuite) TestNewEthAccountVerificationDecorator() {

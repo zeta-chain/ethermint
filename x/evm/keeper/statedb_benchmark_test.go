@@ -6,9 +6,9 @@ import (
 	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/go-ethereum/common"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/crypto"
 
 	"github.com/zeta-chain/ethermint/tests"
 )

@@ -5,9 +5,9 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	ethparams "github.com/ethereum/go-ethereum/params"
+	"github.com/zeta-chain/go-ethereum/common"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
+	ethparams "github.com/zeta-chain/go-ethereum/params"
 	"github.com/holiman/uint256"
 	"github.com/zeta-chain/ethermint/x/evm/keeper"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"

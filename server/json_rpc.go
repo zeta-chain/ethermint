@@ -28,8 +28,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	ethlog "github.com/ethereum/go-ethereum/log"
-	ethrpc "github.com/ethereum/go-ethereum/rpc"
+	ethlog "github.com/zeta-chain/go-ethereum/log"
+	ethrpc "github.com/zeta-chain/go-ethereum/rpc"
 	"github.com/zeta-chain/ethermint/rpc"
 
 	tmlog "github.com/cometbft/cometbft/libs/log"

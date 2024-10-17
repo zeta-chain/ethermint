@@ -18,11 +18,11 @@ package importer
 import (
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	ethcons "github.com/ethereum/go-ethereum/consensus"
-	ethstate "github.com/ethereum/go-ethereum/core/state"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	ethrpc "github.com/ethereum/go-ethereum/rpc"
+	"github.com/zeta-chain/go-ethereum/common"
+	ethcons "github.com/zeta-chain/go-ethereum/consensus"
+	ethstate "github.com/zeta-chain/go-ethereum/core/state"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
+	ethrpc "github.com/zeta-chain/go-ethereum/rpc"
 )
 
 // ChainContext implements Ethereum's core.ChainContext and consensus.Engine

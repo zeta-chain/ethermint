@@ -20,7 +20,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common"
 )
 
 // IsEmptyHash returns true if the hash corresponds to an empty ethereum hex hash.

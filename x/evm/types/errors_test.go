@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/go-ethereum/crypto"
 	"github.com/status-im/keycard-go/hexutils"
 	"github.com/stretchr/testify/require"
 )

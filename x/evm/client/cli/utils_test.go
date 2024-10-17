@@ -9,7 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common"
 )
 
 func cosmosAddressFromArg(addr string) (sdk.AccAddress, error) {

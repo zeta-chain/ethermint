@@ -27,10 +27,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/consensus/misc/eip1559"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common/hexutil"
+	"github.com/zeta-chain/go-ethereum/consensus/misc/eip1559"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"

@@ -28,10 +28,10 @@ import (
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/pkg/errors"
 
-	"github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/eth/filters"
+	"github.com/zeta-chain/go-ethereum/common"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/crypto"
+	"github.com/zeta-chain/go-ethereum/eth/filters"
 )
 
 // BloomIV represents the bit indexes and value inside the bloom filter that belong

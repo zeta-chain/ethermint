@@ -7,7 +7,7 @@ import (
 
 	"github.com/zeta-chain/ethermint/tests"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common"
 )
 
 func TestTransactionLogsValidate(t *testing.T) {

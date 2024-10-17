@@ -19,10 +19,10 @@ import (
 	"math/big"
 	"os"
 
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/eth/tracers/logger"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/zeta-chain/go-ethereum/core"
+	"github.com/zeta-chain/go-ethereum/core/vm"
+	"github.com/zeta-chain/go-ethereum/eth/tracers/logger"
+	"github.com/zeta-chain/go-ethereum/params"
 	"github.com/zeta-chain/ethermint/x/evm/types"
 )
 

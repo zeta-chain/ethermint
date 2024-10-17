@@ -22,11 +22,11 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/core"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common/hexutil"
+	"github.com/zeta-chain/go-ethereum/common/math"
+	"github.com/zeta-chain/go-ethereum/core"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 )
 
 // TransactionArgs represents the arguments to construct a new transaction

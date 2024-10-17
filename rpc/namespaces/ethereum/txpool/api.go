@@ -18,7 +18,7 @@ package txpool
 import (
 	"github.com/cometbft/cometbft/libs/log"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/zeta-chain/go-ethereum/common/hexutil"
 
 	"github.com/zeta-chain/ethermint/rpc/types"
 )

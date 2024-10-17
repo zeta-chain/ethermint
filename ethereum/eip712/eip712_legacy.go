@@ -30,9 +30,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common/math"
+	"github.com/zeta-chain/go-ethereum/signer/core/apitypes"
 )
 
 type FeeDelegationOptions struct {

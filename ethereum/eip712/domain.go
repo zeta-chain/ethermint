@@ -16,8 +16,8 @@
 package eip712
 
 import (
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+	"github.com/zeta-chain/go-ethereum/common/math"
+	"github.com/zeta-chain/go-ethereum/signer/core/apitypes"
 )
 
 // createEIP712Domain creates the typed data domain for the given chainID.

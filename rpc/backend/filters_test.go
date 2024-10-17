@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 
 	tmtypes "github.com/cometbft/cometbft/types"
-	"github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/common"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 	"github.com/zeta-chain/ethermint/rpc/backend/mocks"
 	ethrpc "github.com/zeta-chain/ethermint/rpc/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"

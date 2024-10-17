@@ -20,8 +20,8 @@ import (
 	"maps"
 	"sort"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/crypto"
 	"github.com/holiman/uint256"
 )
 

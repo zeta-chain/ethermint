@@ -18,8 +18,8 @@ package filters
 import (
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/common"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 )
 
 // FilterLogs creates a slice of logs matching the given criteria.

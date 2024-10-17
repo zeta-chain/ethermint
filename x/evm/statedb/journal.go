@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"sort"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common"
 	"github.com/holiman/uint256"
 )
 

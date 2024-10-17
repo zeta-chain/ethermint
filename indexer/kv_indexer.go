@@ -27,7 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common"
 	rpctypes "github.com/zeta-chain/ethermint/rpc/types"
 
 	ethermint "github.com/zeta-chain/ethermint/types"

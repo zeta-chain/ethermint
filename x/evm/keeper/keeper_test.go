@@ -38,11 +38,11 @@ import (
 	"github.com/zeta-chain/ethermint/x/evm/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common/hexutil"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/crypto"
+	"github.com/zeta-chain/go-ethereum/params"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"

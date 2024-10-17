@@ -6,9 +6,9 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common/hexutil"
+	"github.com/zeta-chain/go-ethereum/rlp"
 	"github.com/zeta-chain/ethermint/rpc/backend/mocks"
 	rpctypes "github.com/zeta-chain/ethermint/rpc/types"
 	"github.com/zeta-chain/ethermint/tests"

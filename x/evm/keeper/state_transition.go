@@ -29,12 +29,12 @@ import (
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	"github.com/zeta-chain/ethermint/x/evm/types"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/core"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/core/vm"
+	"github.com/zeta-chain/go-ethereum/crypto"
+	"github.com/zeta-chain/go-ethereum/params"
 )
 
 // NewEVM generates a go-ethereum VM from the provided Message fields and the chain parameters

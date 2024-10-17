@@ -21,13 +21,13 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/go-ethereum/common"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/core/vm"
+	"github.com/zeta-chain/go-ethereum/crypto"
 	"github.com/holiman/uint256"
 
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/zeta-chain/go-ethereum/params"
 	"github.com/zeta-chain/ethermint/store/cachemulti"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )

@@ -9,10 +9,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ethereum/go-ethereum/common"
-	ethcons "github.com/ethereum/go-ethereum/consensus"
-	ethcore "github.com/ethereum/go-ethereum/core"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/common"
+	ethcons "github.com/zeta-chain/go-ethereum/consensus"
+	ethcore "github.com/zeta-chain/go-ethereum/core"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 )
 
 func TestChainContextInterface(t *testing.T) {

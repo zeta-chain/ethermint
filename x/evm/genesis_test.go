@@ -1,7 +1,7 @@
 package evm_test
 
 import (
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common"
 	"github.com/holiman/uint256"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

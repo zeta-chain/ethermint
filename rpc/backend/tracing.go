@@ -21,8 +21,8 @@ import (
 
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
 	rpctypes "github.com/zeta-chain/ethermint/rpc/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"

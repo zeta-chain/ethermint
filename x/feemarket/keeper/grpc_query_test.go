@@ -3,7 +3,7 @@ package keeper_test
 import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ethparams "github.com/ethereum/go-ethereum/params"
+	ethparams "github.com/zeta-chain/go-ethereum/params"
 	"github.com/zeta-chain/ethermint/x/feemarket/types"
 )
 

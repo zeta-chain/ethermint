@@ -3,8 +3,8 @@ package types
 import (
 	"math/big"
 
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/params"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/params"
 )
 
 // MakeSigner returns a Signer based on the given chain config and block number.

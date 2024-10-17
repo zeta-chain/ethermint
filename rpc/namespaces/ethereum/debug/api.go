@@ -35,9 +35,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 
 	"github.com/cometbft/cometbft/libs/log"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common/hexutil"
+	"github.com/zeta-chain/go-ethereum/rlp"
 	"github.com/zeta-chain/ethermint/rpc/backend"
 	rpctypes "github.com/zeta-chain/ethermint/rpc/types"
 )

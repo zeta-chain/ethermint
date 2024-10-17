@@ -16,9 +16,9 @@ import (
 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
 	"github.com/zeta-chain/ethermint/tests"
 
-	"github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/go-ethereum/common"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/crypto"
 
 	"github.com/zeta-chain/ethermint/app"
 	"github.com/zeta-chain/ethermint/encoding"

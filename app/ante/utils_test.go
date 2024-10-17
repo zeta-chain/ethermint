@@ -18,8 +18,8 @@ import (
 	"github.com/zeta-chain/ethermint/testutil"
 	utiltx "github.com/zeta-chain/ethermint/testutil/tx"
 
-	"github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/common"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"

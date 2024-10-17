@@ -18,16 +18,16 @@ package eth
 import (
 	"context"
 
-	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+	"github.com/zeta-chain/go-ethereum/signer/core/apitypes"
 
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/zeta-chain/go-ethereum/rpc"
 
 	"github.com/cometbft/cometbft/libs/log"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/common/math"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common/hexutil"
+	"github.com/zeta-chain/go-ethereum/common/math"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 
 	"github.com/zeta-chain/ethermint/rpc/backend"
 

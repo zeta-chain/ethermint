@@ -18,8 +18,8 @@ package statedb
 import (
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/params"
 	"github.com/zeta-chain/ethermint/x/evm/types"
 )
 

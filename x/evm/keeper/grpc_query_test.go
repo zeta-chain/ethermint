@@ -7,12 +7,12 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/crypto"
-	ethlogger "github.com/ethereum/go-ethereum/eth/tracers/logger"
-	ethparams "github.com/ethereum/go-ethereum/params"
+	"github.com/zeta-chain/go-ethereum/common"
+	"github.com/zeta-chain/go-ethereum/common/hexutil"
+	"github.com/zeta-chain/go-ethereum/core/vm"
+	"github.com/zeta-chain/go-ethereum/crypto"
+	ethlogger "github.com/zeta-chain/go-ethereum/eth/tracers/logger"
+	ethparams "github.com/zeta-chain/go-ethereum/params"
 	"github.com/zeta-chain/ethermint/tests"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 

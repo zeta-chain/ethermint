@@ -3,7 +3,7 @@ package types
 import (
 	"math/big"
 
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	ethtypes "github.com/zeta-chain/go-ethereum/core/types"
 )
 
 func (suite *TxDataTestSuite) TestAccessListTxCopy() {
