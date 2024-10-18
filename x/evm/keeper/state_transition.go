@@ -357,10 +357,11 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 	leftoverGas := msg.GasLimit
 
 	// Allow the tracer captures the tx level events, mainly the gas consumption.
-	if tracer != nil {
-		tracer.CaptureTxStart(leftoverGas)
+	vmCfg := evm.Config
+	if vmCfg.Tracer != nil {
+		vmCfg.Tracer.CaptureTxStart(leftoverGas)
 		defer func() {
-			tracer.CaptureTxEnd(leftoverGas)
+			vmCfg.Tracer.CaptureTxEnd(leftoverGas)
 		}()
 	}
 
