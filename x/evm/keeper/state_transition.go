@@ -16,11 +16,11 @@
 package keeper
 
 import (
-	"bytes"
+	"fmt"
 	"math/big"
-	"sort"
 
 	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/holiman/uint256"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -77,37 +77,19 @@ func (k *Keeper) NewEVM(
 	// i.e rules.IsByzantium, rules.IsConstantinople, etc.
 	rules := cfg.ChainConfig.Rules(big.NewInt(ctx.BlockHeight()), cfg.ChainConfig.MergeNetsplitBlock != nil, 1)
 
-	contracts := make(map[common.Address]vm.PrecompiledContract)
-	active := make([]common.Address, 0)
-
-	// Creates the list of **default** precompiled contracts (not stateful) for this set of rules.
-	// contracts hold the list of all contracts, while active holds the list of all active addresses.
-	// i.e create the list of contracts for Berlin.
-	for addr, c := range vm.DefaultPrecompiles(rules) {
-		contracts[addr] = c
-		active = append(active, addr)
-	}
+	statefulPrecompiles := make([]vm.StatefulPrecompiledContract, 0)
 
 	// Add the custom stateful precompiled contracts and their addresses to the list.
 	// Then, mark them as active.
 	for _, fn := range k.customContractFns {
 		c := fn(ctx, rules)
-		addr := c.Address()
-		contracts[addr] = c
-		active = append(active, addr)
+		statefulPrecompiles = append(statefulPrecompiles, c)
 	}
-
-	// Sort the active slice in address ascending order.
-	sort.SliceStable(active, func(i, j int) bool {
-		return bytes.Compare(active[i].Bytes(), active[j].Bytes()) < 0
-	})
 
 	evm := vm.NewEVM(blockCtx, txCtx, stateDB, cfg.ChainConfig, vmConfig)
 
-	// Set the precompiled contracts:
-	// - contracts contains all the precompiled contracts.
-	// - active contains *only* the addresses of the active precompiled contracts.
-	evm.WithPrecompiles(contracts, active)
+	// set precompiled contracts
+	evm.SetStatefulPrecompiles(statefulPrecompiles)
 
 	return evm
 }
@@ -400,17 +382,25 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 	leftoverGas -= intrinsicGas
 
 	rules := cfg.ChainConfig.Rules(big.NewInt(ctx.BlockHeight()), cfg.ChainConfig.MergeNetsplitBlock != nil, uint64(ctx.BlockTime().Unix()))
-	stateDB.Prepare(rules, msg.From, cfg.CoinBase, msg.To, evm.ActivePrecompiles(rules), msg.AccessList)
+	stateDB.Prepare(rules, msg.From, cfg.CoinBase, msg.To, evm.AllPrecompiledAddresses(rules), msg.AccessList)
+
+	if msg.Value == nil {
+		msg.Value = new(big.Int)
+	}
+	valueUint256, isOverflow := uint256.FromBig(msg.Value)
+	if isOverflow {
+		return nil, fmt.Errorf("%v is not a valid uint256", msg.Value)
+	}
 
 	if contractCreation {
 		// take over the nonce management from evm:
 		// - reset sender's nonce to msg.Nonce() before calling evm.
 		// - increase sender's nonce by one no matter the result.
 		stateDB.SetNonce(sender.Address(), msg.Nonce)
-		ret, _, leftoverGas, vmErr = evm.Create(sender, msg.Data, leftoverGas, msg.Value)
+		ret, _, leftoverGas, vmErr = evm.Create(sender, msg.Data, leftoverGas, valueUint256)
 		stateDB.SetNonce(sender.Address(), msg.Nonce+1)
 	} else {
-		ret, leftoverGas, vmErr = evm.Call(sender, *msg.To, msg.Data, leftoverGas, msg.Value)
+		ret, leftoverGas, vmErr = evm.Call(sender, *msg.To, msg.Data, leftoverGas, valueUint256)
 	}
 
 	refundQuotient := params.RefundQuotient

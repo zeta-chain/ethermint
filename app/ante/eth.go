@@ -16,6 +16,7 @@
 package ante
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 
@@ -24,6 +25,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/holiman/uint256"
 
 	ethermint "github.com/zeta-chain/ethermint/types"
 	"github.com/zeta-chain/ethermint/x/evm/keeper"
@@ -93,7 +95,7 @@ func (avd EthAccountVerificationDecorator) AnteHandle(
 				"the sender is not EOA: address %s, codeHash <%s>", fromAddr, acct.CodeHash)
 		}
 
-		if err := keeper.CheckSenderBalance(sdkmath.NewIntFromBigInt(acct.Balance), txData); err != nil {
+		if err := keeper.CheckSenderBalance(sdkmath.NewIntFromBigInt(acct.Balance.ToBig()), txData); err != nil {
 			return ctx, errorsmod.Wrap(err, "failed to check sender balance")
 		}
 	}
@@ -302,9 +304,14 @@ func (ctd CanTransferDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		stateDB := statedb.New(ctx, ctd.evmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(ctx.HeaderHash().Bytes())))
 		evm := ctd.evmKeeper.NewEVM(ctx, coreMsg, cfg, evmtypes.NewNoOpTracer(), stateDB)
 
+		valueU256, isOverflow := uint256.FromBig(coreMsg.Value)
+		if isOverflow {
+			return ctx, fmt.Errorf("%v is not a valid uint256", coreMsg.Value)
+		}
+
 		// check that caller has enough balance to cover asset transfer for **topmost** call
 		// NOTE: here the gas consumed is from the context with the infinite gas meter
-		if coreMsg.Value.Sign() > 0 && !evm.Context.CanTransfer(stateDB, coreMsg.From, coreMsg.Value) {
+		if coreMsg.Value.Sign() > 0 && !evm.Context.CanTransfer(stateDB, coreMsg.From, valueU256) {
 			return ctx, errorsmod.Wrapf(
 				errortypes.ErrInsufficientFunds,
 				"failed to transfer %s from address %s using the EVM block context transfer function",

@@ -4,11 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"math/big"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/holiman/uint256"
 	"github.com/zeta-chain/ethermint/app"
 	"github.com/zeta-chain/ethermint/types"
 
@@ -40,8 +40,8 @@ import (
 var (
 	flagBlockchain string
 
-	rewardBig8  = big.NewInt(8)
-	rewardBig32 = big.NewInt(32)
+	reward8U256  = uint256.NewInt(8)
+	reward32U256 = uint256.NewInt(32)
 )
 
 func init() {
@@ -183,18 +183,19 @@ func accumulateRewards(
 	if config.IsByzantium(header.Number) {
 		blockReward = ethash.ByzantiumBlockReward
 	}
-
 	// accumulate the rewards for the miner and any included uncles
-	reward := new(big.Int).Set(blockReward)
-	r := new(big.Int)
+	reward := new(uint256.Int).Set(blockReward)
+	r := new(uint256.Int)
 
 	for _, uncle := range uncles {
-		r.Add(uncle.Number, rewardBig8)
-		r.Sub(r, header.Number)
+		uncleNumber, _ := uint256.FromBig(uncle.Number)
+		headerNumber, _ := uint256.FromBig(header.Number)
+		r.Add(uncleNumber, reward8U256)
+		r.Sub(r, headerNumber)
 		r.Mul(r, blockReward)
-		r.Div(r, rewardBig8)
+		r.Div(r, reward8U256)
 		vmdb.AddBalance(uncle.Coinbase, r)
-		r.Div(blockReward, rewardBig32)
+		r.Div(blockReward, reward32U256)
 		reward.Add(reward, r)
 	}
 

@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	ethparams "github.com/ethereum/go-ethereum/params"
+	"github.com/holiman/uint256"
 	"github.com/zeta-chain/ethermint/x/evm/keeper"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
@@ -204,9 +205,11 @@ func (suite *KeeperTestSuite) TestCheckSenderBalance() {
 	}
 
 	vmdb := suite.StateDB()
-	vmdb.AddBalance(suite.address, hundredInt.BigInt())
+	hundredU256, isOverflow := uint256.FromBig(hundredInt.BigInt())
+	suite.Require().False(isOverflow)
+	vmdb.AddBalance(suite.address, hundredU256)
 	balance := vmdb.GetBalance(suite.address)
-	suite.Require().Equal(balance, hundredInt.BigInt())
+	suite.Require().Equal(balance.String(), hundredU256.String())
 	err := vmdb.Commit()
 	suite.Require().NoError(err, "Unexpected error while committing to vmdb: %d", err)
 
@@ -239,7 +242,7 @@ func (suite *KeeperTestSuite) TestCheckSenderBalance() {
 
 			acct := suite.app.EvmKeeper.GetAccountOrEmpty(suite.ctx, suite.address)
 			err := keeper.CheckSenderBalance(
-				sdkmath.NewIntFromBigInt(acct.Balance),
+				sdkmath.NewIntFromBigInt(acct.Balance.ToBig()),
 				txData,
 			)
 
@@ -455,17 +458,20 @@ func (suite *KeeperTestSuite) TestVerifyFeeAndDeductTxCostsFromUserBalance() {
 				} else {
 					gasTipCap = tc.gasTipCap
 				}
-				vmdb.AddBalance(suite.address, initBalance.BigInt())
+				initBalanceU256, isOverflow := uint256.FromBig(initBalance.BigInt())
+				suite.Require().False(isOverflow)
+				vmdb.AddBalance(suite.address, initBalanceU256)
 				balance := vmdb.GetBalance(suite.address)
-				suite.Require().Equal(balance, initBalance.BigInt())
+				suite.Require().Equal(balance.String(), initBalanceU256.String())
 			} else {
 				if tc.gasPrice != nil {
 					gasPrice = tc.gasPrice.BigInt()
 				}
-
-				vmdb.AddBalance(suite.address, hundredInt.BigInt())
+				hundredBalanceU256, isOverflow := uint256.FromBig(hundredInt.BigInt())
+				suite.Require().False(isOverflow)
+				vmdb.AddBalance(suite.address, hundredBalanceU256)
 				balance := vmdb.GetBalance(suite.address)
-				suite.Require().Equal(balance, hundredInt.BigInt())
+				suite.Require().Equal(balance.String(), hundredInt.String())
 			}
 			err := vmdb.Commit()
 			suite.Require().NoError(err, "Unexpected error while committing to vmdb: %d", err)

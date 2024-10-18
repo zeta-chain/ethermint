@@ -7,6 +7,7 @@ import (
 
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	"github.com/holiman/uint256"
 
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
@@ -61,7 +62,7 @@ func (suite *StateDBTestSuite) TestAccount() {
 		{"non-exist account", func(db *statedb.StateDB, cms sdk.MultiStore) {
 			suite.Require().Equal(false, db.Exist(address))
 			suite.Require().Equal(true, db.Empty(address))
-			suite.Require().Equal(big.NewInt(0), db.GetBalance(address))
+			suite.Require().Equal(uint256.NewInt(0), db.GetBalance(address))
 			suite.Require().Equal([]byte(nil), db.GetCode(address))
 			suite.Require().Equal(common.Hash{}, db.GetCodeHash(address))
 			suite.Require().Equal(uint64(0), db.GetNonce(address))
@@ -78,7 +79,7 @@ func (suite *StateDBTestSuite) TestAccount() {
 			db = statedb.New(ctx, keeper, txConfig)
 			suite.Require().Equal(true, db.Exist(address))
 			suite.Require().Equal(true, db.Empty(address))
-			suite.Require().Equal(big.NewInt(0), db.GetBalance(address))
+			suite.Require().Equal(uint256.NewInt(0), db.GetBalance(address))
 			suite.Require().Equal([]byte(nil), db.GetCode(address))
 			suite.Require().Equal(common.BytesToHash(emptyCodeHash), db.GetCodeHash(address))
 			suite.Require().Equal(uint64(0), db.GetNonce(address))
@@ -91,7 +92,7 @@ func (suite *StateDBTestSuite) TestAccount() {
 			// create a contract account
 			db.CreateAccount(address)
 			db.SetCode(address, []byte("hello world"))
-			db.AddBalance(address, big.NewInt(100))
+			db.AddBalance(address, uint256.NewInt(100))
 			db.SetState(address, key1, value1)
 			db.SetState(address, key2, value2)
 			codeHash := db.GetCodeHash(address)
@@ -110,7 +111,7 @@ func (suite *StateDBTestSuite) TestAccount() {
 			// check dirty state
 			suite.Require().True(db.HasSelfDestructed(address))
 			// balance is cleared
-			suite.Require().Equal(big.NewInt(0), db.GetBalance(address))
+			suite.Require().Equal(uint256.NewInt(0), db.GetBalance(address))
 			// but code and state are still accessible in dirty state
 			suite.Require().Equal(value1, db.GetState(address, key1))
 			suite.Require().Equal([]byte("hello world"), db.GetCode(address))
@@ -142,7 +143,7 @@ func (suite *StateDBTestSuite) TestAccountOverride() {
 	_, ctx, keeper := setupTestEnv(suite.T())
 	db := statedb.New(ctx, keeper, emptyTxConfig)
 	// test balance carry over when overwritten
-	amount := big.NewInt(1)
+	amount := uint256.NewInt(1)
 
 	// init an EOA account, account overriden only happens on EOA account.
 	db.AddBalance(address, amount)
@@ -184,23 +185,23 @@ func (suite *StateDBTestSuite) TestBalance() {
 	testCases := []struct {
 		name       string
 		malleate   func(*statedb.StateDB, sdk.MultiStore)
-		expBalance *big.Int
+		expBalance *uint256.Int
 	}{
 		{"add balance", func(db *statedb.StateDB, cms sdk.MultiStore) {
-			db.AddBalance(address, big.NewInt(10))
-		}, big.NewInt(10)},
+			db.AddBalance(address, uint256.NewInt(10))
+		}, uint256.NewInt(10)},
 		{"sub balance", func(db *statedb.StateDB, cms sdk.MultiStore) {
-			db.AddBalance(address, big.NewInt(10))
+			db.AddBalance(address, uint256.NewInt(10))
 			// get dirty balance
-			suite.Require().Equal(big.NewInt(10), db.GetBalance(address))
-			db.SubBalance(address, big.NewInt(2))
-		}, big.NewInt(8)},
+			suite.Require().Equal(uint256.NewInt(10), db.GetBalance(address))
+			db.SubBalance(address, uint256.NewInt(2))
+		}, uint256.NewInt(8)},
 		{"add zero balance", func(db *statedb.StateDB, cms sdk.MultiStore) {
-			db.AddBalance(address, big.NewInt(0))
-		}, big.NewInt(0)},
+			db.AddBalance(address, uint256.NewInt(0))
+		}, uint256.NewInt(0)},
 		{"sub zero balance", func(db *statedb.StateDB, cms sdk.MultiStore) {
-			db.SubBalance(address, big.NewInt(0))
-		}, big.NewInt(0)},
+			db.SubBalance(address, uint256.NewInt(0))
+		}, uint256.NewInt(0)},
 	}
 
 	for _, tc := range testCases {
@@ -213,7 +214,7 @@ func (suite *StateDBTestSuite) TestBalance() {
 			suite.Require().Equal(tc.expBalance, db.GetBalance(address))
 			suite.Require().NoError(db.Commit())
 			// check committed balance too
-			suite.Require().Equal(tc.expBalance, keeper.GetBalance(ctx, address))
+			suite.Require().Equal(tc.expBalance.String(), keeper.GetBalance(ctx, address).String())
 		})
 	}
 }
@@ -341,8 +342,8 @@ func (suite *StateDBTestSuite) TestRevertSnapshot() {
 			db.SetNonce(address, 10)
 		}},
 		{"change balance", func(db vm.StateDB) {
-			db.AddBalance(address, big.NewInt(10))
-			db.SubBalance(address, big.NewInt(5))
+			db.AddBalance(address, uint256.NewInt(10))
+			db.SubBalance(address, uint256.NewInt(5))
 		}},
 		{"override account", func(db vm.StateDB) {
 			db.CreateAccount(address)
@@ -379,7 +380,7 @@ func (suite *StateDBTestSuite) TestRevertSnapshot() {
 				// do some arbitrary changes to the storage
 				db := statedb.New(ctx, keeper, emptyTxConfig)
 				db.SetNonce(address, 1)
-				db.AddBalance(address, big.NewInt(100))
+				db.AddBalance(address, uint256.NewInt(100))
 				db.SetCode(address, []byte("hello world"))
 				db.SetState(address, v1, v2)
 				db.SetNonce(address2, 1)
