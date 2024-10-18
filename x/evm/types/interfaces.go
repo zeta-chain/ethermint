@@ -72,7 +72,7 @@ type FeeMarketKeeper interface {
 // EvmHooks event hooks for evm tx processing
 type EvmHooks interface {
 	// Must be called after tx is processed successfully, if return an error, the whole transaction is reverted.
-	PostTxProcessing(ctx sdk.Context, msg core.Message, receipt *ethtypes.Receipt) error
+	PostTxProcessing(ctx sdk.Context, msg *core.Message, receipt *ethtypes.Receipt) error
 }
 
 type (

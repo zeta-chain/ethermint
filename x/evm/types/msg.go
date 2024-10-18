@@ -325,7 +325,7 @@ func (msg MsgEthereumTx) AsTransaction() *ethtypes.Transaction {
 }
 
 // AsMessage creates an Ethereum core.Message from the msg fields
-func (msg MsgEthereumTx) AsMessage(signer ethtypes.Signer, baseFee *big.Int) (core.Message, error) {
+func (msg MsgEthereumTx) AsMessage(signer ethtypes.Signer, baseFee *big.Int) (*core.Message, error) {
 	txData, err := UnpackTxData(msg.Data)
 	if err != nil {
 		return nil, err
@@ -349,17 +349,19 @@ func (msg MsgEthereumTx) AsMessage(signer ethtypes.Signer, baseFee *big.Int) (co
 			return nil, err
 		}
 	}
-	ethMsg := ethtypes.NewMessage(
-		from,
-		txData.GetTo(),
-		txData.GetNonce(),
-		txData.GetValue(),
-		txData.GetGas(),
-		gasPrice, gasFeeCap, gasTipCap,
-		txData.GetData(),
-		txData.GetAccessList(),
-		false,
-	)
+	ethMsg := &core.Message{
+		From:              from,
+		To:                txData.GetTo(),
+		Nonce:             txData.GetNonce(),
+		Value:             txData.GetValue(),
+		GasLimit:          txData.GetGas(),
+		GasPrice:          gasPrice,
+		GasFeeCap:         gasFeeCap,
+		GasTipCap:         gasTipCap,
+		Data:              txData.GetData(),
+		AccessList:        txData.GetAccessList(),
+		SkipAccountChecks: false,
+	}
 
 	return ethMsg, nil
 }
