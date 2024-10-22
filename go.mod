@@ -241,4 +241,4 @@ replace (
 )
 
 // ZetaChain maintained replacements
-replace github.com/ethereum/go-ethereum => github.com/zeta-chain/go-ethereum v1.13.16-0.20241018211122-a3509360e99b
+replace github.com/ethereum/go-ethereum => github.com/zeta-chain/go-ethereum v1.13.16-0.20241022183758-422c6ef93ccc
