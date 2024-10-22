@@ -84,6 +84,7 @@ func (k *Keeper) NewEVM(
 	for _, fn := range k.customContractFns {
 		c := fn(ctx, rules)
 		statefulPrecompiles = append(statefulPrecompiles, c)
+		fmt.Printf("ethermint: got spc %s %#v\n", c.Address(), c)
 	}
 
 	evm := vm.NewEVM(blockCtx, txCtx, stateDB, cfg.ChainConfig, vmConfig)
