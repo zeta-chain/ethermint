@@ -462,7 +462,7 @@ func (s *StateDB) SelfDestruct(addr common.Address) {
 		prevbalance: new(uint256.Int).Set(stateObject.Balance()),
 	})
 	stateObject.markSuicided()
-	stateObject.account.Balance = new(uint256.Int)
+	stateObject.account.Balance = uint256.NewInt(0)
 }
 
 func (s *StateDB) Selfdestruct6780(addr common.Address) {
