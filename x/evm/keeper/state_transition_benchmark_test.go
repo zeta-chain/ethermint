@@ -12,7 +12,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/ethermint/types"
+	ethermint "github.com/zeta-chain/ethermint/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
 
@@ -145,7 +145,7 @@ func newNativeMessage(
 	data []byte,
 	accessList ethtypes.AccessList,
 ) (*core.Message, error) {
-	msgSigner := types.MakeSigner(cfg, big.NewInt(blockHeight))
+	msgSigner := ethermint.MakeSigner(cfg, big.NewInt(blockHeight))
 
 	msg, baseFee, err := newEthMsgTx(nonce, blockHeight, address, cfg, krSigner, ethSigner, txType, data, accessList)
 	if err != nil {

@@ -217,8 +217,8 @@ schema = 3
     version = "v0.4.0"
     hash = "sha256-Ol5bznli6Dh5uXi8GUGsjZo8DzCdF0hqsUMwDNUpxP0="
   [mod."github.com/ethereum/go-ethereum"]
-    version = "v1.13.16-0.20241018211122-a3509360e99b"
-    hash = "sha256-ijnOmKYj308G5WOlFVkMFcQ7AqMdtxrWCadikdpTVkY="
+    version = "v1.13.16-0.20241022183758-422c6ef93ccc"
+    hash = "sha256-Nxipk3PKrfSb/IxBz6r69rPtcnFSDMYj0UWOC0WJibI="
     replaced = "github.com/zeta-chain/go-ethereum"
   [mod."github.com/felixge/httpsnoop"]
     version = "v1.0.4"

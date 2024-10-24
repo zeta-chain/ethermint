@@ -32,7 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	"github.com/zeta-chain/ethermint/types"
+	ethermint "github.com/zeta-chain/ethermint/types"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -182,7 +182,7 @@ func (msg MsgEthereumTx) Type() string { return TypeMsgEthereumTx }
 // checks of a Transaction. If returns an error if validation fails.
 func (msg MsgEthereumTx) ValidateBasic() error {
 	if msg.From != "" {
-		if err := types.ValidateAddress(msg.From); err != nil {
+		if err := ethermint.ValidateAddress(msg.From); err != nil {
 			return errorsmod.Wrap(err, "invalid from address")
 		}
 	}
