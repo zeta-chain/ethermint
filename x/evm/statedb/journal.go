@@ -18,10 +18,10 @@ package statedb
 
 import (
 	"bytes"
-	"math/big"
 	"sort"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/holiman/uint256"
 )
 
 // JournalEntry is a modification entry in the state change journal that can be
@@ -104,13 +104,13 @@ type (
 	suicideChange struct {
 		account     *common.Address
 		prev        bool // whether account had already suicided
-		prevbalance *big.Int
+		prevbalance *uint256.Int
 	}
 
 	// Changes to individual accounts.
 	balanceChange struct {
 		account *common.Address
-		prev    *big.Int
+		prev    *uint256.Int
 	}
 	nonceChange struct {
 		account *common.Address
@@ -138,6 +138,12 @@ type (
 	accessListAddSlotChange struct {
 		address *common.Address
 		slot    *common.Hash
+	}
+
+	// Changes to transient storage
+	transientStorageChange struct {
+		account       *common.Address
+		key, prevalue common.Hash
 	}
 )
 
@@ -206,6 +212,14 @@ func (ch refundChange) Revert(s *StateDB) {
 }
 
 func (ch refundChange) Dirtied() *common.Address {
+	return nil
+}
+
+func (ch transientStorageChange) Revert(s *StateDB) {
+	s.setTransientState(*ch.account, ch.key, ch.prevalue)
+}
+
+func (ch transientStorageChange) Dirtied() *common.Address {
 	return nil
 }
 

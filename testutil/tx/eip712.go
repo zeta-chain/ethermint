@@ -35,7 +35,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 
-	"github.com/zeta-chain/ethermint/types"
+	ethermint "github.com/zeta-chain/ethermint/types"
 
 	"github.com/zeta-chain/ethermint/app"
 )
@@ -91,7 +91,7 @@ func PrepareEIP712CosmosTx(
 ) (client.TxBuilder, error) {
 	txArgs := args.CosmosTxArgs
 
-	pc, err := types.ParseChainID(txArgs.ChainID)
+	pc, err := ethermint.ParseChainID(txArgs.ChainID)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +156,7 @@ func PrepareEIP712CosmosTx(
 func createTypedData(args typedDataArgs, useLegacy bool) (apitypes.TypedData, error) {
 	if useLegacy {
 		registry := codectypes.NewInterfaceRegistry()
-		types.RegisterInterfaces(registry)
+		ethermint.RegisterInterfaces(registry)
 		cryptocodec.RegisterInterfaces(registry)
 		ethermintCodec := codec.NewProtoCodec(registry)
 
@@ -262,7 +262,7 @@ func getTxSignatureV2(args signatureV2Args, useLegacyExtension bool) signing.Sig
 // setBuilderLegacyWeb3Extension creates a legacy ExtensionOptionsWeb3Tx and
 // appends it to the builder options.
 func setBuilderLegacyWeb3Extension(builder authtx.ExtensionOptionsTxBuilder, args legacyWeb3ExtensionArgs) error {
-	option, err := codectypes.NewAnyWithValue(&types.ExtensionOptionsWeb3Tx{
+	option, err := codectypes.NewAnyWithValue(&ethermint.ExtensionOptionsWeb3Tx{
 		FeePayer:         args.feePayer,
 		TypedDataChainID: args.chainID,
 		FeePayerSig:      args.signature,

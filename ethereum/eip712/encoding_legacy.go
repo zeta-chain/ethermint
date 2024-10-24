@@ -26,7 +26,7 @@ import (
 	txTypes "github.com/cosmos/cosmos-sdk/types/tx"
 
 	apitypes "github.com/ethereum/go-ethereum/signer/core/apitypes"
-	"github.com/zeta-chain/ethermint/types"
+	ethermint "github.com/zeta-chain/ethermint/types"
 )
 
 type aminoMessage struct {
@@ -108,7 +108,7 @@ func legacyDecodeAminoSignDoc(signDocBytes []byte) (apitypes.TypedData, error) {
 		FeePayer: feePayer,
 	}
 
-	chainID, err := types.ParseChainID(aminoDoc.ChainID)
+	chainID, err := ethermint.ParseChainID(aminoDoc.ChainID)
 	if err != nil {
 		return apitypes.TypedData{}, errors.New("invalid chain ID passed as argument")
 	}
@@ -178,7 +178,7 @@ func legacyDecodeProtobufSignDoc(signDocBytes []byte) (apitypes.TypedData, error
 
 	signerInfo := authInfo.SignerInfos[0]
 
-	chainID, err := types.ParseChainID(signDoc.ChainId)
+	chainID, err := ethermint.ParseChainID(signDoc.ChainId)
 	if err != nil {
 		return apitypes.TypedData{}, fmt.Errorf("invalid chain ID passed as argument: %w", err)
 	}

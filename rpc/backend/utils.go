@@ -29,7 +29,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/consensus/misc"
+	"github.com/ethereum/go-ethereum/consensus/misc/eip1559"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -134,7 +134,7 @@ func (b *Backend) processBlock(
 	targetOneFeeHistory.BaseFee = blockBaseFee
 	cfg := b.ChainConfig()
 	if cfg.IsLondon(big.NewInt(blockHeight + 1)) {
-		targetOneFeeHistory.NextBaseFee = misc.CalcBaseFee(cfg, b.CurrentHeader())
+		targetOneFeeHistory.NextBaseFee = eip1559.CalcBaseFee(cfg, b.CurrentHeader())
 	} else {
 		targetOneFeeHistory.NextBaseFee = new(big.Int)
 	}
