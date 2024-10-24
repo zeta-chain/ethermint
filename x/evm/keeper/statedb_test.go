@@ -89,9 +89,9 @@ func (suite *KeeperTestSuite) TestAddBalance() {
 			post := vmdb.GetBalance(suite.address)
 
 			if tc.isNoOp {
-				suite.Require().Equal(prev.String(), post.String())
+				suite.Require().True(prev.Eq(post))
 			} else {
-				suite.Require().Equal(new(uint256.Int).Add(prev, tc.amount).String(), post.String())
+				suite.Require().True(new(uint256.Int).Add(prev, tc.amount).Eq(post))
 			}
 		})
 	}
@@ -136,9 +136,9 @@ func (suite *KeeperTestSuite) TestSubBalance() {
 			post := vmdb.GetBalance(suite.address)
 
 			if tc.isNoOp {
-				suite.Require().Equal(prev.String(), post.String())
+				suite.Require().True(prev.Eq(post))
 			} else {
-				suite.Require().Equal(new(uint256.Int).Sub(prev, tc.amount).String(), post.String())
+				suite.Require().True(new(uint256.Int).Sub(prev, tc.amount).Eq(post))
 			}
 		})
 	}
