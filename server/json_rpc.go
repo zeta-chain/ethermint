@@ -46,7 +46,7 @@ func (g *gethLogsToTm) Enabled(_ context.Context, _ slog.Level) bool {
 	return true
 }
 
-func (g *gethLogsToTm) Handle(ctx context.Context, record slog.Record) error {
+func (g *gethLogsToTm) Handle(_ context.Context, record slog.Record) error {
 	attrs := g.attrs
 	record.Attrs(func(attr slog.Attr) bool {
 		attrs = append(attrs, attr)
@@ -72,7 +72,7 @@ func (g *gethLogsToTm) WithAttrs(attrs []slog.Attr) slog.Handler {
 	}
 }
 
-func (g *gethLogsToTm) WithGroup(name string) slog.Handler {
+func (g *gethLogsToTm) WithGroup(_ string) slog.Handler {
 	return g
 }
 

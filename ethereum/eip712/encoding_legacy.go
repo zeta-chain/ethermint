@@ -26,7 +26,6 @@ import (
 	txTypes "github.com/cosmos/cosmos-sdk/types/tx"
 
 	apitypes "github.com/ethereum/go-ethereum/signer/core/apitypes"
-	"github.com/zeta-chain/ethermint/types"
 	ethermint "github.com/zeta-chain/ethermint/types"
 )
 
@@ -109,7 +108,7 @@ func legacyDecodeAminoSignDoc(signDocBytes []byte) (apitypes.TypedData, error) {
 		FeePayer: feePayer,
 	}
 
-	chainID, err := types.ParseChainID(aminoDoc.ChainID)
+	chainID, err := ethermint.ParseChainID(aminoDoc.ChainID)
 	if err != nil {
 		return apitypes.TypedData{}, errors.New("invalid chain ID passed as argument")
 	}

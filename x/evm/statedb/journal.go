@@ -223,14 +223,6 @@ func (ch transientStorageChange) Dirtied() *common.Address {
 	return nil
 }
 
-func (ch transientStorageChange) copy() JournalEntry {
-	return transientStorageChange{
-		account:  ch.account,
-		key:      ch.key,
-		prevalue: ch.prevalue,
-	}
-}
-
 func (ch addLogChange) Revert(s *StateDB) {
 	s.logs = s.logs[:len(s.logs)-1]
 }
