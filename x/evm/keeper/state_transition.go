@@ -17,6 +17,7 @@ package keeper
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -60,10 +61,11 @@ func (k *Keeper) NewEVM(
 		Coinbase:    cfg.CoinBase,
 		GasLimit:    ethermint.BlockGasLimit(ctx),
 		BlockNumber: big.NewInt(ctx.BlockHeight()),
-		Time:        uint64(ctx.BlockHeader().Time.Unix()),
-		Difficulty:  big.NewInt(0), // unused. Only required in PoW context
-		BaseFee:     cfg.BaseFee,
-		Random:      nil, // not supported
+		// #nosec G115 timestamp always positive
+		Time:       uint64(ctx.BlockHeader().Time.Unix()),
+		Difficulty: big.NewInt(0), // unused. Only required in PoW context
+		BaseFee:    cfg.BaseFee,
+		Random:     nil, // not supported
 	}
 
 	txCtx := core.NewEVMTxContext(msg)
@@ -382,6 +384,7 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 	}
 	leftoverGas -= intrinsicGas
 
+	// #nosec G115 timestamp always positive
 	rules := cfg.ChainConfig.Rules(big.NewInt(ctx.BlockHeight()), cfg.ChainConfig.MergeNetsplitBlock != nil, uint64(ctx.BlockTime().Unix()))
 	stateDB.Prepare(rules, msg.From, cfg.CoinBase, msg.To, evm.AllPrecompiledAddresses(rules), msg.AccessList)
 
@@ -432,9 +435,14 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 		}
 	}
 
+	if msg.GasLimit > math.MaxInt64 {
+		return nil, errorsmod.Wrapf(types.ErrGasOverflow, "gas limit exceeds max int64 (%d)", math.MaxInt64)
+	}
+
 	// calculate a minimum amount of gas to be charged to sender if GasLimit
 	// is considerably higher than GasUsed to stay more aligned with Tendermint gas mechanics
 	// for more info https://github.com/evmos/ethermint/issues/1085
+	// #nosec G115 msg.GasLimit range checked
 	gasLimit := sdk.NewDec(int64(msg.GasLimit))
 	minGasMultiplier := k.GetMinGasMultiplier(ctx)
 	minimumGasUsed := gasLimit.Mul(minGasMultiplier)
@@ -443,6 +451,7 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 		return nil, errorsmod.Wrapf(types.ErrGasOverflow, "message gas limit < leftover gas (%d < %d)", msg.GasLimit, leftoverGas)
 	}
 
+	// #nosec G115 temporaryGasUsed always in range
 	gasUsed := sdk.MaxDec(minimumGasUsed, sdk.NewDec(int64(temporaryGasUsed))).TruncateInt().Uint64()
 	// reset leftoverGas, to be used by the tracer
 	leftoverGas = msg.GasLimit - gasUsed

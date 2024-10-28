@@ -59,8 +59,9 @@ func LegacyWrapTxToTypedData(
 	}
 
 	domain := apitypes.TypedDataDomain{
-		Name:              "Cosmos Web3",
-		Version:           "1.0.0",
+		Name:    "Cosmos Web3",
+		Version: "1.0.0",
+		// #nosec G115 chainID always positive
 		ChainId:           math.NewHexOrDecimal256(int64(chainID)),
 		VerifyingContract: "cosmos",
 		Salt:              "0",

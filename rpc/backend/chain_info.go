@@ -173,9 +173,11 @@ func (b *Backend) FeeHistory(
 		if err != nil {
 			return nil, err
 		}
+		// #nosec G115 block number always in range
 		blockEnd = int64(blockNumber)
 	}
 
+	// #nosec G115 not security relevant
 	blocks := int64(userBlockCount)
 	maxBlockCount := int64(b.cfg.JSONRPC.FeeHistoryCap)
 	if blocks > maxBlockCount {
@@ -204,6 +206,7 @@ func (b *Backend) FeeHistory(
 
 	// fetch block
 	for blockID := blockStart; blockID <= blockEnd; blockID++ {
+		// #nosec G115 out of range would just result in confusing output
 		index := int32(blockID - blockStart)
 		// tendermint block
 		tendermintblock, err := b.TendermintBlockByNumber(rpctypes.BlockNumber(blockID))

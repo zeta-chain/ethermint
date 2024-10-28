@@ -66,7 +66,9 @@ func (k *Keeper) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) {
 	// this will be keep BaseFee protected from un-penalized manipulation
 	// more info here https://github.com/zeta-chain/ethermint/pull/1105#discussion_r888798925
 	minGasMultiplier := k.GetParams(ctx).MinGasMultiplier
+	// #nosec G115 gasWanted always in range
 	limitedGasWanted := sdk.NewDec(int64(gasWanted)).Mul(minGasMultiplier)
+	// #nosec G115 gasUsed always in range
 	gasWanted = sdk.MaxDec(limitedGasWanted, sdk.NewDec(int64(gasUsed))).TruncateInt().Uint64()
 	k.SetBlockGasWanted(ctx, gasWanted)
 

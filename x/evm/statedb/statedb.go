@@ -81,12 +81,6 @@ type StateDB struct {
 
 	// events emitted by native action
 	nativeEvents sdk.Events
-
-	// handle balances natively
-	//nolint
-	evmDenom string
-	//nolint
-	err error
 }
 
 // New creates a new state from a given trie.
@@ -94,7 +88,7 @@ func New(ctx sdk.Context, keeper Keeper, txConfig TxConfig) *StateDB {
 	return NewWithParams(ctx, keeper, txConfig, keeper.GetParams(ctx))
 }
 
-func NewWithParams(ctx sdk.Context, keeper Keeper, txConfig TxConfig, params evmtypes.Params) *StateDB {
+func NewWithParams(ctx sdk.Context, keeper Keeper, txConfig TxConfig, _ evmtypes.Params) *StateDB {
 	db := &StateDB{
 		keeper:           keeper,
 		stateObjects:     make(map[common.Address]*stateObject),
@@ -467,7 +461,14 @@ func (s *StateDB) Selfdestruct6780(addr common.Address) {
 	s.SelfDestruct(addr)
 }
 
-func (s *StateDB) Prepare(rules params.Rules, sender, coinbase common.Address, dest *common.Address, precompiles []common.Address, txAccesses ethtypes.AccessList) {
+func (s *StateDB) Prepare(
+	rules params.Rules,
+	sender,
+	_ common.Address,
+	dest *common.Address,
+	precompiles []common.Address,
+	txAccesses ethtypes.AccessList,
+) {
 	if rules.IsBerlin {
 		// Clear out any leftover from previous executions
 		s.accessList = newAccessList()

@@ -69,6 +69,7 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 		msgs := b.EthMsgsFromTendermintBlock(block, blockRes)
 		for i := range msgs {
 			if msgs[i].Hash == hexTx {
+				// #nosec G115 block size limit prevents out of range
 				res.EthTxIndex = int32(i)
 				break
 			}
@@ -88,7 +89,9 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 	return rpctypes.NewTransactionFromMsg(
 		msg,
 		common.BytesToHash(block.BlockID.Hash.Bytes()),
+		// #nosec G115 height always in range
 		uint64(res.Height),
+		// #nosec G115 index always positive
 		uint64(res.EthTxIndex),
 		baseFee,
 		b.chainID,
@@ -179,6 +182,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		return nil, nil
 	}
 	for _, txResult := range blockRes.TxsResults[0:res.TxIndex] {
+		// #nosec G115 txResult.GasUsed always positive
 		cumulativeGasUsed += uint64(txResult.GasUsed)
 	}
 	cumulativeGasUsed += res.CumulativeGasUsed
@@ -210,6 +214,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		msgs := b.EthMsgsFromTendermintBlock(resBlock, blockRes)
 		for i := range msgs {
 			if msgs[i].Hash == hexTx {
+				// #nosec G115 block size limit prevents out of range
 				res.EthTxIndex = int32(i)
 				break
 			}
@@ -235,8 +240,10 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 
 		// Inclusion information: These fields provide information about the inclusion of the
 		// transaction corresponding to this receipt.
-		"blockHash":        common.BytesToHash(resBlock.Block.Header.Hash()).Hex(),
-		"blockNumber":      hexutil.Uint64(res.Height),
+		"blockHash": common.BytesToHash(resBlock.Block.Header.Hash()).Hex(),
+		// #nosec G115 height always positive
+		"blockNumber": hexutil.Uint64(res.Height),
+		// #nosec G115 index always positive
 		"transactionIndex": hexutil.Uint64(res.EthTxIndex),
 
 		// sender and receiver (contract or EOA) addreses
@@ -330,6 +337,7 @@ func (b *Backend) GetTxByEthHash(hash common.Hash) (*ethermint.TxResult, error) 
 // GetTxByTxIndex uses `/tx_query` to find transaction by tx index of valid ethereum txs
 func (b *Backend) GetTxByTxIndex(height int64, index uint) (*ethermint.TxResult, error) {
 	if b.indexer != nil {
+		// #nosec G115 not security relevant
 		return b.indexer.GetByBlockAndIndex(height, int32(index))
 	}
 
@@ -339,6 +347,7 @@ func (b *Backend) GetTxByTxIndex(height int64, index uint) (*ethermint.TxResult,
 		evmtypes.AttributeKeyTxIndex, index,
 	)
 	txResult, err := b.queryTendermintTxIndexer(query, func(txs *rpctypes.ParsedTxs) *rpctypes.ParsedTx {
+		// #nosec G115 out of range would just result in confusing output
 		return txs.GetTxByTxIndex(int(index))
 	})
 	if err != nil {
@@ -398,6 +407,7 @@ func (b *Backend) GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, i
 			return nil, nil
 		}
 	} else {
+		// #nosec G115 out of range would just result in confusing output
 		i := int(idx)
 		ethMsgs := b.EthMsgsFromTendermintBlock(block, blockRes)
 		if i >= len(ethMsgs) {
@@ -417,6 +427,7 @@ func (b *Backend) GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, i
 	return rpctypes.NewTransactionFromMsg(
 		msg,
 		common.BytesToHash(block.Block.Hash()),
+		// #nosec G115 block height always in range
 		uint64(block.Block.Height),
 		uint64(idx),
 		baseFee,

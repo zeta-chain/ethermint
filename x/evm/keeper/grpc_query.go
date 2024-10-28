@@ -306,6 +306,7 @@ func (k Keeper) EstimateGas(c context.Context, req *types.EthCallRequest) (*type
 			return nil, err
 		}
 		if params != nil && params.Block != nil && params.Block.MaxGas > 0 {
+			// #nosec G115 MaxGas range checked
 			hi = uint64(params.Block.MaxGas)
 		} else {
 			hi = req.GasCap
@@ -429,6 +430,7 @@ func (k Keeper) TraceTx(c context.Context, req *types.QueryTraceTxRequest) (*typ
 			msg = unsignedTxAsMessage(common.HexToAddress(req.Msg.From), ethTx, cfg.BaseFee)
 		}
 		txConfig.TxHash = ethTx.Hash()
+		// #nosec G115 block size limit prevents out of range
 		txConfig.TxIndex = uint(i)
 		rsp, err := k.ApplyMessageWithConfig(ctx, msg, types.NewNoOpTracer(), true, cfg, txConfig)
 		if err != nil {
@@ -514,6 +516,7 @@ func (k Keeper) TraceBlock(c context.Context, req *types.QueryTraceBlockRequest)
 		result := types.TxTraceResult{}
 		ethTx := tx.AsTransaction()
 		txConfig.TxHash = ethTx.Hash()
+		// #nosec G115 block size limit prevents out of range
 		txConfig.TxIndex = uint(i)
 		traceResult, logIndex, err := k.traceTx(
 			ctx, cfg, txConfig, common.HexToAddress(tx.From),
@@ -589,8 +592,9 @@ func (k *Keeper) traceTx(
 
 	tCtx := &tracers.Context{
 		BlockHash: txConfig.BlockHash,
-		TxIndex:   int(txConfig.TxIndex),
-		TxHash:    txConfig.TxHash,
+		// #nosec G115 TxIndex always positive
+		TxIndex: int(txConfig.TxIndex),
+		TxHash:  txConfig.TxHash,
 	}
 
 	if traceConfig.Tracer != "" {
