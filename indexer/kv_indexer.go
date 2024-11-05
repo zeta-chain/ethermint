@@ -97,8 +97,10 @@ func (kv *KVIndexer) IndexBlock(block *tmtypes.Block, txResults []*abci.Response
 			txHash := common.HexToHash(ethMsg.Hash)
 
 			txResult := ethermint.TxResult{
-				Height:     height,
-				TxIndex:    uint32(txIndex),
+				Height: height,
+				// #nosec G115 index always positive
+				TxIndex: uint32(txIndex),
+				// #nosec G115 index always positive
 				MsgIndex:   uint32(msgIndex),
 				EthTxIndex: ethTxIndex,
 			}
@@ -180,7 +182,9 @@ func TxHashKey(hash common.Hash) []byte {
 
 // TxIndexKey returns the key for db entry: `(block number, tx index) -> tx hash`
 func TxIndexKey(blockNumber int64, txIndex int32) []byte {
+	// #nosec G115 block number always positive
 	bz1 := sdk.Uint64ToBigEndian(uint64(blockNumber))
+	// #nosec G115 index always positive
 	bz2 := sdk.Uint64ToBigEndian(uint64(txIndex))
 	return append(append([]byte{KeyPrefixTxIndex}, bz1...), bz2...)
 }
@@ -241,5 +245,6 @@ func parseBlockNumberFromKey(key []byte) (int64, error) {
 		return 0, fmt.Errorf("wrong tx index key length, expect: %d, got: %d", TxIndexKeyLength, len(key))
 	}
 
+	// #nosec G115 block number always in range
 	return int64(sdk.BigEndianToUint64(key[1:9])), nil
 }

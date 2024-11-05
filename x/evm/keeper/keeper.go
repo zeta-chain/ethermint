@@ -31,6 +31,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/holiman/uint256"
 
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	ethermint "github.com/zeta-chain/ethermint/types"
@@ -39,7 +40,7 @@ import (
 )
 
 // CustomContractFn defines a custom precompiled contract generator with ctx, rules and returns a precompiled contract.
-type CustomContractFn func(sdk.Context, params.Rules) vm.PrecompiledContract
+type CustomContractFn func(sdk.Context, params.Rules) vm.StatefulPrecompiledContract
 
 // EventConverter type represents a function that parses a list of EventAttributes to a list of Ethereum Log objects.
 type EventConverter = func([]abci.EventAttribute) []*ethtypes.Log
@@ -185,6 +186,7 @@ func (k Keeper) GetAuthority() sdk.AccAddress {
 // GetBlockBloomTransient returns bloom bytes for the current block height
 func (k Keeper) GetBlockBloomTransient(ctx sdk.Context) *big.Int {
 	store := prefix.NewStore(ctx.TransientStore(k.transientKey), types.KeyPrefixTransientBloom)
+	// #nosec G115 block height always positive
 	heightBz := sdk.Uint64ToBigEndian(uint64(ctx.BlockHeight()))
 	bz := store.Get(heightBz)
 	if len(bz) == 0 {
@@ -198,6 +200,7 @@ func (k Keeper) GetBlockBloomTransient(ctx sdk.Context) *big.Int {
 // every block.
 func (k Keeper) SetBlockBloomTransient(ctx sdk.Context, bloom *big.Int) {
 	store := prefix.NewStore(ctx.TransientStore(k.transientKey), types.KeyPrefixTransientBloom)
+	// #nosec G115 block height always positive
 	heightBz := sdk.Uint64ToBigEndian(uint64(ctx.BlockHeight()))
 	store.Set(heightBz, bloom.Bytes())
 }
@@ -277,7 +280,7 @@ func (k *Keeper) SetHooks(eh types.EvmHooks) *Keeper {
 }
 
 // PostTxProcessing delegate the call to the hooks. If no hook has been registered, this function returns with a `nil` error
-func (k *Keeper) PostTxProcessing(ctx sdk.Context, msg core.Message, receipt *ethtypes.Receipt) error {
+func (k *Keeper) PostTxProcessing(ctx sdk.Context, msg *core.Message, receipt *ethtypes.Receipt) error {
 	if k.hooks == nil {
 		return nil
 	}
@@ -285,7 +288,7 @@ func (k *Keeper) PostTxProcessing(ctx sdk.Context, msg core.Message, receipt *et
 }
 
 // Tracer return a default vm.Tracer based on current keeper state
-func (k Keeper) Tracer(ctx sdk.Context, msg core.Message, ethCfg *params.ChainConfig) vm.EVMLogger {
+func (k Keeper) Tracer(ctx sdk.Context, msg *core.Message, ethCfg *params.ChainConfig) vm.EVMLogger {
 	return NewTracer(k.tracer, msg, ethCfg, ctx.BlockHeight())
 }
 
@@ -319,7 +322,7 @@ func (k *Keeper) GetAccountOrEmpty(ctx sdk.Context, addr common.Address) statedb
 
 	// empty account
 	return statedb.Account{
-		Balance:  new(big.Int),
+		Balance:  new(uint256.Int),
 		CodeHash: types.EmptyCodeHash,
 	}
 }

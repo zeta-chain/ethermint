@@ -120,6 +120,7 @@ func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.FeeTx) (sdk.Coi
 
 		// Determine the required fees by multiplying each required minimum gas
 		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
+		// #nosec G115 always in range
 		glDec := sdk.NewDec(int64(gas))
 
 		for i, gp := range minGasPrices {
@@ -132,6 +133,7 @@ func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.FeeTx) (sdk.Coi
 		}
 	}
 
+	// #nosec G115 always in range
 	priority := getTxPriority(feeCoins, int64(gas))
 	return feeCoins, priority, nil
 }

@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/holiman/uint256"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -498,7 +499,7 @@ func (suite *KeeperTestSuite) TestGetAccountStorage() {
 
 func (suite *KeeperTestSuite) TestGetAccountOrEmpty() {
 	empty := statedb.Account{
-		Balance:  new(big.Int),
+		Balance:  new(uint256.Int),
 		CodeHash: types.EmptyCodeHash,
 	}
 

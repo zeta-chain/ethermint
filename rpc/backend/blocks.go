@@ -179,6 +179,7 @@ func (b *Backend) TendermintBlockByNumber(blockNum rpctypes.BlockNumber) (*tmrpc
 		if err != nil {
 			return nil, err
 		}
+		// #nosec G115 always in range
 		height = int64(n)
 	}
 	resBlock, err := b.clientCtx.Client.Block(b.ctx, &height)
@@ -401,7 +402,9 @@ func (b *Backend) RPCBlockFromTendermintBlock(
 		rpcTx, err := rpctypes.NewRPCTransaction(
 			tx,
 			common.BytesToHash(block.Hash()),
+			// #nosec G115 block height always positive
 			uint64(block.Height),
+			// #nosec G115 txIndex always positive
 			uint64(txIndex),
 			baseFee,
 			b.chainID,
@@ -457,6 +460,7 @@ func (b *Backend) RPCBlockFromTendermintBlock(
 			// block gas limit has exceeded, other txs must have failed with same reason.
 			break
 		}
+		// #nosec G115 gas used always positive
 		gasUsed += uint64(txsResult.GetGasUsed())
 	}
 

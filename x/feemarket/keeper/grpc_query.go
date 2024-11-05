@@ -57,6 +57,7 @@ func (k Keeper) BlockGas(c context.Context, _ *types.QueryBlockGasRequest) (*typ
 	gas := k.GetBlockGasWanted(ctx)
 
 	return &types.QueryBlockGasResponse{
+		// #nosec G115 always in range
 		Gas: int64(gas),
 	}, nil
 }

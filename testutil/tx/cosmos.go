@@ -67,6 +67,7 @@ func PrepareCosmosTx(
 
 	var fees sdk.Coins
 	if args.GasPrice != nil {
+		// #nosec G115 always in range
 		fees = sdk.Coins{{Denom: evmtypes.DefaultEVMDenom, Amount: args.GasPrice.MulRaw(int64(args.Gas))}}
 	} else {
 		fees = sdk.Coins{DefaultFee}

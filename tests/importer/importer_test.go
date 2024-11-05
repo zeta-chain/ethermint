@@ -4,12 +4,13 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"math/big"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/holiman/uint256"
 	"github.com/zeta-chain/ethermint/app"
+	"github.com/zeta-chain/ethermint/types"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -28,7 +29,7 @@ import (
 	ethparams "github.com/ethereum/go-ethereum/params"
 	ethrlp "github.com/ethereum/go-ethereum/rlp"
 
-	"github.com/cometbft/cometbft/abci/types"
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmversion "github.com/cometbft/cometbft/proto/tendermint/version"
@@ -39,8 +40,8 @@ import (
 var (
 	flagBlockchain string
 
-	rewardBig8  = big.NewInt(8)
-	rewardBig32 = big.NewInt(32)
+	reward8U256  = uint256.NewInt(8)
+	reward32U256 = uint256.NewInt(32)
 )
 
 func init() {
@@ -135,7 +136,7 @@ func (suite *ImporterTestSuite) TestImportBlocks() {
 		tmheader := suite.ctx.BlockHeader()
 		// fix due to that begin block can't have height 0
 		tmheader.Height = int64(block.NumberU64()) + 1
-		suite.app.BeginBlock(types.RequestBeginBlock{
+		suite.app.BeginBlock(abcitypes.RequestBeginBlock{
 			Header: tmheader,
 		})
 		ctx := suite.app.NewContext(false, tmheader)
@@ -159,7 +160,7 @@ func (suite *ImporterTestSuite) TestImportBlocks() {
 		accumulateRewards(chainConfig, vmdb, header, block.Uncles())
 
 		// simulate BaseApp EndBlocker commitment
-		endBR := types.RequestEndBlock{Height: tmheader.Height}
+		endBR := abcitypes.RequestEndBlock{Height: tmheader.Height}
 		suite.app.EndBlocker(ctx, endBR)
 		suite.app.Commit()
 
@@ -182,18 +183,19 @@ func accumulateRewards(
 	if config.IsByzantium(header.Number) {
 		blockReward = ethash.ByzantiumBlockReward
 	}
-
 	// accumulate the rewards for the miner and any included uncles
-	reward := new(big.Int).Set(blockReward)
-	r := new(big.Int)
+	reward := new(uint256.Int).Set(blockReward)
+	r := new(uint256.Int)
 
 	for _, uncle := range uncles {
-		r.Add(uncle.Number, rewardBig8)
-		r.Sub(r, header.Number)
+		uncleNumber, _ := uint256.FromBig(uncle.Number)
+		headerNumber, _ := uint256.FromBig(header.Number)
+		r.Add(uncleNumber, reward8U256)
+		r.Sub(r, headerNumber)
 		r.Mul(r, blockReward)
-		r.Div(r, rewardBig8)
+		r.Div(r, reward8U256)
 		vmdb.AddBalance(uncle.Coinbase, r)
-		r.Div(blockReward, rewardBig32)
+		r.Div(blockReward, reward32U256)
 		reward.Add(reward, r)
 	}
 
@@ -229,7 +231,7 @@ func applyTransaction(
 	gp *ethcore.GasPool, evmKeeper *evmkeeper.Keeper, vmdb *statedb.StateDB, header *ethtypes.Header,
 	tx *ethtypes.Transaction, usedGas *uint64, cfg ethvm.Config,
 ) (*ethtypes.Receipt, uint64, error) {
-	msg, err := tx.AsMessage(ethtypes.MakeSigner(config, header.Number), sdk.ZeroInt().BigInt())
+	msg, err := ethcore.TransactionToMessage(tx, types.MakeSigner(config, header.Number), sdk.ZeroInt().BigInt())
 	if err != nil {
 		return nil, 0, err
 	}
@@ -259,7 +261,7 @@ func applyTransaction(
 	receipt.GasUsed = execResult.UsedGas
 
 	// if the transaction created a contract, store the creation address in the receipt.
-	if msg.To() == nil {
+	if msg.To == nil {
 		receipt.ContractAddress = crypto.CreateAddress(vmenv.TxContext.Origin, tx.Nonce())
 	}
 

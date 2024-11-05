@@ -17,7 +17,6 @@ package statedb
 
 import (
 	"fmt"
-	"math/big"
 	"sort"
 
 	errorsmod "cosmossdk.io/errors"
@@ -26,7 +25,9 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/holiman/uint256"
 
+	"github.com/ethereum/go-ethereum/params"
 	"github.com/zeta-chain/ethermint/store/cachemulti"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
@@ -76,17 +77,10 @@ type StateDB struct {
 	accessList *accessList
 
 	// Transient storage
-	//nolint
 	transientStorage transientStorage
 
 	// events emitted by native action
 	nativeEvents sdk.Events
-
-	// handle balances natively
-	//nolint
-	evmDenom string
-	//nolint
-	err error
 }
 
 // New creates a new state from a given trie.
@@ -94,13 +88,13 @@ func New(ctx sdk.Context, keeper Keeper, txConfig TxConfig) *StateDB {
 	return NewWithParams(ctx, keeper, txConfig, keeper.GetParams(ctx))
 }
 
-//nolint
-func NewWithParams(ctx sdk.Context, keeper Keeper, txConfig TxConfig, params evmtypes.Params) *StateDB {
+func NewWithParams(ctx sdk.Context, keeper Keeper, txConfig TxConfig, _ evmtypes.Params) *StateDB {
 	db := &StateDB{
-		keeper:       keeper,
-		stateObjects: make(map[common.Address]*stateObject),
-		journal:      newJournal(),
-		accessList:   newAccessList(),
+		keeper:           keeper,
+		stateObjects:     make(map[common.Address]*stateObject),
+		journal:          newJournal(),
+		accessList:       newAccessList(),
+		transientStorage: newTransientStorage(),
 
 		txConfig: txConfig,
 
@@ -173,12 +167,12 @@ func (s *StateDB) Empty(addr common.Address) bool {
 }
 
 // GetBalance retrieves the balance from the given address or 0 if object not found
-func (s *StateDB) GetBalance(addr common.Address) *big.Int {
+func (s *StateDB) GetBalance(addr common.Address) *uint256.Int {
 	stateObject := s.getStateObject(addr)
 	if stateObject != nil {
 		return stateObject.Balance()
 	}
-	return common.Big0
+	return common.U2560
 }
 
 // GetNonce returns the nonce of account, 0 if not exists.
@@ -242,7 +236,7 @@ func (s *StateDB) GetRefund() uint64 {
 }
 
 // HasSuicided returns if the contract is suicided in current transaction.
-func (s *StateDB) HasSuicided(addr common.Address) bool {
+func (s *StateDB) HasSelfDestructed(addr common.Address) bool {
 	stateObject := s.getStateObject(addr)
 	if stateObject != nil {
 		return stateObject.suicided
@@ -378,7 +372,7 @@ func (s *StateDB) CacheContext() sdk.Context {
  */
 
 // AddBalance adds amount to the account associated with addr.
-func (s *StateDB) AddBalance(addr common.Address, amount *big.Int) {
+func (s *StateDB) AddBalance(addr common.Address, amount *uint256.Int) {
 	stateObject := s.getOrNewStateObject(addr)
 	if stateObject != nil {
 		stateObject.AddBalance(amount)
@@ -386,7 +380,7 @@ func (s *StateDB) AddBalance(addr common.Address, amount *big.Int) {
 }
 
 // SubBalance subtracts amount from the account associated with addr.
-func (s *StateDB) SubBalance(addr common.Address, amount *big.Int) {
+func (s *StateDB) SubBalance(addr common.Address, amount *uint256.Int) {
 	stateObject := s.getOrNewStateObject(addr)
 	if stateObject != nil {
 		stateObject.SubBalance(amount)
@@ -417,25 +411,85 @@ func (s *StateDB) SetState(addr common.Address, key, value common.Hash) {
 	}
 }
 
-// Suicide marks the given account as suicided.
+// SetTransientState sets transient storage for a given account. It
+// adds the change to the journal so that it can be rolled back
+// to its previous value if there is a revert.
+func (s *StateDB) SetTransientState(addr common.Address, key, value common.Hash) {
+	prev := s.GetTransientState(addr, key)
+	if prev == value {
+		return
+	}
+	s.journal.append(transientStorageChange{
+		account:  &addr,
+		key:      key,
+		prevalue: prev,
+	})
+	s.setTransientState(addr, key, value)
+}
+
+// setTransientState is a lower level setter for transient storage. It
+// is called during a revert to prevent modifications to the journal.
+func (s *StateDB) setTransientState(addr common.Address, key, value common.Hash) {
+	s.transientStorage.Set(addr, key, value)
+}
+
+// GetTransientState gets transient storage for a given account.
+func (s *StateDB) GetTransientState(addr common.Address, key common.Hash) common.Hash {
+	return s.transientStorage.Get(addr, key)
+}
+
+// SelfDestruct marks the given account as suicided.
 // This clears the account balance.
 //
 // The account's state object is still available until the state is committed,
-// getStateObject will return a non-nil account after Suicide.
-func (s *StateDB) Suicide(addr common.Address) bool {
+// getStateObject will return a non-nil account after SelfDestruct.
+func (s *StateDB) SelfDestruct(addr common.Address) {
 	stateObject := s.getStateObject(addr)
 	if stateObject == nil {
-		return false
+		return
 	}
 	s.journal.append(suicideChange{
 		account:     &addr,
 		prev:        stateObject.suicided,
-		prevbalance: new(big.Int).Set(stateObject.Balance()),
+		prevbalance: new(uint256.Int).Set(stateObject.Balance()),
 	})
 	stateObject.markSuicided()
-	stateObject.account.Balance = new(big.Int)
+	stateObject.account.Balance = uint256.NewInt(0)
+}
 
-	return true
+func (s *StateDB) Selfdestruct6780(addr common.Address) {
+	s.SelfDestruct(addr)
+}
+
+func (s *StateDB) Prepare(
+	rules params.Rules,
+	sender,
+	_ common.Address,
+	dest *common.Address,
+	precompiles []common.Address,
+	txAccesses ethtypes.AccessList,
+) {
+	if rules.IsBerlin {
+		// Clear out any leftover from previous executions
+		s.accessList = newAccessList()
+
+		s.AddAddressToAccessList(sender)
+		if dest != nil {
+			s.AddAddressToAccessList(*dest)
+			// If it's a create-tx, the destination will be added inside evm.create
+		}
+		for _, addr := range precompiles {
+			s.AddAddressToAccessList(addr)
+		}
+		for _, el := range txAccesses {
+			s.AddAddressToAccessList(el.Address)
+			for _, key := range el.StorageKeys {
+				s.AddSlotToAccessList(el.Address, key)
+			}
+		}
+	}
+	// Reset transient storage at the beginning of transaction execution
+	s.transientStorage = newTransientStorage()
 }
 
 // PrepareAccessList handles the preparatory steps for executing a state transition with

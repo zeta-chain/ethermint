@@ -3,6 +3,7 @@ package ante_test
 import (
 	"math/big"
 
+	"github.com/holiman/uint256"
 	"github.com/zeta-chain/ethermint/tests"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
@@ -17,7 +18,7 @@ func (suite AnteTestSuite) TestSignatures() {
 
 	acc := statedb.NewEmptyAccount()
 	acc.Nonce = 1
-	acc.Balance = big.NewInt(10000000000)
+	acc.Balance = uint256.NewInt(10000000000)
 
 	suite.app.EvmKeeper.SetAccount(suite.ctx, addr, *acc)
 	msgEthereumTx := evmtypes.NewTx(suite.app.EvmKeeper.ChainID(), 1, &to, big.NewInt(10), 100000, big.NewInt(1), nil, nil, nil, nil)
