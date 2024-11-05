@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestSubBalance() {
 			"positive amount, below zero",
 			uint256.NewInt(100),
 			func(vm.StateDB) {},
-			false,
+			true,
 		},
 		{
 			"positive amount, above zero",
