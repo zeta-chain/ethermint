@@ -128,7 +128,13 @@ func (s *stateObject) SubBalance(amount *uint256.Int) {
 	if amount.Sign() == 0 {
 		return
 	}
-	s.SetBalance(new(uint256.Int).Sub(s.Balance(), amount))
+	// the underflow condition should be checked at higher levels, but
+	// we will guard against it anyway to be safe
+	newBalance, isUnderflow := new(uint256.Int).SubOverflow(s.Balance(), amount)
+	if isUnderflow {
+		return
+	}
+	s.SetBalance(newBalance)
 }
 
 // SetBalance update account balance.

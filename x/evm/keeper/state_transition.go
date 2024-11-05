@@ -388,12 +388,13 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 	rules := cfg.ChainConfig.Rules(big.NewInt(ctx.BlockHeight()), cfg.ChainConfig.MergeNetsplitBlock != nil, uint64(ctx.BlockTime().Unix()))
 	stateDB.Prepare(rules, msg.From, cfg.CoinBase, msg.To, evm.AllPrecompiledAddresses(rules), msg.AccessList)
 
+	value := msg.Value
 	if msg.Value == nil {
-		msg.Value = new(big.Int)
+		value = new(big.Int)
 	}
-	valueUint256, isOverflow := uint256.FromBig(msg.Value)
+	valueUint256, isOverflow := uint256.FromBig(value)
 	if isOverflow {
-		return nil, fmt.Errorf("%v is not a valid uint256", msg.Value)
+		return nil, fmt.Errorf("%v is not a valid uint256", value)
 	}
 
 	if contractCreation {
