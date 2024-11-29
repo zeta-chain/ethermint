@@ -33,7 +33,7 @@ require (
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
-	github.com/status-im/keycard-go v0.2.0
+	github.com/status-im/keycard-go v0.3.3
 	github.com/stretchr/testify v1.9.0
 	github.com/tidwall/btree v1.6.0
 	github.com/tidwall/gjson v1.14.4
