@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
-	"github.com/evmos/ethermint/store/cachekv/internal"
+	"github.com/zeta-chain/ethermint/store/cachekv/internal"
 )
 
 // Store wraps an in-memory cache around an underlying types.KVStore.

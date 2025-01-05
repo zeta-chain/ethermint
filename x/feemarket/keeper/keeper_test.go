@@ -8,8 +8,8 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/evmos/ethermint/testutil"
 	"github.com/stretchr/testify/suite"
+	"github.com/zeta-chain/ethermint/testutil"
 )
 
 type KeeperTestSuite struct {

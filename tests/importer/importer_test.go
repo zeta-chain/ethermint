@@ -9,7 +9,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/evmos/ethermint/app"
+	"github.com/zeta-chain/ethermint/app"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"

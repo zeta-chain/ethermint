@@ -21,8 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/evmos/ethermint/testutil"
-	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	"github.com/zeta-chain/ethermint/testutil"
+	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 
 	"github.com/zeta-chain/ethermint/app"
 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"

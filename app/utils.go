@@ -36,8 +36,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/evmos/ethermint/encoding"
-	ethermint "github.com/evmos/ethermint/types"
+	"github.com/zeta-chain/ethermint/encoding"
+	ethermint "github.com/zeta-chain/ethermint/types"
 )
 
 type GenesisState map[string]json.RawMessage

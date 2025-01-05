@@ -25,8 +25,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/ethereum/go-ethereum/common"
-	enccodec "github.com/evmos/ethermint/encoding/codec"
-	ethermint "github.com/evmos/ethermint/types"
+	enccodec "github.com/zeta-chain/ethermint/encoding/codec"
+	ethermint "github.com/zeta-chain/ethermint/types"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )

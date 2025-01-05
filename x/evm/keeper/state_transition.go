@@ -21,13 +21,14 @@ import (
 	"math/big"
 
 	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/holiman/uint256"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ethermint "github.com/evmos/ethermint/types"
-	"github.com/evmos/ethermint/x/evm/statedb"
-	"github.com/evmos/ethermint/x/evm/types"
+	ethermint "github.com/zeta-chain/ethermint/types"
+	"github.com/zeta-chain/ethermint/x/evm/statedb"
+	"github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -441,7 +442,7 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 
 	// calculate a minimum amount of gas to be charged to sender if GasLimit
 	// is considerably higher than GasUsed to stay more aligned with Tendermint gas mechanics
-	// for more info https://github.com/evmos/ethermint/issues/1085
+	// for more info https://github.com/zeta-chain/ethermint/issues/1085
 	gasLimit := sdkmath.LegacyNewDec(int64(msg.GasLimit))
 	minGasMultiplier := cfg.FeeMarketParams.MinGasMultiplier
 	if minGasMultiplier.IsNil() {

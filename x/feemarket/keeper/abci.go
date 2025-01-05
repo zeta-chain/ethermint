@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/evmos/ethermint/x/feemarket/types"
+	"github.com/zeta-chain/ethermint/x/feemarket/types"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/telemetry"

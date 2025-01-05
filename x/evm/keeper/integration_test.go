@@ -14,12 +14,12 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/evmos/ethermint/app"
-	"github.com/evmos/ethermint/tests"
-	"github.com/evmos/ethermint/testutil"
+	"github.com/zeta-chain/ethermint/app"
+	"github.com/zeta-chain/ethermint/tests"
+	"github.com/zeta-chain/ethermint/testutil"
 
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 )
 
 var _ = Describe("Feemarket", func() {

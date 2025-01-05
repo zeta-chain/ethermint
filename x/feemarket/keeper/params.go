@@ -19,7 +19,7 @@ import (
 	"math/big"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/evmos/ethermint/x/feemarket/types"
+	"github.com/zeta-chain/ethermint/x/feemarket/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

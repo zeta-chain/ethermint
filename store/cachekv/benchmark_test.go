@@ -6,7 +6,6 @@ import (
 
 	"cosmossdk.io/store/dbadapter"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/evmos/ethermint/store/cachekv"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/ethermint/store/cachekv"
 )

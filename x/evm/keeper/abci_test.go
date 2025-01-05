@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
 
 func (suite *KeeperTestSuite) TestEndBlock() {

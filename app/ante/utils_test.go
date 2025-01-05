@@ -15,10 +15,10 @@ import (
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/evmos/ethermint/app"
-	"github.com/evmos/ethermint/ethereum/eip712"
-	"github.com/evmos/ethermint/testutil"
-	utiltx "github.com/evmos/ethermint/testutil/tx"
+	"github.com/zeta-chain/ethermint/app"
+	"github.com/zeta-chain/ethermint/ethereum/eip712"
+	"github.com/zeta-chain/ethermint/testutil"
+	utiltx "github.com/zeta-chain/ethermint/testutil/tx"
 
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -48,11 +48,11 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	ante "github.com/evmos/ethermint/app/ante"
-	"github.com/evmos/ethermint/tests"
-	"github.com/evmos/ethermint/x/evm/statedb"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	ante "github.com/zeta-chain/ethermint/app/ante"
+	"github.com/zeta-chain/ethermint/tests"
+	"github.com/zeta-chain/ethermint/x/evm/statedb"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 )
 
 type AnteTestSuite struct {
