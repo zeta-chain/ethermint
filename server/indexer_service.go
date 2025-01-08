@@ -12,15 +12,17 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
+// along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
 package server
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/cometbft/cometbft/libs/service"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/types"
 
 	ethermint "github.com/zeta-chain/ethermint/types"
@@ -30,22 +32,28 @@ const (
 	ServiceName = "EVMIndexerService"
 
 	NewBlockWaitTimeout = 60 * time.Second
+
+	// https://github.com/cometbft/cometbft/blob/v0.37.4/rpc/core/env.go#L193
+	NotFoundErr          = "is not available"
+	ErrorBackoffDuration = 1 * time.Second
 )
 
 // EVMIndexerService indexes transactions for json-rpc service.
 type EVMIndexerService struct {
 	service.BaseService
 
-	txIdxr ethermint.EVMTxIndexer
-	client rpcclient.Client
+	txIdxr   ethermint.EVMTxIndexer
+	client   rpcclient.Client
+	allowGap bool
 }
 
 // NewEVMIndexerService returns a new service instance.
 func NewEVMIndexerService(
 	txIdxr ethermint.EVMTxIndexer,
 	client rpcclient.Client,
+	allowGap bool,
 ) *EVMIndexerService {
-	is := &EVMIndexerService{txIdxr: txIdxr, client: client}
+	is := &EVMIndexerService{txIdxr: txIdxr, client: client, allowGap: allowGap}
 	is.BaseService = *service.NewBaseService(nil, ServiceName, is)
 	return is
 }
@@ -94,24 +102,47 @@ func (eis *EVMIndexerService) OnStart() error {
 	}
 	if lastBlock == -1 {
 		lastBlock = latestBlock
+	} else if lastBlock < status.SyncInfo.EarliestBlockHeight {
+		if !eis.allowGap {
+			panic("Block gap detected, please recover the missing data")
+		}
+		// to avoid infinite failed to fetch block error when lastBlock is smaller than earliest
+		lastBlock = status.SyncInfo.EarliestBlockHeight
 	}
+	// to avoid height must be greater than 0 error
+	if lastBlock <= 0 {
+		lastBlock = 1
+	}
+
 	for {
 		if latestBlock <= lastBlock {
 			// nothing to index. wait for signal of new block
+
 			select {
 			case <-newBlockSignal:
 			case <-time.After(NewBlockWaitTimeout):
 			}
 			continue
 		}
+		var (
+			err         error
+			block       *ctypes.ResultBlock
+			blockResult *ctypes.ResultBlockResults
+		)
 		for i := lastBlock + 1; i <= latestBlock; i++ {
-			block, err := eis.client.Block(ctx, &i)
+			block, err = eis.client.Block(ctx, &i)
 			if err != nil {
+				if eis.allowGap && strings.Contains(err.Error(), NotFoundErr) {
+					continue
+				}
 				eis.Logger.Error("failed to fetch block", "height", i, "err", err)
 				break
 			}
-			blockResult, err := eis.client.BlockResults(ctx, &i)
+			blockResult, err = eis.client.BlockResults(ctx, &i)
 			if err != nil {
+				if eis.allowGap && strings.Contains(err.Error(), NotFoundErr) {
+					continue
+				}
 				eis.Logger.Error("failed to fetch block result", "height", i, "err", err)
 				break
 			}
@@ -119,6 +150,9 @@ func (eis *EVMIndexerService) OnStart() error {
 				eis.Logger.Error("failed to index block", "height", i, "err", err)
 			}
 			lastBlock = blockResult.Height
+		}
+		if err != nil {
+			time.Sleep(ErrorBackoffDuration)
 		}
 	}
 }
