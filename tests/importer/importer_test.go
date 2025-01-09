@@ -9,7 +9,9 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/holiman/uint256"
 	"github.com/zeta-chain/ethermint/app"
+	"github.com/zeta-chain/ethermint/types"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -232,7 +234,8 @@ func applyTransaction(
 	gp *ethcore.GasPool, evmKeeper *evmkeeper.Keeper, vmdb *statedb.StateDB, header *ethtypes.Header,
 	tx *ethtypes.Transaction, usedGas *uint64, cfg ethvm.Config,
 ) (*ethtypes.Receipt, uint64, error) {
-	msg, err := ethcore.TransactionToMessage(tx, ethtypes.MakeSigner(config, header.Number), sdkmath.ZeroInt().BigInt())
+	msg, err := ethcore.TransactionToMessage(tx, types.MakeSigner(config, header.Number), sdkmath.ZeroInt().BigInt())
+
 	if err != nil {
 		return nil, 0, err
 	}

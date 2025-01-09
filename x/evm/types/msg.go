@@ -229,26 +229,7 @@ func (msg *MsgEthereumTx) GetMsgsV2() ([]proto.Message, error) {
 // GetSender convert the From field to common.Address
 // From should always be set, which is validated in ValidateBasic
 func (msg *MsgEthereumTx) GetSender() common.Address {
-	return common.BytesToAddress(msg.From)
-}
-
-// GetSenderLegacy fallbacks to old behavior if From is empty, should be used by json-rpc
-func (msg *MsgEthereumTx) GetSenderLegacy(chainID *big.Int) (common.Address, error) {
-	if len(msg.From) > 0 {
-		return msg.GetSender(), nil
-	}
-	sender, err := msg.recoverSender(chainID)
-	if err != nil {
-		panic(err)
-	}
-
-	sender, err := msg.GetSender(data.GetChainID())
-	if err != nil {
-		panic(err)
-	}
-
-	signer := sdk.AccAddress(sender.Bytes())
-	return []sdk.AccAddress{signer}
+	return common.HexToAddress(msg.From)
 }
 
 // GetSignBytes returns the Amino bytes of an Ethereum transaction message used
@@ -376,18 +357,6 @@ func (msg MsgEthereumTx) AsMessage(signer ethtypes.Signer, baseFee *big.Int) (*c
 	}
 
 	return ethMsg, nil
-}
-
-// GetSender extracts the sender address from the signature values using the latest signer for the given chainID.
-func (msg *MsgEthereumTx) GetSender(chainID *big.Int) (common.Address, error) {
-	signer := ethtypes.LatestSignerForChainID(chainID)
-	from, err := signer.Sender(msg.AsTransaction())
-	if err != nil {
-		return common.Address{}, err
-	}
-
-	msg.From = from.Hex()
-	return from, nil
 }
 
 // UnpackInterfaces implements UnpackInterfacesMesssage.UnpackInterfaces

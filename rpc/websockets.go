@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"sync"
 
+	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -39,6 +40,7 @@ import (
 
 	"cosmossdk.io/log"
 
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/zeta-chain/ethermint/rpc/ethereum/pubsub"
 	rpcfilters "github.com/zeta-chain/ethermint/rpc/namespaces/ethereum/eth/filters"
 	"github.com/zeta-chain/ethermint/rpc/types"

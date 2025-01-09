@@ -4,22 +4,17 @@ import (
 	"errors"
 	"math/big"
 	"testing"
-	"time"
 
+	"github.com/gogo/protobuf/codec"
+	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
+	"github.com/zeta-chain/ethermint/tests"
 	"github.com/zeta-chain/ethermint/x/evm/keeper"
+	"github.com/zeta-chain/ethermint/x/evm/statedb"
 
-	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-	tmjson "github.com/cometbft/cometbft/libs/json"
-
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -27,19 +22,32 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/ethermint/app"
-	ethermint "github.com/zeta-chain/ethermint/types"
 	"github.com/zeta-chain/ethermint/x/evm/types"
 )
 
 type HandlerTestSuite struct {
 	testutil.BaseTestSuiteWithAccount
 	chainID   *big.Int
+	ethSigner ethtypes.Signer
+	from      common.Address
+	to        sdk.AccAddress
+
+	dynamicTxFee bool
+}
+
+type EvmTestSuite struct {
+	suite.Suite
+
+	ctx     sdk.Context
+	app     *app.EthermintApp
+	codec   codec.Codec
+	chainID *big.Int
+
+	signer    keyring.Signer
 	ethSigner ethtypes.Signer
 	from      common.Address
 	to        sdk.AccAddress
@@ -60,7 +68,6 @@ func (suite *EvmTestSuite) DoSetupTest(t require.TestingT) {
 	// consensus key
 	priv, err = ethsecp256k1.GenerateKey()
 	require.NoError(t, err)
-	consAddress := sdk.ConsAddress(priv.PubKey().Address())
 
 	suite.app = app.Setup(checkTx, func(app *app.EthermintApp, genesis app.GenesisState) app.GenesisState {
 		if suite.dynamicTxFee {
@@ -85,7 +92,7 @@ func (suite *EvmTestSuite) SignTx(tx *types.MsgEthereumTx) {
 }
 
 func (suite *EvmTestSuite) StateDB() *statedb.StateDB {
-	return statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(suite.ctx.HeaderHash().Bytes())))
+	return statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(suite.ctx.HeaderHash())))
 }
 
 func TestEvmTestSuite(t *testing.T) {

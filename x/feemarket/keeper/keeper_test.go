@@ -4,12 +4,16 @@ import (
 	_ "embed"
 	"math/big"
 	"testing"
-	"time"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/gogo/protobuf/codec"
 	"github.com/stretchr/testify/suite"
-	"github.com/zeta-chain/ethermint/testutil"
+	"github.com/zeta-chain/ethermint/app"
+	"github.com/zeta-chain/ethermint/x/feemarket/types"
 )
 
 type KeeperTestSuite struct {

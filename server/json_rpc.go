@@ -20,78 +20,86 @@ import (
 	"net/http"
 	"time"
 
-	"golang.org/x/exp/slog"
-
-	"github.com/gorilla/mux"
-	"github.com/rs/cors"
-	"golang.org/x/sync/errgroup"
-
+	tmlog "cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	ethlog "github.com/ethereum/go-ethereum/log"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
-	"github.com/zeta-chain/ethermint/rpc"
-
-	tmlog "github.com/cometbft/cometbft/libs/log"
-	"github.com/zeta-chain/ethermint/server/config"
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	ethermint "github.com/zeta-chain/ethermint/types"
+	"golang.org/x/exp/slog"
+
+	"github.com/zeta-chain/ethermint/rpc"
+	"github.com/zeta-chain/ethermint/server/config"
 )
 
 const (
 	ServerStartTime = 5 * time.Second
-	MaxRetry        = 6
 )
 
+type gethLogsToTm struct {
+	logger tmlog.Logger
+	attrs  []slog.Attr
+}
+
+func (g *gethLogsToTm) Enabled(_ context.Context, _ slog.Level) bool {
+	return true
+}
+
+func (g *gethLogsToTm) Handle(_ context.Context, record slog.Record) error {
+	attrs := g.attrs
+	record.Attrs(func(attr slog.Attr) bool {
+		attrs = append(attrs, attr)
+		return true
+	})
+	switch record.Level {
+	case slog.LevelDebug:
+		g.logger.Debug(record.Message, attrs)
+	case slog.LevelInfo:
+		g.logger.Info(record.Message, attrs)
+	case slog.LevelWarn:
+		g.logger.Info(record.Message, attrs)
+	case slog.LevelError:
+		g.logger.Error(record.Message, attrs)
+	}
+	return nil
+}
+
+func (g *gethLogsToTm) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return &gethLogsToTm{
+		logger: g.logger,
+		attrs:  append(g.attrs, attrs...),
+	}
+}
+
+func (g *gethLogsToTm) WithGroup(_ string) slog.Handler {
+	return g
+}
+
 // StartJSONRPC starts the JSON-RPC server
-func StartJSONRPC(srvCtx *server.Context,
+func StartJSONRPC(ctx *server.Context,
 	clientCtx client.Context,
-	g *errgroup.Group,
+	tmRPCAddr,
+	tmEndpoint string,
 	config *config.Config,
 	indexer ethermint.EVMTxIndexer,
 ) (*http.Server, chan struct{}, error) {
-	logger := srvCtx.Logger.With("module", "geth")
+	tmWsClient := ConnectTmWS(tmRPCAddr, tmEndpoint, ctx.Logger)
 
-	evtClient, ok := clientCtx.Client.(rpcclient.EventsClient)
-	if !ok {
-		return nil, nil, fmt.Errorf("client %T does not implement EventsClient", clientCtx.Client)
-	}
-
-	var rpcStream *stream.RPCStream
-	var err error
-	for i := 0; i < MaxRetry; i++ {
-		rpcStream, err = stream.NewRPCStreams(evtClient, logger, clientCtx.TxConfig.TxDecoder())
-		if err == nil {
-			break
-		}
-		time.Sleep(time.Second)
-	}
-
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create rpc streams after %d attempts: %w", MaxRetry, err)
-	}
-
-	ethlog.Root().SetHandler(ethlog.FuncHandler(func(r *ethlog.Record) error {
-		switch r.Lvl {
-		case ethlog.LvlTrace, ethlog.LvlDebug:
-			logger.Debug(r.Msg, r.Ctx...)
-		case ethlog.LvlInfo, ethlog.LvlWarn:
-			logger.Info(r.Msg, r.Ctx...)
-		case ethlog.LvlError, ethlog.LvlCrit:
-			logger.Error(r.Msg, r.Ctx...)
-		}
-		return nil
-	}))
+	logger := ctx.Logger.With("module", "geth")
+	ethlog.SetDefault(ethlog.NewLogger(&gethLogsToTm{logger: logger}))
 
 	rpcServer := ethrpc.NewServer()
 
 	allowUnprotectedTxs := config.JSONRPC.AllowUnprotectedTxs
 	rpcAPIArr := config.JSONRPC.API
 
-	apis := rpc.GetRPCAPIs(srvCtx, clientCtx, rpcStream, allowUnprotectedTxs, indexer, rpcAPIArr)
+	apis := rpc.GetRPCAPIs(ctx, clientCtx, tmWsClient, allowUnprotectedTxs, indexer, rpcAPIArr)
 
 	for _, api := range apis {
 		if err := rpcServer.RegisterName(api.Namespace, api.Service); err != nil {
-			srvCtx.Logger.Error(
+			ctx.Logger.Error(
 				"failed to register service in JSON RPC namespace",
 				"namespace", api.Namespace,
 				"service", api.Service,
@@ -123,22 +131,32 @@ func StartJSONRPC(srvCtx *server.Context,
 		return nil, nil, err
 	}
 
-	g.Go(func() error {
-		srvCtx.Logger.Info("Starting JSON-RPC server", "address", config.JSONRPC.Address)
+	errCh := make(chan error)
+	go func() {
+		ctx.Logger.Info("Starting JSON-RPC server", "address", config.JSONRPC.Address)
 		if err := httpSrv.Serve(ln); err != nil {
 			if err == http.ErrServerClosed {
 				close(httpSrvDone)
+				return
 			}
 
-			srvCtx.Logger.Error("failed to start JSON-RPC server", "error", err.Error())
-			return err
+			ctx.Logger.Error("failed to start JSON-RPC server", "error", err.Error())
+			errCh <- err
 		}
-		return nil
-	})
+	}()
 
-	srvCtx.Logger.Info("Starting JSON WebSocket server", "address", config.JSONRPC.WsAddress)
+	select {
+	case err := <-errCh:
+		ctx.Logger.Error("failed to boot JSON-RPC server", "error", err.Error())
+		return nil, nil, err
+	case <-time.After(ServerStartTime): // assume JSON RPC server started successfully
+	}
 
-	wsSrv := rpc.NewWebsocketsServer(clientCtx, srvCtx.Logger, rpcStream, config)
+	ctx.Logger.Info("Starting JSON WebSocket server", "address", config.JSONRPC.WsAddress)
+
+	// allocate separate WS connection to Tendermint
+	tmWsClient = ConnectTmWS(tmRPCAddr, tmEndpoint, ctx.Logger)
+	wsSrv := rpc.NewWebsocketsServer(clientCtx, ctx.Logger, tmWsClient, config)
 	wsSrv.Start()
 	return httpSrv, httpSrvDone, nil
 }

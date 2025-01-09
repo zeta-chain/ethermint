@@ -69,7 +69,8 @@ func DefaultChainConfig() ChainConfig {
 	arrowGlacierBlock := sdkmath.ZeroInt()
 	grayGlacierBlock := sdkmath.ZeroInt()
 	mergeNetsplitBlock := sdkmath.ZeroInt()
-	shanghaiTime := sdkmath.ZeroInt()
+	shanghaiBlock := sdkmath.ZeroInt()
+	cancunBlock := sdkmath.ZeroInt()
 
 	return ChainConfig{
 		HomesteadBlock:      &homesteadBlock,

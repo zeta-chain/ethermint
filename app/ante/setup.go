@@ -114,14 +114,14 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 
 	msgs := tx.GetMsgs()
 	if msgs == nil {
-		return errorsmod.Wrap(errortypes.ErrUnknownRequest, "invalid transaction. Transaction without messages")
+		return ctx, errorsmod.Wrap(errortypes.ErrUnknownRequest, "invalid transaction. Transaction without messages")
 	}
 
 	if t, ok := tx.(sdk.HasValidateBasic); ok {
 		err := t.ValidateBasic()
 		// ErrNoSignatures is fine with eth tx
 		if err != nil && !errors.Is(err, errortypes.ErrNoSignatures) {
-			return errorsmod.Wrap(err, "tx basic validation failed")
+			return ctx, errorsmod.Wrap(err, "tx basic validation failed")
 		}
 	}
 
@@ -202,7 +202,7 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	}
 
 	if !authInfo.Fee.Amount.Equal(txFee) {
-		return errorsmod.Wrapf(errortypes.ErrInvalidRequest, "invalid AuthInfo Fee Amount (%s != %s)", authInfo.Fee.Amount, txFee)
+		return ctx, errorsmod.Wrapf(errortypes.ErrInvalidRequest, "invalid AuthInfo Fee Amount (%s != %s)", authInfo.Fee.Amount, txFee)
 	}
 
 	if authInfo.Fee.GasLimit != txGasLimit {

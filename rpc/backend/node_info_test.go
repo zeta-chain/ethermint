@@ -18,10 +18,12 @@ import (
 )
 
 func (suite *BackendTestSuite) TestRPCMinGasPrice() {
+	defaultPrice := new(big.Int).SetInt64(ethermint.DefaultGasPrice)
+	bigPrice, _ := new(big.Int).SetString("18446744073709551616", 10)
 	testCases := []struct {
 		name           string
 		registerMock   func()
-		expMinGasPrice int64
+		expMinGasPrice *big.Int
 		expPass        bool
 	}{
 		{
@@ -30,7 +32,7 @@ func (suite *BackendTestSuite) TestRPCMinGasPrice() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterParamsWithoutHeaderError(queryClient, 1)
 			},
-			ethermint.DefaultGasPrice,
+			defaultPrice,
 			true,
 		},
 		{

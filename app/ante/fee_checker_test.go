@@ -17,7 +17,6 @@ import (
 	ethermint "github.com/zeta-chain/ethermint/types"
 	"github.com/zeta-chain/ethermint/x/evm/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 )
 
 var _ DynamicFeeEVMKeeper = MockEVMKeeper{}
@@ -208,15 +207,7 @@ func TestSDKTxFeeChecker(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			evmParams := tc.keeper.GetParams(tc.ctx)
-			feemarketParams := feemarkettypes.Params{
-				NoBaseFee: false,
-				BaseFee:   sdkmath.NewIntFromBigInt(tc.keeper.BaseFee),
-			}
-			chainID := tc.keeper.ChainID()
-			chainCfg := evmParams.GetChainConfig()
-			ethCfg := chainCfg.EthereumConfig(chainID)
-			fees, priority, err := NewDynamicFeeChecker(ethCfg, &evmParams, &feemarketParams)(tc.ctx, tc.buildTx())
+			fees, priority, err := NewDynamicFeeChecker(tc.keeper)(tc.ctx, tc.buildTx())
 			if tc.expSuccess {
 				require.Equal(t, tc.expFees, fees.String())
 				require.Equal(t, tc.expPriority, priority)

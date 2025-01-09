@@ -430,7 +430,6 @@ func (suite *BackendTestSuite) TestFeeHistory() {
 			},
 			sdk.AccAddress(tests.GenerateAddress().Bytes()),
 			true,
-			nil,
 		},
 		{
 			"pass - Concurrent FeeHistoryResults object",
@@ -460,9 +459,6 @@ func (suite *BackendTestSuite) TestFeeHistory() {
 			},
 			sdk.AccAddress(tests.GenerateAddress().Bytes()),
 			true,
-			[]*big.Int{
-				big.NewInt(0), // for overwrite overlap
-			},
 		},
 	}
 

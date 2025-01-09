@@ -69,7 +69,7 @@ func startInProcess(cfg Config, val *Validator) error {
 
 	app := cfg.AppConstructor(*val)
 
-	genDocProvider := server.GenDocProvider(cmtCfg)
+	genDocProvider := node.DefaultGenesisDocProviderFunc(cmtCfg)
 	cmtApp := sdkserver.NewCometABCIWrapper(app)
 	tmNode, err := node.NewNode(
 		cmtCfg,

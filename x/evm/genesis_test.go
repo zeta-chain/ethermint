@@ -6,7 +6,6 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
-	etherminttypes "github.com/zeta-chain/ethermint/types"
 	"github.com/zeta-chain/ethermint/x/evm"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	"github.com/zeta-chain/ethermint/x/evm/types"

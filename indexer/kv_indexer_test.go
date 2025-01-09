@@ -14,10 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/ethermint/app"
 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
-	evmenc "github.com/zeta-chain/ethermint/encoding"
 	"github.com/zeta-chain/ethermint/indexer"
 	"github.com/zeta-chain/ethermint/tests"
-	ethermint "github.com/zeta-chain/ethermint/types"
 	"github.com/zeta-chain/ethermint/x/evm/types"
 )
 
@@ -181,9 +179,4 @@ func TestKVIndexer(t *testing.T) {
 			}
 		})
 	}
-}
-
-// MakeEncodingConfig creates the EncodingConfig
-func MakeEncodingConfig() ethermint.EncodingConfig {
-	return evmenc.MakeConfig(app.ModuleBasics)
 }

@@ -180,7 +180,7 @@ func RegisterBlockResultsWithEventLog(client *mocks.Client, height int64) (*tmrp
 	res := &tmrpctypes.ResultBlockResults{
 		Height: height,
 		TxsResults: []*abci.ExecTxResult{
-			{Code: 0, GasUsed: 0, Data: data},
+			{Code: 0, GasUsed: 0, Data: []byte("data")},
 		},
 	}
 	client.On("BlockResults", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).

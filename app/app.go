@@ -28,7 +28,7 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
-	"github.com/cosmos/cosmos-sdk/server"
+
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/gorilla/mux"
@@ -525,6 +525,7 @@ func NewEthermintApp(
 		app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.FeeMarketKeeper,
 		tracer,
 		nil,
+		app.ConsensusParamsKeeper,
 		allKeys,
 	)
 
