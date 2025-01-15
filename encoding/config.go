@@ -64,9 +64,6 @@ func MakeConfig() ethermint.EncodingConfig {
 	if err != nil {
 		panic(err)
 	}
-	if err := interfaceRegistry.SigningContext().Validate(); err != nil {
-		panic(err)
-	}
 	codec := amino.NewProtoCodec(interfaceRegistry)
 	encodingConfig := ethermint.EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
