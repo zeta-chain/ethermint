@@ -34,8 +34,6 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	ethermint "github.com/zeta-chain/ethermint/types"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/core"
@@ -204,11 +202,11 @@ func (msg MsgEthereumTx) Type() string { return TypeMsgEthereumTx }
 // ValidateBasic implements the sdk.Msg interface. It performs basic validation
 // checks of a Transaction. If returns an error if validation fails.
 func (msg MsgEthereumTx) ValidateBasic() error {
-	if msg.From != "" {
-		if err := ethermint.ValidateAddress(msg.From); err != nil {
-			return errorsmod.Wrap(err, "invalid from address")
-		}
-	}
+	// if msg.From != "" {
+	// 	if err := ethermint.ValidateAddress(msg.From); err != nil {
+	// 		return errorsmod.Wrap(err, "invalid from address")
+	// 	}
+	// }
 
 	// Validate Size_ field, should be kept empty
 	if msg.Size_ != 0 {

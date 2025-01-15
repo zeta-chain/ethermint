@@ -176,9 +176,9 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		}
 
 		// Validate `From` field
-		if msgEthTx.From != "" {
-			return ctx, errorsmod.Wrapf(errortypes.ErrInvalidRequest, "invalid From %s, expect empty string", msgEthTx.From)
-		}
+		// if msgEthTx.From != "" {
+		// 	return ctx, errorsmod.Wrapf(errortypes.ErrInvalidRequest, "invalid From %s, expect empty string", msgEthTx.From)
+		// }
 
 		txGasLimit += msgEthTx.GetGas()
 
