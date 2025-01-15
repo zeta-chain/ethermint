@@ -419,7 +419,7 @@ func (msg *MsgEthereumTx) BuildTx(b client.TxBuilder, evmDenom string) (authsign
 	builder.SetExtensionOptions(option)
 
 	// A valid msg should have empty `From`
-	msg.From = ""
+	// msg.From = ""
 
 	err = builder.SetMsgs(msg)
 	if err != nil {
