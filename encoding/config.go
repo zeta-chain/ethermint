@@ -53,9 +53,9 @@ func MakeConfig() ethermint.EncodingConfig {
 		ValidatorAddressCodec: address.Bech32Codec{
 			Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
 		},
-		CustomGetSigners: map[protoreflect.FullName]signing.GetSignersFunc{
-			"ethermint.evm.v1.MsgEthereumTx": customGetSignerFn("from"),
-		},
+		// CustomGetSigners: map[protoreflect.FullName]signing.GetSignersFunc{
+		// 	"ethermint.evm.v1.MsgEthereumTx": customGetSignerFn("from"),
+		// },
 	}
 	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
 		ProtoFiles:     gogoproto.HybridResolver,
