@@ -174,6 +174,27 @@ func (msg *MsgEthereumTx) FromEthereumTx(tx *ethtypes.Transaction) error {
 	return nil
 }
 
+// FromSignedEthereumTx populates the message fields from the given signed ethereum transaction, and set From field.
+func (msg *MsgEthereumTx) FromSignedEthereumTx(tx *ethtypes.Transaction, chainID *big.Int) error {
+	if err := msg.FromEthereumTx(tx); err != nil {
+		return err
+	}
+
+	from, err := msg.recoverSender(chainID)
+	fmt.Println("recover sender", from, err)
+	if err != nil {
+		return err
+	}
+
+	msg.From = from.String()
+	return nil
+}
+
+// recoverSender recovers the sender address from the transaction signature.
+func (msg *MsgEthereumTx) recoverSender(chainID *big.Int) (common.Address, error) {
+	return ethtypes.LatestSignerForChainID(chainID).Sender(msg.AsTransaction())
+}
+
 // Route returns the route value of an MsgEthereumTx.
 func (msg MsgEthereumTx) Route() string { return RouterKey }
 
