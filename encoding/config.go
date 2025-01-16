@@ -37,7 +37,7 @@ func customGetSignerFn(path string) func(msg proto.Message) ([][]byte, error) {
 	return func(msg proto.Message) ([][]byte, error) {
 		m := msg.ProtoReflect()
 		fieldDesc := m.Descriptor().Fields().ByName(protoreflect.Name(path))
-		addr := common.BytesToAddress((m.Get(fieldDesc).Bytes()))
+		addr := common.HexToAddress((m.Get(fieldDesc).String()))
 		signer := sdk.AccAddress(addr.Bytes())
 		return [][]byte{signer}, nil
 	}
@@ -53,9 +53,9 @@ func MakeConfig() ethermint.EncodingConfig {
 		ValidatorAddressCodec: address.Bech32Codec{
 			Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
 		},
-		// CustomGetSigners: map[protoreflect.FullName]signing.GetSignersFunc{
-		// 	"ethermint.evm.v1.MsgEthereumTx": customGetSignerFn("from"),
-		// },
+		CustomGetSigners: map[protoreflect.FullName]signing.GetSignersFunc{
+			"ethermint.evm.v1.MsgEthereumTx": customGetSignerFn("from"),
+		},
 	}
 	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
 		ProtoFiles:     gogoproto.HybridResolver,
