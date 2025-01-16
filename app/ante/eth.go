@@ -82,9 +82,13 @@ func (avd EthAccountVerificationDecorator) AnteHandle(
 			return ctx, errorsmod.Wrap(errortypes.ErrInvalidAddress, "from address cannot be empty")
 		}
 
+		fmt.Println("ante 1")
+
 		// check whether the sender address is EOA
 		fromAddr := common.BytesToAddress(from)
 		acct := avd.evmKeeper.GetAccount(ctx, fromAddr)
+
+		fmt.Println("ante 1 2")
 
 		if acct == nil {
 			acc := avd.ak.NewAccountWithAddress(ctx, from)
@@ -99,6 +103,9 @@ func (avd EthAccountVerificationDecorator) AnteHandle(
 			return ctx, errorsmod.Wrap(err, "failed to check sender balance")
 		}
 	}
+
+	fmt.Println("ante 1 3")
+
 	return next(ctx, tx, simulate)
 }
 
@@ -352,6 +359,7 @@ func (issd EthIncrementSenderSequenceDecorator) AnteHandle(ctx sdk.Context, tx s
 			return ctx, errorsmod.Wrap(err, "failed to unpack tx data")
 		}
 
+		fmt.Println("ante 2")
 		// increase sequence of sender
 		acc := issd.ak.GetAccount(ctx, msgEthTx.GetFrom())
 		if acc == nil {
@@ -361,6 +369,8 @@ func (issd EthIncrementSenderSequenceDecorator) AnteHandle(ctx sdk.Context, tx s
 			)
 		}
 		nonce := acc.GetSequence()
+
+		fmt.Println("ante 2 2")
 
 		// we merged the nonce verification to nonce increment, so when tx includes multiple messages
 		// with same sender, they'll be accepted.
@@ -377,6 +387,8 @@ func (issd EthIncrementSenderSequenceDecorator) AnteHandle(ctx sdk.Context, tx s
 
 		issd.ak.SetAccount(ctx, acc)
 	}
+
+	fmt.Println("ante 2 3")
 
 	return next(ctx, tx, simulate)
 }
