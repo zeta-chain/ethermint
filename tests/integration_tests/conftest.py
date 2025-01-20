@@ -3,6 +3,18 @@ import pytest
 from .network import setup_ethermint, setup_geth
 
 
+def pytest_configure(config):
+    config.addinivalue_line("markers", "unmarked: fallback mark for unmarked tests")
+    config.addinivalue_line("markers", "upgrade: upgrade tests")
+    config.addinivalue_line("markers", "filter: filter tests")
+
+
+def pytest_collection_modifyitems(items, config):
+    for item in items:
+        if not any(item.iter_markers()):
+            item.add_marker("unmarked")
+
+
 @pytest.fixture(scope="session")
 def ethermint(tmp_path_factory):
     path = tmp_path_factory.mktemp("ethermint")

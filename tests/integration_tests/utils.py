@@ -1,9 +1,12 @@
 import json
 import os
+import re
+import secrets
 import socket
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import bech32
@@ -14,7 +17,7 @@ from hexbytes import HexBytes
 from web3._utils.transactions import fill_nonce, fill_transaction_defaults
 from web3.exceptions import TimeExhausted
 
-load_dotenv(Path(__file__).parent.parent.parent / "scripts/.env")
+load_dotenv(Path(__file__).parent.parent.parent / "scripts/env")
 Account.enable_unaudited_hdwallet_features()
 ACCOUNTS = {
     "validator": Account.from_mnemonic(os.getenv("VALIDATOR1_MNEMONIC")),
@@ -33,6 +36,10 @@ TEST_CONTRACTS = {
     "Mars": "Mars.sol",
     "StateContract": "StateContract.sol",
     "TestExploitContract": "TestExploitContract.sol",
+    "TestRevert": "TestRevert.sol",
+    "TestMessageCall": "TestMessageCall.sol",
+    "Calculator": "Calculator.sol",
+    "Caller": "Caller.sol",
 }
 
 
@@ -129,14 +136,41 @@ def wait_for_block_time(cli, t):
         time.sleep(0.5)
 
 
+def wait_for_fn(name, fn, *, timeout=240, interval=1):
+    for i in range(int(timeout / interval)):
+        result = fn()
+        print("check", name, result)
+        if result:
+            return result
+        time.sleep(interval)
+    else:
+        raise TimeoutError(f"wait for {name} timeout")
+
+
 def deploy_contract(w3, jsonfile, args=(), key=KEYS["validator"]):
     """
     deploy contract and return the deployed contract instance
+    """
+    tx = create_contract_transaction(w3, jsonfile, args, key)
+    return send_contract_transaction(w3, jsonfile, tx, key)
+
+
+def create_contract_transaction(w3, jsonfile, args=(), key=KEYS["validator"]):
+    """
+    create contract transaction
     """
     acct = Account.from_key(key)
     info = json.loads(jsonfile.read_text())
     contract = w3.eth.contract(abi=info["abi"], bytecode=info["bytecode"])
     tx = contract.constructor(*args).build_transaction({"from": acct.address})
+    return tx
+
+
+def send_contract_transaction(w3, jsonfile, tx, key=KEYS["validator"]):
+    """
+    send create contract transaction and return the deployed contract instance
+    """
+    info = json.loads(jsonfile.read_text())
     txreceipt = send_transaction(w3, tx, key)
     assert txreceipt.status == 1
     address = txreceipt.contractAddress
@@ -167,6 +201,19 @@ def send_transaction(w3, tx, key=KEYS["validator"], i=0):
         return send_transaction(w3, tx, key, i + 1)
 
 
+def send_txs(w3, txs):
+    # use different sender accounts to be able be send concurrently
+    raw_transactions = []
+    for key in txs:
+        signed = sign_transaction(w3, txs[key], key)
+        raw_transactions.append(signed.rawTransaction)
+    # wait block update
+    w3_wait_for_new_blocks(w3, 1, sleep=0.1)
+    # send transactions
+    sended_hash_set = send_raw_transactions(w3, raw_transactions)
+    return sended_hash_set
+
+
 def send_successful_transaction(w3, i=0):
     if i > 3:
         raise TimeExhausted
@@ -191,10 +238,9 @@ def decode_bech32(addr):
 
 
 def supervisorctl(inipath, *args):
-    subprocess.run(
+    return subprocess.check_output(
         (sys.executable, "-msupervisor.supervisorctl", "-c", inipath, *args),
-        check=True,
-    )
+    ).decode()
 
 
 def parse_events(logs):

@@ -1,4 +1,5 @@
 import json
+import subprocess
 import tempfile
 
 import requests
@@ -15,10 +16,10 @@ class ChainCommand:
     def __init__(self, cmd):
         self.cmd = cmd
 
-    def __call__(self, cmd, *args, stdin=None, **kwargs):
+    def __call__(self, cmd, *args, stdin=None, stderr=subprocess.STDOUT, **kwargs):
         "execute chain-maind"
         args = " ".join(build_cli_args_safe(cmd, *args, **kwargs))
-        return interact(f"{self.cmd} {args}", input=stdin)
+        return interact(f"{self.cmd} {args}", input=stdin, stderr=stderr)
 
 
 class CosmosCLI:
@@ -847,3 +848,38 @@ class CosmosCLI:
 
     def migrate_keystore(self):
         return self.raw("keys", "migrate", home=self.data_dir)
+
+    def get_default_kwargs(self):
+        return {
+            "gas_prices": DEFAULT_GAS_PRICE,
+            "gas": "auto",
+            "gas_adjustment": "1.5",
+        }
+
+    def event_query_tx_for(self, hash):
+        return json.loads(
+            self.raw(
+                "query",
+                "event-query-tx-for",
+                hash,
+                "-y",
+                home=self.data_dir,
+                stderr=subprocess.DEVNULL,
+            )
+        )
+
+    def submit_gov_proposal(self, proposal, **kwargs):
+        default_kwargs = self.get_default_kwargs()
+        kwargs.setdefault("broadcast_mode", "sync")
+        return json.loads(
+            self.raw(
+                "tx",
+                "gov",
+                "submit-proposal",
+                proposal,
+                "-y",
+                home=self.data_dir,
+                stderr=subprocess.DEVNULL,
+                **(default_kwargs | kwargs),
+            )
+        )

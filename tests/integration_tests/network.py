@@ -9,7 +9,7 @@ from pystarport import ports
 from web3.middleware import geth_poa_middleware
 
 from .cosmoscli import CosmosCLI
-from .utils import supervisorctl, w3_wait_for_block, wait_for_port
+from .utils import w3_wait_for_block, wait_for_port
 
 DEFAULT_CHAIN_BINARY = "ethermintd"
 

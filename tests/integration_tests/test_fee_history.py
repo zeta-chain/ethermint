@@ -1,5 +1,3 @@
-import hashlib
-import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -7,11 +5,7 @@ import pytest
 from web3 import Web3
 
 from .network import setup_custom_ethermint
-from .utils import (
-    ADDRS,
-    send_transaction,
-    w3_wait_for_block,
-)
+from .utils import ADDRS, send_transaction, w3_wait_for_block
 
 NEW_BASE_FEE = 100000000000
 
