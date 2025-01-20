@@ -9,6 +9,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	ethparams "github.com/ethereum/go-ethereum/params"
 	"github.com/holiman/uint256"
+	"github.com/zeta-chain/ethermint/app"
 	"github.com/zeta-chain/ethermint/x/evm/keeper"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
@@ -430,7 +431,7 @@ func (suite *KeeperTestSuite) TestVerifyFeeAndDeductTxCostsFromUserBalance() {
 			expectPassDeduct: true,
 			from:             suite.address.String(),
 			malleate: func() {
-				suite.Ctx = suite.Ctx.WithIsCheckTx(true).WithConsensusParams(*app.DefaultConsensusParams)
+				suite.ctx = suite.ctx.WithIsCheckTx(true).WithConsensusParams(*app.DefaultConsensusParams)
 			},
 		},
 	}

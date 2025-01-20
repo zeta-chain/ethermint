@@ -30,7 +30,7 @@ func (suite *KeeperTestSuite) TestCalculateBaseFee() {
 			0,
 			0,
 			sdkmath.LegacyZeroDec(),
-			func(baseFee sdkmath.Int) sdkmath.Int { return suite.App.FeeMarketKeeper.GetParams(suite.Ctx).BaseFee },
+			func(baseFee sdkmath.Int) sdkmath.Int { return suite.app.FeeMarketKeeper.GetParams(suite.ctx).BaseFee },
 		},
 		{
 			"with BaseFee - parent block wanted the same gas as its target (ElasticityMultiplier = 2)",
@@ -38,7 +38,7 @@ func (suite *KeeperTestSuite) TestCalculateBaseFee() {
 			1,
 			50,
 			sdkmath.LegacyZeroDec(),
-			func(baseFee sdkmath.Int) sdkmath.Int { return suite.App.FeeMarketKeeper.GetParams(suite.Ctx).BaseFee },
+			func(baseFee sdkmath.Int) sdkmath.Int { return suite.app.FeeMarketKeeper.GetParams(suite.ctx).BaseFee },
 		},
 		{
 			"with BaseFee - parent block wanted the same gas as its target, with higher min gas price (ElasticityMultiplier = 2)",
@@ -46,7 +46,7 @@ func (suite *KeeperTestSuite) TestCalculateBaseFee() {
 			1,
 			50,
 			sdkmath.LegacyNewDec(1500000000),
-			func(baseFee sdkmath.Int) sdkmath.Int { return suite.App.FeeMarketKeeper.GetParams(suite.Ctx).BaseFee },
+			func(baseFee sdkmath.Int) sdkmath.Int { return suite.app.FeeMarketKeeper.GetParams(suite.ctx).BaseFee },
 		},
 		{
 			"with BaseFee - parent block wanted more gas than its target (ElasticityMultiplier = 2)",
@@ -89,7 +89,7 @@ func (suite *KeeperTestSuite) TestCalculateBaseFee() {
 			params.NoBaseFee = tc.NoBaseFee
 			params.MinGasPrice = tc.minGasPrice
 
-			err := suite.App.FeeMarketKeeper.SetParams(suite.Ctx, params)
+			err := suite.app.FeeMarketKeeper.SetParams(suite.ctx, params)
 			suite.Require().NoError(err)
 			// Set block height
 			suite.ctx = suite.ctx.WithBlockHeight(tc.blockHeight)
@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) TestCalculateBaseFee() {
 				MaxBytes: 10,
 			}
 			consParams := tmproto.ConsensusParams{Block: &blockParams}
-			suite.Ctx = suite.Ctx.WithConsensusParams(consParams)
+			suite.ctx = suite.ctx.WithConsensusParams(consParams)
 
 			fee := suite.app.FeeMarketKeeper.CalculateBaseFee(suite.ctx)
 			if tc.NoBaseFee {

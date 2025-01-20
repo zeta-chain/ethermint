@@ -16,50 +16,9 @@ import (
 	"github.com/zeta-chain/ethermint/x/evm/types"
 )
 
-type KeeperBenchmarkTestSuite struct {
-	testutil.EVMTestSuiteWithAccountAndQueryClient
-}
-
-// deployTestMessageCall deploy a test erc20 contract and returns the contract address
-func (suite *KeeperBenchmarkTestSuite) deployTestMessageCall(b *testing.B) common.Address {
-	chainID := suite.App.EvmKeeper.ChainID()
-	data := types.TestMessageCall.Bin
-	args, err := json.Marshal(&types.TransactionArgs{
-		From: &suite.Address,
-		Data: (*hexutil.Bytes)(&data),
-	})
-	require.NoError(b, err)
-
-	res, err := suite.EvmQueryClient.EstimateGas(suite.Ctx, &types.EthCallRequest{
-		Args:            args,
-		GasCap:          uint64(config.DefaultGasCap),
-		ProposerAddress: suite.Ctx.BlockHeader().ProposerAddress,
-	})
-	require.NoError(b, err)
-
-	nonce := suite.App.EvmKeeper.GetNonce(suite.Ctx, suite.Address)
-	erc20DeployTx := types.NewTxContract(
-		chainID,
-		nonce,
-		nil,     // amount
-		res.Gas, // gasLimit
-		nil,     // gasPrice
-		nil, nil,
-		data, // input
-		nil,  // accesses
-	)
-	erc20DeployTx.From = suite.Address.Bytes()
-	err = erc20DeployTx.Sign(ethtypes.LatestSignerForChainID(chainID), suite.Signer)
-	require.NoError(b, err)
-	rsp, err := suite.App.EvmKeeper.EthereumTx(suite.Ctx, erc20DeployTx)
-	require.NoError(b, err)
-	require.Empty(b, rsp.VmError)
-	return crypto.CreateAddress(suite.Address, nonce)
-}
-
-func setupContract(b *testing.B) (*KeeperBenchmarkTestSuite, common.Address) {
-	suite := KeeperBenchmarkTestSuite{}
-	suite.SetupTest(b)
+func SetupContract(b *testing.B) (*KeeperTestSuite, common.Address) {
+	suite := KeeperTestSuite{}
+	suite.SetupTestWithT(b)
 
 	amt := sdk.Coins{ethermint.NewPhotonCoinInt64(1000000000000000000)}
 	err := suite.app.BankKeeper.MintCoins(suite.ctx, types.ModuleName, amt)
@@ -67,8 +26,8 @@ func setupContract(b *testing.B) (*KeeperBenchmarkTestSuite, common.Address) {
 	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, suite.address.Bytes(), amt)
 	require.NoError(b, err)
 
-	contractAddr := suite.DeployTestContract(b, suite.Address, sdkmath.NewIntWithDecimal(1000, 18).BigInt(), false)
-	suite.Commit(b)
+	contractAddr := suite.DeployTestContract(b, suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
+	suite.Commit()
 
 	return &suite, contractAddr
 }
@@ -83,8 +42,8 @@ func SetupTestMessageCall(b *testing.B) (*KeeperTestSuite, common.Address) {
 	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, suite.address.Bytes(), amt)
 	require.NoError(b, err)
 
-	contractAddr := suite.deployTestMessageCall(b)
-	suite.Commit(b)
+	contractAddr := suite.DeployTestMessageCall(b)
+	suite.Commit()
 
 	return &suite, contractAddr
 }
@@ -112,7 +71,7 @@ func DoBenchmark(b *testing.B, txBuilder TxBuilder) {
 		err = authante.DeductFees(suite.app.BankKeeper, suite.ctx, suite.app.AccountKeeper.GetAccount(ctx, msg.GetFrom()), fees)
 		require.NoError(b, err)
 
-		rsp, err := suite.App.EvmKeeper.EthereumTx(ctx, msg)
+		rsp, err := suite.app.EvmKeeper.EthereumTx(sdk.WrapSDKContext(ctx), msg)
 		require.NoError(b, err)
 		require.False(b, rsp.Failed())
 	}
@@ -179,7 +138,7 @@ func BenchmarkMessageCall(b *testing.B) {
 		err = authante.DeductFees(suite.app.BankKeeper, suite.ctx, suite.app.AccountKeeper.GetAccount(ctx, msg.GetFrom()), fees)
 		require.NoError(b, err)
 
-		rsp, err := suite.App.EvmKeeper.EthereumTx(ctx, msg)
+		rsp, err := suite.app.EvmKeeper.EthereumTx(sdk.WrapSDKContext(ctx), msg)
 		require.NoError(b, err)
 		require.False(b, rsp.Failed())
 	}

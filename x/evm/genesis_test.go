@@ -6,6 +6,7 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
+	etherminttypes "github.com/zeta-chain/ethermint/types"
 	"github.com/zeta-chain/ethermint/x/evm"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	"github.com/zeta-chain/ethermint/x/evm/types"
@@ -66,8 +67,7 @@ func (suite *EvmTestSuite) TestInitGenesis() {
 			"invalid account type",
 			func() {
 				acc := authtypes.NewBaseAccountWithAddress(address.Bytes())
-				acc.AccountNumber = suite.App.AccountKeeper.NextAccountNumber(suite.Ctx)
-				suite.App.AccountKeeper.SetAccount(suite.Ctx, acc)
+				suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 			},
 			&types.GenesisState{
 				Params: types.DefaultParams(),
@@ -117,8 +117,8 @@ func (suite *EvmTestSuite) TestInitGenesis() {
 		{
 			"ignore empty account code checking with non-empty codehash",
 			func() {
-				ethAcc := &ethermint.EthAccount{
-					BaseAccount: authtypes.NewBaseAccount(address.Bytes(), nil, suite.App.AccountKeeper.NextAccountNumber(suite.Ctx), 0),
+				ethAcc := &etherminttypes.EthAccount{
+					BaseAccount: authtypes.NewBaseAccount(address.Bytes(), nil, 0, 0),
 					CodeHash:    common.BytesToHash([]byte{1, 2, 3}).Hex(),
 				}
 

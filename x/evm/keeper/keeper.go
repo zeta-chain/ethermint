@@ -34,7 +34,6 @@ import (
 	"github.com/holiman/uint256"
 
 	sdkmath "cosmossdk.io/math"
-	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	ethermint "github.com/zeta-chain/ethermint/types"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	"github.com/zeta-chain/ethermint/x/evm/types"
@@ -83,8 +82,6 @@ type Keeper struct {
 
 	customContractFns []CustomContractFn
 
-	ck consensusparamkeeper.Keeper
-
 	// a set of store keys that should cover all the precompile use cases,
 	// or ideally just pass the application's all stores.
 	keys map[string]storetypes.StoreKey
@@ -102,7 +99,6 @@ func NewKeeper(
 	fmk types.FeeMarketKeeper,
 	tracer string,
 	customContractFns []CustomContractFn,
-	ck consensusparamkeeper.Keeper,
 	keys map[string]storetypes.StoreKey,
 ) *Keeper {
 	// ensure evm module account is set
@@ -128,7 +124,6 @@ func NewKeeper(
 		transientKey:      transientKey,
 		tracer:            tracer,
 		customContractFns: customContractFns,
-		ck:                ck,
 		keys:              keys,
 	}
 }

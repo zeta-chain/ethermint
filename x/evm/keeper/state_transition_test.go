@@ -5,7 +5,6 @@ import (
 	"math"
 	"math/big"
 
-	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -24,53 +23,8 @@ import (
 	"github.com/zeta-chain/ethermint/x/evm/types"
 )
 
-type StateTransitionTestSuite struct {
-	testutil.EVMTestSuiteWithAccountAndQueryClient
-	mintFeeCollector bool
-}
-
-func (suite *StateTransitionTestSuite) SetupTest() {
-	t := suite.T()
-	suite.EVMTestSuiteWithAccountAndQueryClient.SetupTestWithCb(t, func(a *app.EthermintApp, genesis app.GenesisState) app.GenesisState {
-		feemarketGenesis := feemarkettypes.DefaultGenesisState()
-		feemarketGenesis.Params.NoBaseFee = true
-		genesis[feemarkettypes.ModuleName] = a.AppCodec().MustMarshalJSON(feemarketGenesis)
-		acc := &ethermint.EthAccount{
-			BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(suite.Address.Bytes()), nil, 0, 0),
-			CodeHash:    common.BytesToHash(crypto.Keccak256(nil)).String(),
-		}
-		accs, err := authtypes.PackAccounts(authtypes.GenesisAccounts{acc})
-		require.NoError(t, err)
-		var authGenesis authtypes.GenesisState
-		a.AppCodec().MustUnmarshalJSON(genesis[authtypes.ModuleName], &authGenesis)
-		authGenesis.Accounts = append(authGenesis.Accounts, accs[0])
-		genesis[authtypes.ModuleName] = a.AppCodec().MustMarshalJSON(&authGenesis)
-		if suite.mintFeeCollector {
-			// mint some coin to fee collector
-			coins := sdk.NewCoins(sdk.NewCoin(types.DefaultEVMDenom, sdkmath.NewInt(int64(params.TxGas)-1)))
-			balances := []banktypes.Balance{
-				{
-					Address: suite.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName).String(),
-					Coins:   coins,
-				},
-			}
-			var bankGenesis banktypes.GenesisState
-			suite.App.AppCodec().MustUnmarshalJSON(genesis[banktypes.ModuleName], &bankGenesis)
-			// Update balances and total supply
-			bankGenesis.Balances = append(bankGenesis.Balances, balances...)
-			bankGenesis.Supply = bankGenesis.Supply.Add(coins...)
-			genesis[banktypes.ModuleName] = suite.App.AppCodec().MustMarshalJSON(&bankGenesis)
-		}
-		return genesis
-	})
-}
-
-func TestStateTransitionTestSuite(t *testing.T) {
-	suite.Run(t, new(StateTransitionTestSuite))
-}
-
-func (suite *StateTransitionTestSuite) TestGetHashFn() {
-	header := suite.Ctx.BlockHeader()
+func (suite *KeeperTestSuite) TestGetHashFn() {
+	header := suite.ctx.BlockHeader()
 	h, _ := tmtypes.HeaderFromProto(&header)
 	hash := h.Hash()
 
@@ -84,7 +38,7 @@ func (suite *StateTransitionTestSuite) TestGetHashFn() {
 			"case 1.1: context hash cached",
 			uint64(suite.ctx.BlockHeight()),
 			func() {
-				suite.Ctx = suite.Ctx.WithHeaderHash(tmhash.Sum([]byte("header"))).WithConsensusParams(*app.DefaultConsensusParams)
+				suite.ctx = suite.ctx.WithHeaderHash(tmhash.Sum([]byte("header")))
 			},
 			common.BytesToHash(tmhash.Sum([]byte("header"))),
 		},
@@ -93,8 +47,8 @@ func (suite *StateTransitionTestSuite) TestGetHashFn() {
 			uint64(suite.ctx.BlockHeight()),
 			func() {
 				header := tmproto.Header{}
-				header.Height = suite.Ctx.BlockHeight()
-				suite.Ctx = suite.Ctx.WithBlockHeader(header).WithConsensusParams(*app.DefaultConsensusParams)
+				header.Height = suite.ctx.BlockHeight()
+				suite.ctx = suite.ctx.WithBlockHeader(header)
 			},
 			common.Hash{},
 		},
@@ -102,7 +56,7 @@ func (suite *StateTransitionTestSuite) TestGetHashFn() {
 			"case 1.3: hash calculated from Tendermint header",
 			uint64(suite.ctx.BlockHeight()),
 			func() {
-				suite.Ctx = suite.Ctx.WithBlockHeader(header).WithConsensusParams(*app.DefaultConsensusParams)
+				suite.ctx = suite.ctx.WithBlockHeader(header)
 			},
 			common.BytesToHash(hash),
 		},
@@ -110,7 +64,7 @@ func (suite *StateTransitionTestSuite) TestGetHashFn() {
 			"case 2.1: height lower than current one, hist info not found",
 			1,
 			func() {
-				suite.Ctx = suite.Ctx.WithBlockHeight(10).WithConsensusParams(*app.DefaultConsensusParams)
+				suite.ctx = suite.ctx.WithBlockHeight(10)
 			},
 			common.Hash{},
 		},
@@ -118,8 +72,8 @@ func (suite *StateTransitionTestSuite) TestGetHashFn() {
 			"case 2.2: height lower than current one, invalid hist info header",
 			1,
 			func() {
-				suite.App.StakingKeeper.SetHistoricalInfo(suite.Ctx, 1, &stakingtypes.HistoricalInfo{})
-				suite.Ctx = suite.Ctx.WithBlockHeight(10).WithConsensusParams(*app.DefaultConsensusParams)
+				suite.app.StakingKeeper.SetHistoricalInfo(suite.ctx, 1, &stakingtypes.HistoricalInfo{})
+				suite.ctx = suite.ctx.WithBlockHeight(10)
 			},
 			common.Hash{},
 		},
@@ -130,8 +84,8 @@ func (suite *StateTransitionTestSuite) TestGetHashFn() {
 				histInfo := &stakingtypes.HistoricalInfo{
 					Header: header,
 				}
-				suite.App.StakingKeeper.SetHistoricalInfo(suite.Ctx, 1, histInfo)
-				suite.Ctx = suite.Ctx.WithBlockHeight(10).WithConsensusParams(*app.DefaultConsensusParams)
+				suite.app.StakingKeeper.SetHistoricalInfo(suite.ctx, 1, histInfo)
+				suite.ctx = suite.ctx.WithBlockHeight(10)
 			},
 			common.BytesToHash(hash),
 		},
@@ -168,7 +122,7 @@ func (suite *KeeperTestSuite) TestGetCoinbaseAddress() {
 			func() {
 				header := suite.ctx.BlockHeader()
 				header.ProposerAddress = []byte{}
-				suite.Ctx = suite.Ctx.WithBlockHeader(header).WithConsensusParams(*app.DefaultConsensusParams)
+				suite.ctx = suite.ctx.WithBlockHeader(header)
 			},
 			false,
 		},
@@ -191,10 +145,10 @@ func (suite *KeeperTestSuite) TestGetCoinbaseAddress() {
 
 				header := suite.ctx.BlockHeader()
 				header.ProposerAddress = valConsAddr.Bytes()
-				suite.Ctx = suite.Ctx.WithBlockHeader(header).WithConsensusParams(*app.DefaultConsensusParams)
+				suite.ctx = suite.ctx.WithBlockHeader(header)
 
-				_, err = suite.App.StakingKeeper.GetValidatorByConsAddr(suite.Ctx, valConsAddr.Bytes())
-				suite.Require().NoError(err)
+				_, err = suite.app.StakingKeeper.GetValidatorByConsAddr(suite.ctx, valConsAddr.Bytes())
+				suite.Require().Nil(err)
 
 				suite.Require().NotEmpty(suite.ctx.BlockHeader().ProposerAddress)
 			},
@@ -306,9 +260,11 @@ func (suite *KeeperTestSuite) TestGetEthIntrinsicGas() {
 			ethCfg := params.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
 			ethCfg.HomesteadBlock = big.NewInt(2)
 			ethCfg.IstanbulBlock = big.NewInt(3)
-			signer := ethtypes.LatestSignerForChainID(suite.App.EvmKeeper.ChainID())
-			suite.Ctx = suite.Ctx.WithBlockHeight(tc.height).WithConsensusParams(*app.DefaultConsensusParams)
-			nonce := suite.App.EvmKeeper.GetNonce(suite.Ctx, suite.Address)
+			signer := ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
+
+			suite.ctx = suite.ctx.WithBlockHeight(tc.height)
+
+			nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
 			m, err := newNativeMessage(
 				nonce,
 				suite.ctx.BlockHeight(),

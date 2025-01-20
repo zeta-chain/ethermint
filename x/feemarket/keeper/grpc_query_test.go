@@ -53,7 +53,7 @@ func (suite *KeeperTestSuite) TestQueryBaseFee() {
 			"pass - non-nil Base Fee",
 			func() {
 				baseFee := sdkmath.OneInt().BigInt()
-				suite.App.FeeMarketKeeper.SetBaseFee(suite.Ctx, baseFee)
+				suite.app.FeeMarketKeeper.SetBaseFee(suite.ctx, baseFee)
 
 				aux = sdkmath.NewIntFromBigInt(baseFee)
 				expRes = &types.QueryBaseFeeResponse{BaseFee: &aux}

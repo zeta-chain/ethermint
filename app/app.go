@@ -525,7 +525,6 @@ func NewEthermintApp(
 		app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.FeeMarketKeeper,
 		tracer,
 		nil,
-		app.ConsensusParamsKeeper,
 		allKeys,
 	)
 

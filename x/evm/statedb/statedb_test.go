@@ -24,10 +24,10 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/ethermint/app"
-	"github.com/zeta-chain/ethermint/encoding"
 	ethermint "github.com/zeta-chain/ethermint/types"
 	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
@@ -181,22 +181,22 @@ func (suite *StateDBTestSuite) TestBalance() {
 	// NOTE: no need to test overflow/underflow, that is guaranteed by evm implementation.
 	testCases := []struct {
 		name       string
-		malleate   func(*statedb.StateDB, sdk.MultiStore)
+		malleate   func(*statedb.StateDB, storetypes.MultiStore)
 		expBalance *uint256.Int
 	}{
-		{"add balance", func(db *statedb.StateDB, cms sdk.MultiStore) {
+		{"add balance", func(db *statedb.StateDB, cms storetypes.MultiStore) {
 			db.AddBalance(address, uint256.NewInt(10))
 		}, uint256.NewInt(10)},
-		{"sub balance", func(db *statedb.StateDB, cms sdk.MultiStore) {
+		{"sub balance", func(db *statedb.StateDB, cms storetypes.MultiStore) {
 			db.AddBalance(address, uint256.NewInt(10))
 			// get dirty balance
 			suite.Require().Equal(uint256.NewInt(10), db.GetBalance(address))
 			db.SubBalance(address, uint256.NewInt(2))
 		}, uint256.NewInt(8)},
-		{"add zero balance", func(db *statedb.StateDB, cms sdk.MultiStore) {
+		{"add zero balance", func(db *statedb.StateDB, cms storetypes.MultiStore) {
 			db.AddBalance(address, uint256.NewInt(0))
 		}, uint256.NewInt(0)},
-		{"sub zero balance", func(db *statedb.StateDB, cms sdk.MultiStore) {
+		{"sub zero balance", func(db *statedb.StateDB, cms storetypes.MultiStore) {
 			db.SubBalance(address, uint256.NewInt(0))
 		}, uint256.NewInt(0)},
 	}
@@ -795,7 +795,6 @@ func newTestKeeper(t *testing.T, cms storetypes.MultiStore) (sdk.Context, *evmke
 		authAddr,
 		log.NewNopLogger(),
 	)
-	conKeeper := consensusparamkeeper.NewKeeper(appCodec, testStoreKeys[consensusparamtypes.StoreKey], authAddr)
 
 	allKeys := make(map[string]storetypes.StoreKey, len(testStoreKeys)+len(testTransientKeys)+len(testMemKeys))
 	for k, v := range testStoreKeys {
