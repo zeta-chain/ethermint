@@ -3,12 +3,12 @@ package backend
 import (
 	"fmt"
 
-	dbm "github.com/cosmos/cosmos-db"
-	abci "github.com/cometbft/cometbft/abci/types"
 	tmlog "cosmossdk.io/log"
+	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/types"
 	tmtypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"

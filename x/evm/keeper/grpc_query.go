@@ -306,6 +306,7 @@ func (k Keeper) EstimateGas(c context.Context, req *types.EthCallRequest) (*type
 		// Query block gas limit
 		params := ctx.ConsensusParams()
 		if params.Block != nil && params.Block.MaxGas > 0 {
+			// #nosec G115 always in range
 			hi = uint64(params.Block.MaxGas)
 		} else {
 			hi = req.GasCap

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	tmrand "github.com/cometbft/cometbft/libs/rand"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/store/dbadapter"

@@ -311,10 +311,10 @@ func (suite *StateDBTestSuite) TestCode() {
 			suite.Require().NoError(db.Commit())
 
 			// check again
-			//db = statedb.New(sdk.Context{}, keeper, emptyTxConfig)
-			//suite.Require().Equal(tc.expCode, db.GetCode(address))
-			//suite.Require().Equal(len(tc.expCode), db.GetCodeSize(address))
-			//suite.Require().Equal(tc.expCodeHash, db.GetCodeHash(address))
+			// db = statedb.New(sdk.Context{}, keeper, emptyTxConfig)
+			// suite.Require().Equal(tc.expCode, db.GetCode(address))
+			// suite.Require().Equal(len(tc.expCode), db.GetCodeSize(address))
+			// suite.Require().Equal(tc.expCodeHash, db.GetCodeHash(address))
 			ctx, keeper = newTestKeeper(suite.T(), raw)
 			db = statedb.New(ctx, keeper, emptyTxConfig)
 			suite.Require().Equal(tc.expCode, db.GetCode(address))

@@ -235,7 +235,6 @@ func applyTransaction(
 	tx *ethtypes.Transaction, usedGas *uint64, cfg ethvm.Config,
 ) (*ethtypes.Receipt, uint64, error) {
 	msg, err := ethcore.TransactionToMessage(tx, types.MakeSigner(config, header.Number), sdkmath.ZeroInt().BigInt())
-
 	if err != nil {
 		return nil, 0, err
 	}

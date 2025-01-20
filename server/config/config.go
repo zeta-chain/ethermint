@@ -80,9 +80,7 @@ const (
 	DefaultReturnDataLimit = 100000
 )
 
-var (
-	evmTracers = []string{"json", "markdown", "struct", "access_list"}
-)
+var evmTracers = []string{"json", "markdown", "struct", "access_list"}
 
 // Config defines the server's top level configuration. It includes the default app config
 // from the SDK as well as the EVM configuration to enable the JSON-RPC APIs.
