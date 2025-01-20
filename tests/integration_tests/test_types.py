@@ -211,7 +211,7 @@ def test_get_proof(ethermint_rpc_ws, geth):
     validator = ADDRS["validator"]
     method = "eth_getProof"
     for quantity in ["latest", "0x1024"]:
-        res = make_same_rpc_calls(
+        make_same_rpc_calls(
             eth_rpc,
             geth_rpc,
             method,

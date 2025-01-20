@@ -49,6 +49,7 @@ import (
 	mintypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/zeta-chain/ethermint/server"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
 
@@ -142,10 +143,12 @@ func startInProcess(cfg Config, val *Validator) error {
 			return fmt.Errorf("validator %s context is nil", val.Moniker)
 		}
 
-		// val.jsonrpc, val.jsonrpcDone, err = server.StartJSONRPC(val.Ctx, val.ClientCtx, val.errGroup, val.AppConfig, nil)
-		// if err != nil {
-		// 	return err
-		// }
+		tmEndpoint := "/websocket"
+		tmRPCAddr := val.RPCAddress
+		val.jsonrpc, val.jsonrpcDone, err = server.StartJSONRPC(val.Ctx, val.ClientCtx, tmRPCAddr, tmEndpoint, val.AppConfig, nil)
+		if err != nil {
+			return err
+		}
 
 		address := fmt.Sprintf("http://%s", val.AppConfig.JSONRPC.Address)
 
