@@ -179,7 +179,6 @@ func (msg *MsgEthereumTx) FromSignedEthereumTx(tx *ethtypes.Transaction, chainID
 	}
 
 	from, err := msg.recoverSender(chainID)
-	fmt.Println("recover sender", from, err)
 	if err != nil {
 		return err
 	}
@@ -202,12 +201,6 @@ func (msg MsgEthereumTx) Type() string { return TypeMsgEthereumTx }
 // ValidateBasic implements the sdk.Msg interface. It performs basic validation
 // checks of a Transaction. If returns an error if validation fails.
 func (msg MsgEthereumTx) ValidateBasic() error {
-	// if msg.From != "" {
-	// 	if err := ethermint.ValidateAddress(msg.From); err != nil {
-	// 		return errorsmod.Wrap(err, "invalid from address")
-	// 	}
-	// }
-
 	// Validate Size_ field, should be kept empty
 	if msg.Size_ != 0 {
 		return errorsmod.Wrapf(errortypes.ErrInvalidRequest, "tx size is deprecated")
@@ -268,7 +261,6 @@ func (msg MsgEthereumTx) GetSignBytes() []byte {
 // The function will fail if the sender address is not defined for the msg or if
 // the sender is not registered on the keyring
 func (msg *MsgEthereumTx) Sign(ethSigner ethtypes.Signer, keyringSigner keyring.Signer) error {
-	fmt.Println("Sign")
 	from := msg.GetFrom()
 	if from.Empty() {
 		return fmt.Errorf("sender address not defined for message")
@@ -320,7 +312,6 @@ func (msg MsgEthereumTx) GetEffectiveFee(baseFee *big.Int) *big.Int {
 // GetFrom loads the ethereum sender address from the sigcache and returns an
 // sdk.AccAddress from its bytes
 func (msg *MsgEthereumTx) GetFrom() sdk.AccAddress {
-	fmt.Println("Get sender")
 	if msg.From == "" {
 		return nil
 	}

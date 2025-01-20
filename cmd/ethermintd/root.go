@@ -48,7 +48,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	rosettaCmd "github.com/cosmos/rosetta/cmd"
 	"github.com/zeta-chain/ethermint/app"
 	ethermintclient "github.com/zeta-chain/ethermint/client"
 	"github.com/zeta-chain/ethermint/client/debug"
@@ -172,9 +171,6 @@ func NewRootCmd() (*cobra.Command, ethermint.EncodingConfig) {
 	if err != nil {
 		panic(err)
 	}
-
-	// add rosetta
-	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec))
 
 	autoCliOpts := tempApp.AutoCliOpts()
 	initClientCtx, _ = clientcfg.ReadDefaultValuesFromDefaultClientConfig(initClientCtx)
