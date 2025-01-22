@@ -17,10 +17,10 @@
         "homepage": null,
         "owner": "tweag",
         "repo": "gomod2nix",
-        "rev": "40d32f82fc60d66402eb0972e6e368aeab3faf58",
-        "sha256": "0li17ynbg2wg0xqy655m5rmcw905sbv7d4ir35z7s5pg1yhhzxkp",
+        "rev": "514283ec89c39ad0079ff2f3b1437404e4cba608",
+        "sha256": "0wigkjf8ii86wscg0v33bmpda0rjh5442qj2mx2hg1h59m9jmyxl",
         "type": "tarball",
-        "url": "https://github.com/tweag/gomod2nix/archive/40d32f82fc60d66402eb0972e6e368aeab3faf58.tar.gz",
+        "url": "https://github.com/tweag/gomod2nix/archive/514283ec89c39ad0079ff2f3b1437404e4cba608.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "niv": {
