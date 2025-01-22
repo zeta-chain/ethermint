@@ -431,35 +431,6 @@ func (suite *BackendTestSuite) TestFeeHistory() {
 			sdk.AccAddress(tests.GenerateAddress().Bytes()),
 			true,
 		},
-		{
-			"pass - Concurrent FeeHistoryResults object",
-			func(validator sdk.AccAddress) {
-				var header metadata.MD
-				baseFee := sdkmath.NewInt(1)
-				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				fQueryClient := suite.backend.queryClient.FeeMarket.(*mocks.FeeMarketQueryClient)
-				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				suite.backend.cfg.JSONRPC.FeeHistoryCap = 2
-				RegisterBlock(client, ethrpc.BlockNumber(1).Int64(), nil)
-				RegisterBlockResults(client, 1)
-				RegisterBaseFee(queryClient, baseFee)
-				RegisterValidatorAccount(queryClient, validator)
-				RegisterConsensusParams(client, 1)
-				RegisterParams(queryClient, &header, 1)
-				RegisterParamsWithoutHeader(queryClient, 1)
-				RegisterFeeMarketParams(fQueryClient, 1)
-			},
-			1,
-			1,
-			&rpc.FeeHistoryResult{
-				OldestBlock:  (*hexutil.Big)(big.NewInt(1)),
-				BaseFee:      []*hexutil.Big{(*hexutil.Big)(big.NewInt(1)), (*hexutil.Big)(big.NewInt(0))},
-				GasUsedRatio: []float64{0},
-				Reward:       [][]*hexutil.Big{{(*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0))}},
-			},
-			sdk.AccAddress(tests.GenerateAddress().Bytes()),
-			true,
-		},
 	}
 
 	for _, tc := range testCases {

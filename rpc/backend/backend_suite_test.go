@@ -104,9 +104,6 @@ func (suite *BackendTestSuite) buildEthereumTx() (*evmtypes.MsgEthereumTx, []byt
 		nil,
 	)
 
-	// A valid msg should have empty `From`
-	msgEthereumTx.From = ""
-
 	txBuilder := suite.backend.clientCtx.TxConfig.NewTxBuilder()
 	err := txBuilder.SetMsgs(msgEthereumTx)
 	suite.Require().NoError(err)

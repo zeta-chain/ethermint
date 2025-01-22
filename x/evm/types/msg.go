@@ -206,6 +206,10 @@ func (msg MsgEthereumTx) ValidateBasic() error {
 		return errorsmod.Wrapf(errortypes.ErrInvalidRequest, "tx size is deprecated")
 	}
 
+	if len(msg.From) == 0 {
+		return errorsmod.Wrapf(errortypes.ErrInvalidRequest, "sender address is missing")
+	}
+
 	txData, err := UnpackTxData(msg.Data)
 	if err != nil {
 		return errorsmod.Wrap(err, "failed to unpack tx data")
@@ -408,9 +412,6 @@ func (msg *MsgEthereumTx) BuildTx(b client.TxBuilder, evmDenom string) (authsign
 	}
 
 	builder.SetExtensionOptions(option)
-
-	// A valid msg should have empty `From`
-	// msg.From = ""
 
 	err = builder.SetMsgs(msg)
 	if err != nil {

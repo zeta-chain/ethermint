@@ -17,7 +17,6 @@ import (
 	rpctypes "github.com/zeta-chain/ethermint/rpc/types"
 	ethermint "github.com/zeta-chain/ethermint/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	"google.golang.org/grpc/metadata"
 )
 
 func (suite *BackendTestSuite) TestGetTransactionByHash() {
@@ -548,11 +547,7 @@ func (suite *BackendTestSuite) TestGetTransactionReceipt() {
 		{
 			"fail - Receipts do not match ",
 			func() {
-				var header metadata.MD
-				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				RegisterParams(queryClient, &header, 1)
-				RegisterParamsWithoutHeader(queryClient, 1)
 				RegisterBlock(client, 1, txBz)
 				RegisterBlockResults(client, 1)
 			},

@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	coreheader "cosmossdk.io/core/header"
 	"github.com/holiman/uint256"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -179,7 +180,7 @@ func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
 		Height:  1,
 		ChainID: app.ChainID,
 		Time:    time.Now().UTC(),
-	}).WithChainID(app.ChainID)
+	}).WithChainID(app.ChainID).WithProposer(suite.consAddress)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.EvmKeeper)
@@ -189,6 +190,7 @@ func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
 		BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(suite.address.Bytes()), nil, 0, 0),
 		CodeHash:    common.BytesToHash(crypto.Keccak256(nil)).String(),
 	}
+	acc.AccountNumber = suite.app.AccountKeeper.NextAccountNumber(suite.ctx)
 
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
@@ -216,26 +218,21 @@ func (suite *KeeperTestSuite) EvmDenom() string {
 
 // Commit and begin new block
 func (suite *KeeperTestSuite) Commit() {
+	jumpTime := time.Second * 0
+	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: suite.ctx.BlockHeight(),
+		Time:   suite.ctx.BlockTime(),
+	})
 	suite.app.Commit()
+	newBlockTime := suite.ctx.BlockTime().Add(jumpTime)
 	header := suite.ctx.BlockHeader()
-	header.Height += 1
-	suite.app.FinalizeBlock(
-		&abci.RequestFinalizeBlock{
-			Height:             header.Height,
-			Txs:                [][]byte{},
-			Hash:               header.AppHash,
-			NextValidatorsHash: header.NextValidatorsHash,
-			ProposerAddress:    header.ProposerAddress,
-			Time:               header.Time.Add(time.Second),
-		},
-	)
-
+	header.Time = newBlockTime
+	header.Height++
 	// update ctx
-	suite.ctx = suite.app.BaseApp.NewContext(false)
-
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, suite.app.EvmKeeper)
-	suite.queryClient = types.NewQueryClient(queryHelper)
+	suite.ctx = suite.app.NewUncachedContext(false, header).WithHeaderInfo(coreheader.Info{
+		Height: header.Height,
+		Time:   header.Time,
+	})
 }
 
 func (suite *KeeperTestSuite) StateDB() *statedb.StateDB {
@@ -244,7 +241,6 @@ func (suite *KeeperTestSuite) StateDB() *statedb.StateDB {
 
 // DeployTestContract deploy a test erc20 contract and returns the contract address
 func (suite *KeeperTestSuite) DeployTestContract(t require.TestingT, owner common.Address, supply *big.Int) common.Address {
-	ctx := sdk.WrapSDKContext(suite.ctx)
 	chainID := suite.app.EvmKeeper.ChainID()
 
 	ctorArgs, err := types.ERC20Contract.ABI.Pack("", owner, supply)
@@ -258,7 +254,7 @@ func (suite *KeeperTestSuite) DeployTestContract(t require.TestingT, owner commo
 		Data: (*hexutil.Bytes)(&data),
 	})
 	require.NoError(t, err)
-	res, err := suite.queryClient.EstimateGas(ctx, &types.EthCallRequest{
+	res, err := suite.queryClient.EstimateGas(suite.ctx, &types.EthCallRequest{
 		Args:            args,
 		GasCap:          uint64(config.DefaultGasCap),
 		ProposerAddress: suite.ctx.BlockHeader().ProposerAddress,
@@ -294,7 +290,7 @@ func (suite *KeeperTestSuite) DeployTestContract(t require.TestingT, owner commo
 	erc20DeployTx.From = suite.address.Hex()
 	err = erc20DeployTx.Sign(ethtypes.LatestSignerForChainID(chainID), suite.signer)
 	require.NoError(t, err)
-	rsp, err := suite.app.EvmKeeper.EthereumTx(ctx, erc20DeployTx)
+	rsp, err := suite.app.EvmKeeper.EthereumTx(suite.ctx, erc20DeployTx)
 	require.NoError(t, err)
 	require.Empty(t, rsp.VmError)
 	return crypto.CreateAddress(suite.address, nonce)
