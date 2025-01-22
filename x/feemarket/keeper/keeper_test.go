@@ -145,6 +145,7 @@ func (suite *KeeperTestSuite) Commit() {
 	types.RegisterQueryServer(queryHelper, suite.app.FeeMarketKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
+
 func (suite *KeeperTestSuite) TestSetGetBlockGasWanted() {
 	testCases := []struct {
 		name     string
