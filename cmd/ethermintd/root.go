@@ -61,10 +61,6 @@ import (
 
 const EnvPrefix = "ETHERMINT"
 
-type emptyAppOptions struct{}
-
-func (ao emptyAppOptions) Get(_ string) interface{} { return nil }
-
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, ethermint.EncodingConfig) {
