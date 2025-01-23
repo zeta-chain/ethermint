@@ -10,6 +10,6 @@ pkgs.mkShell {
     pkgs.test-env
   ];
   shellHook = ''
-    . ${../../scripts/.env}
+    . ${../../scripts/env}
   '';
 }
