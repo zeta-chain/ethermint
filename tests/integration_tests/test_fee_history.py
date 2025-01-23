@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from web3 import Web3
 
-from .network import setup_custom_ethermint
+from .network import setup_ethermint
 from .utils import ADDRS, send_transaction, w3_wait_for_block
 
 NEW_BASE_FEE = 100000000000
@@ -13,9 +13,7 @@ NEW_BASE_FEE = 100000000000
 @pytest.fixture(scope="module")
 def custom_ethermint(tmp_path_factory):
     path = tmp_path_factory.mktemp("fee-history")
-    yield from setup_custom_ethermint(
-        path, 26500, Path(__file__).parent / "configs/fee-history.jsonnet"
-    )
+    yield from setup_ethermint(path, 26500, long_timeout_commit=True)
 
 
 @pytest.fixture(scope="module", params=["ethermint", "geth"])
