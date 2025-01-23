@@ -6,6 +6,7 @@ pkgs.mkShell {
     pkgs.start-scripts
     pkgs.go-ethereum
     pkgs.cosmovisor
+    pkgs.poetry
     pkgs.nodejs
     pkgs.test-env
   ];
