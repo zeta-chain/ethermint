@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	coreheader "cosmossdk.io/core/header"
+
 	sdkmath "cosmossdk.io/math"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -101,6 +103,7 @@ func (suite *KeeperTestSuite) SetupApp(checkTx bool) {
 		BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(suite.address.Bytes()), nil, 0, 0),
 		CodeHash:    common.BytesToHash(crypto.Keccak256(nil)).String(),
 	}
+	acc.AccountNumber = suite.app.AccountKeeper.NextAccountNumber(s.ctx)
 
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
@@ -124,26 +127,21 @@ func (suite *KeeperTestSuite) SetupApp(checkTx bool) {
 
 // Commit and begin new block
 func (suite *KeeperTestSuite) Commit() {
+	jumpTime := time.Second * 0
+	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: suite.ctx.BlockHeight(),
+		Time:   suite.ctx.BlockTime(),
+	})
 	suite.app.Commit()
+	newBlockTime := suite.ctx.BlockTime().Add(jumpTime)
 	header := suite.ctx.BlockHeader()
-	header.Height += 1
-	suite.app.FinalizeBlock(
-		&abci.RequestFinalizeBlock{
-			Height:             header.Height,
-			Txs:                [][]byte{},
-			Hash:               header.AppHash,
-			NextValidatorsHash: header.NextValidatorsHash,
-			ProposerAddress:    header.ProposerAddress,
-			Time:               header.Time.Add(time.Second),
-		},
-	)
-
+	header.Time = newBlockTime
+	header.Height++
 	// update ctx
-	suite.ctx = suite.app.BaseApp.NewContext(false)
-
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, suite.app.FeeMarketKeeper)
-	suite.queryClient = types.NewQueryClient(queryHelper)
+	suite.ctx = suite.app.NewUncachedContext(false, header).WithHeaderInfo(coreheader.Info{
+		Height: header.Height,
+		Time:   header.Time,
+	})
 }
 
 func (suite *KeeperTestSuite) TestSetGetBlockGasWanted() {

@@ -104,13 +104,7 @@ func (suite *BackendTestSuite) buildEthereumTx() (*evmtypes.MsgEthereumTx, []byt
 		nil,
 	)
 
-	txBuilder := suite.backend.clientCtx.TxConfig.NewTxBuilder()
-	err := txBuilder.SetMsgs(msgEthereumTx)
-	suite.Require().NoError(err)
-
-	bz, err := suite.backend.clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
-	suite.Require().NoError(err)
-	return msgEthereumTx, bz
+	return suite.signAndEncodeEthTx(msgEthereumTx)
 }
 
 // buildFormattedBlock returns a formatted block for testing
@@ -166,14 +160,11 @@ func (suite *BackendTestSuite) generateTestKeyring(clientDir string) (keyring.Ke
 	return keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, clientDir, buf, encCfg.Codec, []keyring.Option{hd.EthSecp256k1Option()}...)
 }
 
-func (suite *BackendTestSuite) signAndEncodeEthTx(msgEthereumTx *evmtypes.MsgEthereumTx) []byte {
+func (suite *BackendTestSuite) signAndEncodeEthTx(msgEthereumTx *evmtypes.MsgEthereumTx) (*evmtypes.MsgEthereumTx, []byte) {
 	from, priv := tests.NewAddrKey()
 	signer := tests.NewSigner(priv)
 
-	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-	RegisterParamsWithoutHeader(queryClient, 1)
-
-	ethSigner := ethtypes.LatestSigner(suite.backend.ChainConfig())
+	ethSigner := ethtypes.LatestSignerForChainID(suite.backend.chainID)
 	msgEthereumTx.From = from.String()
 	err := msgEthereumTx.Sign(ethSigner, signer)
 	suite.Require().NoError(err)
@@ -185,5 +176,5 @@ func (suite *BackendTestSuite) signAndEncodeEthTx(msgEthereumTx *evmtypes.MsgEth
 	txBz, err := txEncoder(tx)
 	suite.Require().NoError(err)
 
-	return txBz
+	return msgEthereumTx, txBz
 }

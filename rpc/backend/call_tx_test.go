@@ -300,6 +300,8 @@ func (suite *BackendTestSuite) TestSendRawTransaction() {
 			"fail - unprotected transactions",
 			func() {
 				suite.backend.allowUnprotectedTxs = false
+				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
+				RegisterParamsWithoutHeaderError(queryClient, 1)
 			},
 			rlpEncodedBz,
 			common.Hash{},

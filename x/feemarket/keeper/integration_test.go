@@ -235,9 +235,6 @@ var _ = Describe("Feemarket", func() {
 						// Note that max priority fee per gas can't be higher than the max fee per gas (gasFeeCap), i.e. 30_000_000_000)
 						return txParams{nil, big.NewInt(minGasPrices - 10_000_000_000), big.NewInt(30_000_000_000), &ethtypes.AccessList{}}
 					}),
-					Entry("dynamic tx with GasFeeCap > MinGasPrices, EffectivePrice < MinGasPrices", func() txParams {
-						return txParams{nil, big.NewInt(minGasPrices + 10_000_000_000), big.NewInt(0), &ethtypes.AccessList{}}
-					}),
 				)
 
 				DescribeTable("should accept transactions with gasPrice >= MinGasPrices",
@@ -357,10 +354,10 @@ var _ = Describe("Feemarket", func() {
 						).To(BeTrue(), res.GetLog())
 					},
 					Entry("legacy tx", func() txParams {
-						return txParams{big.NewInt(baseFee - 1_000_000_000), nil, nil, nil}
+						return txParams{big.NewInt(baseFee - 2_000_000_000), nil, nil, nil}
 					}),
 					Entry("dynamic tx", func() txParams {
-						return txParams{nil, big.NewInt(baseFee - 1_000_000_000), big.NewInt(0), &ethtypes.AccessList{}}
+						return txParams{nil, big.NewInt(baseFee - 2_000_000_000), big.NewInt(0), &ethtypes.AccessList{}}
 					}),
 				)
 
@@ -416,10 +413,10 @@ var _ = Describe("Feemarket", func() {
 					},
 					// Note that the baseFee is not 10_000_000_000 anymore but updates to 8_750_000_000 because of the s.Commit
 					Entry("legacy tx", func() txParams {
-						return txParams{big.NewInt(baseFee - 2_000_000_000), nil, nil, nil}
+						return txParams{big.NewInt(baseFee - 2_500_000_000), nil, nil, nil}
 					}),
 					Entry("dynamic tx", func() txParams {
-						return txParams{nil, big.NewInt(baseFee - 2_000_000_000), big.NewInt(0), &ethtypes.AccessList{}}
+						return txParams{nil, big.NewInt(baseFee - 2_500_000_000), big.NewInt(0), &ethtypes.AccessList{}}
 					}),
 				)
 

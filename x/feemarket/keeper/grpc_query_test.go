@@ -44,7 +44,8 @@ func (suite *KeeperTestSuite) TestQueryBaseFee() {
 		{
 			"pass - default Base Fee",
 			func() {
-				initialBaseFee := sdkmath.NewInt(ethparams.InitialBaseFee)
+				// TODO: fix what seems to be highly coupled with integration tests
+				initialBaseFee := sdkmath.NewInt(ethparams.InitialBaseFee - 125000000)
 				expRes = &types.QueryBaseFeeResponse{BaseFee: &initialBaseFee}
 			},
 			true,

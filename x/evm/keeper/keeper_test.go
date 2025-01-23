@@ -18,7 +18,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -43,7 +42,6 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/params"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -91,7 +89,6 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	checkTx := false
-	suite.app = app.Setup(checkTx, nil)
 	suite.SetupApp(checkTx)
 }
 
@@ -122,6 +119,25 @@ func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
 	suite.consAddress = sdk.ConsAddress(priv.PubKey().Address())
 
 	suite.app = app.Setup(checkTx, func(app *app.EthermintApp, genesis app.GenesisState) app.GenesisState {
+		coins := sdk.NewCoins(sdk.NewCoin(types.DefaultEVMDenom, sdkmath.NewInt(100000000000000)))
+		b32address := sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), suite.consAddress.Bytes())
+		balances := []banktypes.Balance{
+			{
+				Address: b32address,
+				Coins:   coins,
+			},
+			{
+				Address: app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName).String(),
+				Coins:   coins,
+			},
+		}
+		var bankGenesis banktypes.GenesisState
+		app.AppCodec().MustUnmarshalJSON(genesis[banktypes.ModuleName], &bankGenesis)
+		// Update balances and total supply
+		bankGenesis.Balances = append(bankGenesis.Balances, balances...)
+		bankGenesis.Supply = bankGenesis.Supply.Add(coins...).Add(coins...)
+		genesis[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(&bankGenesis)
+
 		feemarketGenesis := feemarkettypes.DefaultGenesisState()
 		if suite.enableFeemarket {
 			feemarketGenesis.Params.EnableHeight = 1
@@ -143,38 +159,6 @@ func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
 		}
 		return genesis
 	})
-
-	if suite.mintFeeCollector {
-		// mint some coin to fee collector
-		coins := sdk.NewCoins(sdk.NewCoin(types.DefaultEVMDenom, sdkmath.NewInt(int64(params.TxGas)-1)))
-		genesisState := app.NewTestGenesisState(suite.app.AppCodec())
-		balances := []banktypes.Balance{
-			{
-				Address: suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName).String(),
-				Coins:   coins,
-			},
-		}
-		var bankGenesis banktypes.GenesisState
-		suite.app.AppCodec().MustUnmarshalJSON(genesisState[banktypes.ModuleName], &bankGenesis)
-		// Update balances and total supply
-		bankGenesis.Balances = append(bankGenesis.Balances, balances...)
-		bankGenesis.Supply = bankGenesis.Supply.Add(coins...)
-		genesisState[banktypes.ModuleName] = suite.app.AppCodec().MustMarshalJSON(&bankGenesis)
-
-		// we marshal the genesisState of all module to a byte array
-		stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
-		require.NoError(t, err)
-
-		// Initialize the chain
-		suite.app.InitChain(
-			&abci.RequestInitChain{
-				ChainId:         "ethermint_9000-1",
-				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: app.DefaultConsensusParams,
-				AppStateBytes:   stateBytes,
-			},
-		)
-	}
 
 	suite.ctx = suite.app.NewUncachedContext(checkTx, tmproto.Header{
 		Height:  1,
