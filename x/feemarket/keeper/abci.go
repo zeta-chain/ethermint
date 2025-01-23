@@ -76,7 +76,9 @@ func (k *Keeper) EndBlock(ctx sdk.Context) error {
 	// this will be keep BaseFee protected from un-penalized manipulation
 	// more info here https://github.com/zeta-chain/ethermint/pull/1105#discussion_r888798925
 	minGasMultiplier := k.GetParams(ctx).MinGasMultiplier
+	// #nosec G701 G115 always in range
 	limitedGasWanted := sdkmath.LegacyNewDec(int64(gasWanted)).Mul(minGasMultiplier)
+	// #nosec G701 G115 always in range
 	gasWanted = sdkmath.LegacyMaxDec(limitedGasWanted, sdkmath.LegacyNewDec(int64(gasUsed))).TruncateInt().Uint64()
 	k.SetBlockGasWanted(ctx, gasWanted)
 

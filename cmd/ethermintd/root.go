@@ -68,7 +68,6 @@ func (ao emptyAppOptions) Get(_ string) interface{} { return nil }
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, ethermint.EncodingConfig) {
-	tempApp := app.NewEthermintApp(cmtlog.NewNopLogger(), dbm.NewMemDB(), nil, true, emptyAppOptions{})
 	encodingConfig := app.MakeConfigForTest()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
@@ -172,13 +171,6 @@ func NewRootCmd() (*cobra.Command, ethermint.EncodingConfig) {
 		panic(err)
 	}
 
-	autoCliOpts := tempApp.AutoCliOpts()
-	initClientCtx, _ = clientcfg.ReadDefaultValuesFromDefaultClientConfig(initClientCtx)
-
-	autoCliOpts.ClientCtx = initClientCtx
-	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
-		panic(err)
-	}
 	return rootCmd, encodingConfig
 }
 
