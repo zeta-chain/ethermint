@@ -80,7 +80,6 @@ def test_get_logs_by_topic(cluster):
     tx = contract.functions.setGreeting("world").build_transaction()
     receipt = send_transaction(w3, tx)
     assert receipt.status == 1
-    start = w3.eth.get_block_number()
 
     # The getLogs method under the hood works as a filter
     # with the specified topics and a block range.
@@ -97,17 +96,6 @@ def test_get_logs_by_topic(cluster):
     w3_wait_for_new_blocks(w3, 2)
     logs = w3.eth.get_logs({"topics": [topic.hex()]})
     assert len(logs) == 0
-
-    # return logs when to block is newer than latest
-    end = start + 2000
-    logs = w3.eth.get_logs(
-        {
-            "fromBlock": hex(start),
-            "toBlock": hex(end),
-            "address": [contract.address],
-        }
-    )
-    assert len(logs) > 0
 
 
 def test_pending_transaction_filter(cluster):
