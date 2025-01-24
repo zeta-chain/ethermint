@@ -1,7 +1,7 @@
 let
   pkgs = import ../../../nix { };
   fetchEthermint = rev: builtins.fetchTarball "https://github.com/zeta-chain/ethermint/archive/${rev}.tar.gz";
-  released = pkgs.buildGo121Module rec {
+  released = pkgs.buildGo122Module rec {
     name = "ethermintd";
     src = fetchEthermint "1ebf85a354a08c856a8c2b97fc82f66f6e44f761";
     subPackages = [ "cmd/ethermintd" ];
