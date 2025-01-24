@@ -5,7 +5,7 @@ let
     name = "ethermintd";
     src = fetchEthermint "1ebf85a354a08c856a8c2b97fc82f66f6e44f761";
     subPackages = [ "cmd/ethermintd" ];
-    vendorSha256 = "sha256-6EHCw0/Lo1JfDOEfsn/NufRco0zgebCo0hwwm5wJoFU=";
+    vendorHash = "sha256-6EHCw0/Lo1JfDOEfsn/NufRco0zgebCo0hwwm5wJoFU=";
     doCheck = false;
   };
   current = pkgs.callPackage ../../../. { };
