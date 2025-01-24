@@ -202,6 +202,7 @@ func queryCommand() *cobra.Command {
 		sdkserver.QueryBlockResultsCmd(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
+		rpc.QueryEventForTxCmd(),
 	)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
