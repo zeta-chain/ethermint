@@ -249,6 +249,13 @@ def parse_events(logs):
         for ev in logs[0]["events"]
     }
 
+def find_log_event_attrs(events, ev_type, cond=None):
+    for ev in events:
+        if ev["type"] == ev_type:
+            attrs = {attr["key"]: attr["value"] for attr in ev["attributes"]}
+            if cond is None or cond(attrs):
+                return attrs
+    return None
 
 def derive_new_account(n=1):
     # derive a new address

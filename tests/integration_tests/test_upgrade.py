@@ -19,6 +19,7 @@ from .utils import (
     wait_for_block,
     wait_for_block_time,
     wait_for_port,
+    find_log_event_attrs,
 )
 
 
@@ -117,12 +118,24 @@ def test_cosmovisor_upgrade(custom_ethermint: Ethermint):
         },
     )
     assert rsp["code"] == 0, rsp["raw_log"]
-
+    print("Rsp: ", rsp)
     # get proposal_id
-    ev = parse_events(rsp["logs"])["submit_proposal"]
+
+    rsp = cli.event_query_tx_for(rsp["txhash"])
+    print("Rsp: ", rsp)
+
+    def cb(attrs):
+        return "proposal_id" in attrs
+
+    ev = find_log_event_attrs(rsp["events"], "submit_proposal", cb)
+
+    print("Ev: ", rsp)
+
     proposal_id = ev["proposal_id"]
 
     rsp = cli.gov_vote("validator", proposal_id, "yes")
+    print("Rsp: ", rsp)
+
     assert rsp["code"] == 0, rsp["raw_log"]
     # rsp = custom_ethermint.cosmos_cli(1).gov_vote("validator", proposal_id, "yes")
     # assert rsp["code"] == 0, rsp["raw_log"]
