@@ -37,7 +37,7 @@ import (
 var (
 	address       common.Address   = common.BigToAddress(big.NewInt(101))
 	address2      common.Address   = common.BigToAddress(big.NewInt(102))
-	blockHash     common.Hash      = common.BigToHash(big.NewInt(9999))
+	blockHash     common.Hash      = common.BigToHash(big.NewInt(0))
 	emptyTxConfig statedb.TxConfig = statedb.NewEmptyTxConfig(blockHash)
 )
 
@@ -510,6 +510,8 @@ func (suite *StateDBTestSuite) TestLog() {
 		Topics:      []common.Hash{},
 		Data:        data,
 		BlockNumber: 1,
+		BlockHash:   blockHash,
+		TxHash:      txHash,
 		TxIndex:     1,
 		Index:       1,
 	}
