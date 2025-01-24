@@ -961,6 +961,7 @@ func (app *EthermintApp) EncodingConfig() ethermint.EncodingConfig {
 // AutoCliOpts returns the autocli options for the app.
 func (app *EthermintApp) AutoCliOpts() autocli.AppOptions {
 	modules := make(map[string]appmodule.AppModule, 0)
+	// #nosec G705 for map iteration
 	for _, m := range app.ModuleManager.Modules {
 		if moduleWithName, ok := m.(module.HasName); ok {
 			moduleName := moduleWithName.Name()
