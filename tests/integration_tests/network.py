@@ -131,9 +131,9 @@ def setup_custom_ethermint(
     print(*cmd)
     try:
         subprocess.run(cmd, check=True)
-    except subprocess.CalledProcessError as e:
-        print("Error {}: {}".format(e.returncode, e.output))
-        raise e
+    except subprocess.CalledProcessError as err:
+        print("Error {}: {}".format(err.returncode, err.output))
+        raise err
     if post_init is not None:
         post_init(path, base_port, config)
     proc = subprocess.Popen(
@@ -144,11 +144,11 @@ def setup_custom_ethermint(
         if wait_port:
             wait_for_port(ports.evmrpc_port(base_port))
             wait_for_port(ports.evmrpc_ws_port(base_port))
-        e = Ethermint(
+        ethermint_instance = Ethermint(
             path / "ethermint_9000-1", chain_binary=chain_binary or DEFAULT_CHAIN_BINARY
         )
-        w3_wait_for_block(e.w3, 1)
-        yield e
+        w3_wait_for_block(ethermint_instance.w3, 1)
+        yield ethermint_instance
     finally:
         os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
         proc.wait()

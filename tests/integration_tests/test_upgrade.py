@@ -192,4 +192,8 @@
 #             home=cli.data_dir,
 #         )
 #     )
-#     assert p == {"allowed_clients": ["06-solomachine", "07-tendermint", "09-localhost"]}
+#     assert p == {"allowed_clients":[
+#       "06-solomachine",
+#       "07-tendermint",
+#       "09-localhost"
+#     ]}

@@ -121,7 +121,7 @@ def test_grpc_mode(custom_ethermint):
             addr = custom_ethermint.cosmos_cli(0).consensus_address()
             cons_addr = decode_bech32(addr)
 
-            def expect_cb(rsp):
+            def expect_cb2(rsp):
                 ret = base64.b64decode(rsp["ret"].encode())
                 return "code" not in rsp and 100 == int.from_bytes(ret, "big")
 
@@ -129,7 +129,7 @@ def test_grpc_mode(custom_ethermint):
             grpc_eth_call(
                 api_port,
                 msg,
-                expect_cb,
+                expect_cb2,
                 chain_id=100,
                 proposer_address=base64.b64encode(cons_addr).decode(),
             )
