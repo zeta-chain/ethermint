@@ -701,7 +701,6 @@ def test_get_logs(cluster):
 
 
 def assert_log_block(w3, log):
-    print("Log received for assertion:", log)
     block_hash = log["blockHash"]
     # check if the returned block hash is correct
     # getBlockByHash
