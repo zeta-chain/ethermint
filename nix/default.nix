@@ -4,11 +4,11 @@ import sources.nixpkgs {
   overlays = [
     (_: pkgs: {
       flake-compat = import sources.flake-compat;
-      go = pkgs.go_1_23;
+      go = pkgs.go_1_22;
       go-ethereum = pkgs.callPackage ./go-ethereum.nix {
         inherit (pkgs.darwin) libobjc;
         inherit (pkgs.darwin.apple_sdk.frameworks) IOKit;
-        buildGoModule = pkgs.buildGo122Module;
+        buildGoModule = pkgs.buildGo112Module;
       };
     }) # update to a version that supports eip-1559
     (import "${sources.poetry2nix}/overlay.nix")
@@ -24,7 +24,7 @@ import sources.nixpkgs {
       })
     (_: pkgs: { test-env = pkgs.callPackage ./testenv.nix { }; })
     (_: pkgs: {
-      cosmovisor = pkgs.buildGo122Module rec {
+      cosmovisor = pkgs.buildGo121Module rec {
         name = "cosmovisor";
         src = sources.cosmos-sdk + "/cosmovisor";
         subPackages = [ "./cmd/cosmovisor" ];
