@@ -1,4 +1,4 @@
-dotenv: .env
+dotenv: env
 ethermint_9000-1:
   cmd: ethermintd
   start-flags: "--trace"

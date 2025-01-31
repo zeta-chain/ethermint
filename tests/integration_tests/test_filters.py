@@ -15,6 +15,8 @@ from .utils import (
     w3_wait_for_new_blocks,
 )
 
+pytestmark = pytest.mark.filter
+
 
 @pytest.fixture(scope="module")
 def custom_ethermint(tmp_path_factory):
@@ -145,7 +147,7 @@ def test_event_log_filter_by_contract(cluster):
 
     # Create new filter from contract
     current_height = hex(w3.eth.get_block_number())
-    flt = contract.events.ChangeGreeting.createFilter(fromBlock=current_height)
+    flt = contract.events.ChangeGreeting.create_filter(fromBlock=current_height)
 
     # without tx
     assert flt.get_new_entries() == []  # GetFilterChanges
@@ -158,7 +160,7 @@ def test_event_log_filter_by_contract(cluster):
     tx_receipt = send_transaction(w3, tx)
     assert tx_receipt.status == 1
 
-    log = contract.events.ChangeGreeting().processReceipt(tx_receipt)[0]
+    log = contract.events.ChangeGreeting().process_receipt(tx_receipt)[0]
     assert log["event"] == "ChangeGreeting"
 
     new_entries = flt.get_new_entries()
@@ -715,7 +717,7 @@ def assert_change_greet_log_data(log, new_greeting):
     # check event log data ('from' and 'value' fields)
     types = ["address", "string"]
     names = ["from", "value"]
-    values = abi.decode_abi(types, log["data"])
+    values = abi.decode(types, log["data"])
     log_data = dict(zip(names, values))
 
     # the address stored in the data field may defer on lower/upper case characters

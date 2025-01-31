@@ -5,9 +5,9 @@ import (
 	"io"
 	"testing"
 
-	dbm "github.com/cometbft/cometbft-db"
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 )
@@ -15,7 +15,7 @@ import (
 func BenchmarkEthermintApp_ExportAppStateAndValidators(b *testing.B) {
 	db := dbm.NewMemDB()
 	app := NewEthermintApp(
-		log.NewTMLogger(io.Discard),
+		log.NewLogger(io.Discard),
 		db,
 		nil,
 		true,
@@ -31,7 +31,7 @@ func BenchmarkEthermintApp_ExportAppStateAndValidators(b *testing.B) {
 
 	// Initialize the chain
 	app.InitChain(
-		abci.RequestInitChain{
+		&abci.RequestInitChain{
 			ChainId:       ChainID,
 			Validators:    []abci.ValidatorUpdate{},
 			AppStateBytes: stateBytes,
@@ -44,7 +44,7 @@ func BenchmarkEthermintApp_ExportAppStateAndValidators(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// Making a new app object with the db, so that initchain hasn't been called
 		app2 := NewEthermintApp(
-			log.NewTMLogger(log.NewSyncWriter(io.Discard)),
+			log.NewLogger(io.Discard),
 			db,
 			nil,
 			true,

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	dbm "github.com/cometbft/cometbft-db"
+	dbm "github.com/cosmos/cosmos-db"
 
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,7 +21,6 @@ import (
 	"github.com/zeta-chain/ethermint/app"
 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
 	"github.com/zeta-chain/ethermint/crypto/hd"
-	"github.com/zeta-chain/ethermint/encoding"
 	"github.com/zeta-chain/ethermint/indexer"
 	"github.com/zeta-chain/ethermint/rpc/backend/mocks"
 	rpctypes "github.com/zeta-chain/ethermint/rpc/types"
@@ -68,7 +67,7 @@ func (suite *BackendTestSuite) SetupTest() {
 	suite.signer = tests.NewSigner(priv)
 	suite.Require().NoError(err)
 
-	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
+	encodingConfig := app.MakeConfigForTest()
 	clientCtx := client.Context{}.WithChainID(ChainID).
 		WithHeight(1).
 		WithTxConfig(encodingConfig.TxConfig).
@@ -86,7 +85,7 @@ func (suite *BackendTestSuite) SetupTest() {
 	suite.backend.ctx = rpctypes.ContextWithHeight(1)
 
 	// Add codec
-	encCfg := encoding.MakeConfig(app.ModuleBasics)
+	encCfg := app.MakeConfigForTest()
 	suite.backend.clientCtx.Codec = encCfg.Codec
 }
 
@@ -105,16 +104,7 @@ func (suite *BackendTestSuite) buildEthereumTx() (*evmtypes.MsgEthereumTx, []byt
 		nil,
 	)
 
-	// A valid msg should have empty `From`
-	msgEthereumTx.From = ""
-
-	txBuilder := suite.backend.clientCtx.TxConfig.NewTxBuilder()
-	err := txBuilder.SetMsgs(msgEthereumTx)
-	suite.Require().NoError(err)
-
-	bz, err := suite.backend.clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
-	suite.Require().NoError(err)
-	return msgEthereumTx, bz
+	return suite.signAndEncodeEthTx(msgEthereumTx)
 }
 
 // buildFormattedBlock returns a formatted block for testing
@@ -166,18 +156,15 @@ func (suite *BackendTestSuite) buildFormattedBlock(
 
 func (suite *BackendTestSuite) generateTestKeyring(clientDir string) (keyring.Keyring, error) {
 	buf := bufio.NewReader(os.Stdin)
-	encCfg := encoding.MakeConfig(app.ModuleBasics)
+	encCfg := app.MakeConfigForTest()
 	return keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, clientDir, buf, encCfg.Codec, []keyring.Option{hd.EthSecp256k1Option()}...)
 }
 
-func (suite *BackendTestSuite) signAndEncodeEthTx(msgEthereumTx *evmtypes.MsgEthereumTx) []byte {
+func (suite *BackendTestSuite) signAndEncodeEthTx(msgEthereumTx *evmtypes.MsgEthereumTx) (*evmtypes.MsgEthereumTx, []byte) {
 	from, priv := tests.NewAddrKey()
 	signer := tests.NewSigner(priv)
 
-	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-	RegisterParamsWithoutHeader(queryClient, 1)
-
-	ethSigner := ethtypes.LatestSigner(suite.backend.ChainConfig())
+	ethSigner := ethtypes.LatestSignerForChainID(suite.backend.chainID)
 	msgEthereumTx.From = from.String()
 	err := msgEthereumTx.Sign(ethSigner, signer)
 	suite.Require().NoError(err)
@@ -189,5 +176,5 @@ func (suite *BackendTestSuite) signAndEncodeEthTx(msgEthereumTx *evmtypes.MsgEth
 	txBz, err := txEncoder(tx)
 	suite.Require().NoError(err)
 
-	return txBz
+	return msgEthereumTx, txBz
 }

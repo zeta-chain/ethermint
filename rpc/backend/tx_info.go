@@ -193,15 +193,8 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	} else {
 		status = hexutil.Uint(ethtypes.ReceiptStatusSuccessful)
 	}
-	chainID, err := b.ChainID()
-	if err != nil {
-		return nil, err
-	}
 
-	from, err := ethMsg.GetSender(chainID.ToInt())
-	if err != nil {
-		return nil, err
-	}
+	from := ethMsg.GetSender()
 
 	// parse tx logs from events
 	logs, err := TxLogsFromEvents(blockRes.TxsResults[res.TxIndex].Events, int(res.MsgIndex))

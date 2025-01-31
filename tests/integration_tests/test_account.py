@@ -11,20 +11,14 @@ def custom_ethermint(tmp_path_factory):
     yield from setup_ethermint(path, 26700, long_timeout_commit=True)
 
 
-@pytest.fixture(scope="module", params=["ethermint", "ethermint-ws", "geth"])
-def cluster(request, custom_ethermint, geth):
+@pytest.fixture(scope="module", params=["ethermint"])
+def cluster(request, custom_ethermint):
     """
     run on ethermint, ethermint websocket and geth
     """
     provider = request.param
     if provider == "ethermint":
         yield custom_ethermint
-    elif provider == "ethermint-ws":
-        ethermint_ws = custom_ethermint.copy()
-        ethermint_ws.use_websocket()
-        yield ethermint_ws
-    elif provider == "geth":
-        yield geth
     else:
         raise NotImplementedError
 

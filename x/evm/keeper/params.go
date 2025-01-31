@@ -21,35 +21,25 @@ import (
 )
 
 // GetParams returns the total set of evm parameters.
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.KeyPrefixParams)
-	if len(bz) == 0 {
-		return k.GetLegacyParams(ctx)
+func (k Keeper) GetParams(ctx sdk.Context) (p types.Params) {
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := store.Get(types.KeyPrefixParams)
+	if err != nil {
+		panic(err)
 	}
-	k.cdc.MustUnmarshal(bz, &params)
-	return
+	if bz == nil {
+		return p
+	}
+	k.cdc.MustUnmarshal(bz, &p)
+	return p
 }
 
 // SetParams sets the EVM params each in their individual key for better get performance
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
-	if err := params.Validate(); err != nil {
+func (k Keeper) SetParams(ctx sdk.Context, p types.Params) error {
+	if err := p.Validate(); err != nil {
 		return err
 	}
-
-	store := ctx.KVStore(k.storeKey)
-	bz, err := k.cdc.Marshal(&params)
-	if err != nil {
-		return err
-	}
-
-	store.Set(types.KeyPrefixParams, bz)
-	return nil
-}
-
-// GetLegacyParams returns param set for version before migrate
-func (k Keeper) GetLegacyParams(ctx sdk.Context) types.Params {
-	var params types.Params
-	k.ss.GetParamSetIfExists(ctx, &params)
-	return params
+	store := k.storeService.OpenKVStore(ctx)
+	bz := k.cdc.MustMarshal(&p)
+	return store.Set(types.KeyPrefixParams, bz)
 }

@@ -17,6 +17,7 @@ from .utils import (
     send_transaction,
     w3_wait_for_block,
     w3_wait_for_new_blocks,
+    wait_for_fn,
 )
 
 
@@ -29,8 +30,16 @@ def get_blocks(ethermint_rpc_ws, geth, with_transactions):
     w3: Web3 = ethermint_rpc_ws.w3
     eth_rpc = w3.provider
     geth_rpc = geth.w3.provider
+    w3_wait_for_new_blocks(w3, 2)
+
+    def wait_blk():
+        res = geth_rpc.make_request("eth_getBlockByNumber", ["0x1", True])
+        return res["result"]
+
+    geth_blk = wait_for_fn("wait_blk", wait_blk)
+
     make_same_rpc_calls(
-        eth_rpc, geth_rpc, "eth_getBlockByNumber", ["0x0", with_transactions]
+        eth_rpc, geth_rpc, "eth_getBlockByNumber", ["0x2", with_transactions]
     )
 
     make_same_rpc_calls(
@@ -45,7 +54,7 @@ def get_blocks(ethermint_rpc_ws, geth, with_transactions):
     geth_rsp = geth_rpc.make_request(
         "eth_getBlockByHash",
         [
-            "0x124d099a1f435d3a6155e5d157ff1078eaefb742435892677ee5b3cb5e6fa055",
+            geth_blk["hash"],
             with_transactions,
         ],
     )
@@ -202,7 +211,7 @@ def test_get_proof(ethermint_rpc_ws, geth):
     validator = ADDRS["validator"]
     method = "eth_getProof"
     for quantity in ["latest", "0x1024"]:
-        res = make_same_rpc_calls(
+        make_same_rpc_calls(
             eth_rpc,
             geth_rpc,
             method,
@@ -210,17 +219,15 @@ def test_get_proof(ethermint_rpc_ws, geth):
         )
     res = send_tnx(w3)
 
-    proof = (eth_rpc.make_request(
-        method, [validator, ["0x0"], hex(res["blockNumber"])]
-    ))["result"]
+    proof = (
+        eth_rpc.make_request(method, [validator, ["0x0"], hex(res["blockNumber"])])
+    )["result"]
     compare_types(proof, EXPECTED_GET_PROOF["result"])
     assert proof["accountProof"], EXPECTED_ACCOUNT_PROOF
     assert proof["storageProof"][0]["proof"], EXPECTED_STORAGE_PROOF
 
     _ = send_and_get_hash(w3)
-    proof = eth_rpc.make_request(
-        method, [validator, ["0x0"], "latest"]
-    )
+    proof = eth_rpc.make_request(method, [validator, ["0x0"], "latest"])
     compare_types(proof, EXPECTED_GET_PROOF)
 
 
@@ -328,13 +335,18 @@ def test_fee_history(ethermint_rpc_ws, geth):
 
 def test_estimate_gas(ethermint_rpc_ws, geth):
     tx = {"to": ADDRS["community"], "from": ADDRS["validator"]}
-
     w3: Web3 = ethermint_rpc_ws.w3
     eth_rpc = w3.provider
     geth_rpc = geth.w3.provider
+
+    def wait_blk():
+        res = geth_rpc.make_request("eth_getBlockByNumber", ["0x1", True])
+        return res["result"]
+
+    wait_for_fn("wait_blk", wait_blk)
     make_same_rpc_calls(eth_rpc, geth_rpc, "eth_estimateGas", [tx])
-    make_same_rpc_calls(eth_rpc, geth_rpc, "eth_estimateGas", [tx, "0x0"])
-    make_same_rpc_calls(eth_rpc, geth_rpc, "eth_estimateGas", [tx, "0x5000"])
+    make_same_rpc_calls(eth_rpc, geth_rpc, "eth_estimateGas", [tx, "0x1"])
+    make_same_rpc_calls(eth_rpc, geth_rpc, "eth_estimateGas", [tx, "0x5"])
     make_same_rpc_calls(eth_rpc, geth_rpc, "eth_estimateGas", [{}])
 
 

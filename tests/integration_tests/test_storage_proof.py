@@ -1,7 +1,7 @@
 import pytest
 
 from .network import setup_ethermint
-from .utils import CONTRACTS, deploy_contract
+from .utils import CONTRACTS, deploy_contract, w3_wait_for_block
 
 
 @pytest.fixture(scope="module")
@@ -25,6 +25,8 @@ def cluster(request, custom_ethermint, geth):
 
 
 def test_basic(cluster):
+    w3_wait_for_block(cluster.w3, 3)
+    # proof queries at height <= 2 are not supported'
     _, res = deploy_contract(
         cluster.w3,
         CONTRACTS["StateContract"],
