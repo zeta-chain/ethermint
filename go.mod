@@ -60,7 +60,7 @@ require (
 	github.com/cosmos/ibc-go/v8 v8.5.2
 	github.com/hashicorp/go-metrics v0.5.3
 	golang.org/x/sync v0.8.0
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.36.5
 )
 
 require (
