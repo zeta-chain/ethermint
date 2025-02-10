@@ -103,7 +103,7 @@ func (b *Backend) getAccountNonce(accAddr common.Address, pending bool, height i
 				break
 			}
 
-			sender := ethMsg.GetSender()
+			sender := ethMsg.GetSender(b.chainID)
 			if sender == accAddr {
 				nonce++
 			}

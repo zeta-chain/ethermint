@@ -194,7 +194,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		status = hexutil.Uint(ethtypes.ReceiptStatusSuccessful)
 	}
 
-	from := ethMsg.GetSender()
+	from := ethMsg.GetSender(b.chainID)
 
 	// parse tx logs from events
 	logs, err := TxLogsFromEvents(blockRes.TxsResults[res.TxIndex].Events, int(res.MsgIndex))
