@@ -532,7 +532,8 @@ func (suite *MsgsTestSuite) TestMsgEthereumTx_Sign() {
 		if tc.expectPass {
 			suite.Require().NoError(err, "valid test %d failed: %s", i, tc.msg)
 
-			sender := tc.tx.GetSender(nil)
+			sender, err := tc.tx.GetSender(nil)
+			suite.Require().NoError(err)
 			suite.Require().Equal(tc.tx.From, sender.Hex(), tc.msg)
 		} else {
 			suite.Require().Error(err, "invalid test %d passed: %s", i, tc.msg)
