@@ -244,8 +244,18 @@ func (msg *MsgEthereumTx) GetMsgsV2() ([]proto.Message, error) {
 
 // GetSender convert the From field to common.Address
 // From should always be set, which is validated in ValidateBasic
-func (msg *MsgEthereumTx) GetSender() common.Address {
-	return common.HexToAddress(msg.From)
+func (msg *MsgEthereumTx) GetSender(chainID *big.Int) (common.Address, error) {
+	if msg.From != "" {
+		return common.HexToAddress(msg.From), nil
+	}
+	signer := ethtypes.LatestSignerForChainID(chainID)
+	from, err := signer.Sender(msg.AsTransaction())
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	msg.From = from.Hex()
+	return from, nil
 }
 
 // GetSignBytes returns the Amino bytes of an Ethereum transaction message used
