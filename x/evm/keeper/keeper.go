@@ -18,14 +18,14 @@ package keeper
 import (
 	"math/big"
 
+	"cosmossdk.io/api/tendermint/abci"
+	corestoretypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -33,7 +33,7 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/holiman/uint256"
 
-	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	sdkmath "cosmossdk.io/math"
 	ethermint "github.com/zeta-chain/ethermint/types"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	"github.com/zeta-chain/ethermint/x/evm/types"
@@ -48,7 +48,8 @@ type EventConverter = func([]abci.EventAttribute) []*ethtypes.Log
 // Keeper grants access to the EVM module state and implements the go-ethereum StateDB interface.
 type Keeper struct {
 	// Protobuf codec
-	cdc codec.BinaryCodec
+	cdc          codec.Codec
+	storeService corestoretypes.KVStoreService
 	// Store key required for the EVM Prefix KVStore. It is required by:
 	// - storing account's Storage State
 	// - storing account's Code
@@ -79,13 +80,7 @@ type Keeper struct {
 	// EVM Hooks for tx post-processing
 	hooks types.EvmHooks
 
-	// Legacy subspace
-	ss paramstypes.Subspace
-
-	// customContractFns is the list of precompiled stateful contract functions.
 	customContractFns []CustomContractFn
-
-	ck consensusparamkeeper.Keeper
 
 	// a set of store keys that should cover all the precompile use cases,
 	// or ideally just pass the application's all stores.
@@ -94,7 +89,8 @@ type Keeper struct {
 
 // NewKeeper generates new evm module keeper
 func NewKeeper(
-	cdc codec.BinaryCodec,
+	cdc codec.Codec,
+	storeService corestoretypes.KVStoreService,
 	storeKey, transientKey storetypes.StoreKey,
 	authority sdk.AccAddress,
 	ak types.AccountKeeper,
@@ -102,9 +98,7 @@ func NewKeeper(
 	sk types.StakingKeeper,
 	fmk types.FeeMarketKeeper,
 	tracer string,
-	ss paramstypes.Subspace,
 	customContractFns []CustomContractFn,
-	ck consensusparamkeeper.Keeper,
 	keys map[string]storetypes.StoreKey,
 ) *Keeper {
 	// ensure evm module account is set
@@ -120,6 +114,7 @@ func NewKeeper(
 	// NOTE: we pass in the parameter space to the CommitStateDB in order to use custom denominations for the EVM operations
 	return &Keeper{
 		cdc:               cdc,
+		storeService:      storeService,
 		authority:         authority,
 		accountKeeper:     ak,
 		bankKeeper:        bankKeeper,
@@ -128,9 +123,7 @@ func NewKeeper(
 		storeKey:          storeKey,
 		transientKey:      transientKey,
 		tracer:            tracer,
-		ss:                ss,
 		customContractFns: customContractFns,
-		ck:                ck,
 		keys:              keys,
 	}
 }
@@ -141,7 +134,8 @@ func (k Keeper) StoreKeys() map[string]storetypes.StoreKey {
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // WithChainID sets the chain id to the local variable in the keeper
@@ -372,11 +366,11 @@ func (k Keeper) getBaseFee(ctx sdk.Context, london bool) *big.Int {
 }
 
 // GetMinGasMultiplier returns the MinGasMultiplier param from the fee market module
-func (k Keeper) GetMinGasMultiplier(ctx sdk.Context) sdk.Dec {
+func (k Keeper) GetMinGasMultiplier(ctx sdk.Context) sdkmath.LegacyDec {
 	fmkParmas := k.feeMarketKeeper.GetParams(ctx)
 	if fmkParmas.MinGasMultiplier.IsNil() {
 		// in case we are executing eth_call on a legacy block, returns a zero value.
-		return sdk.ZeroDec()
+		return sdkmath.LegacyZeroDec()
 	}
 	return fmkParmas.MinGasMultiplier
 }

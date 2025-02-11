@@ -20,7 +20,7 @@ import (
 )
 
 // HasDynamicFeeExtensionOption returns true if the tx implements the `ExtensionOptionDynamicFeeTx` extension option.
-func HasDynamicFeeExtensionOption(any *codectypes.Any) bool {
-	_, ok := any.GetCachedValue().(*ExtensionOptionDynamicFeeTx)
+func HasDynamicFeeExtensionOption(cdcAny *codectypes.Any) bool {
+	_, ok := cdcAny.GetCachedValue().(*ExtensionOptionDynamicFeeTx)
 	return ok
 }

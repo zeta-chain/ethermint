@@ -341,7 +341,7 @@ test-import:
 	go test -run TestImporterTestSuite -v --vet=off github.com/zeta-chain/ethermint/tests/importer
 
 test-rpc:
-	./scripts/integration-test-all.sh -t "rpc" -q 1 -z 1 -s 2 -m "rpc" -r "true"
+	./scripts/integration-test-all.sh -t "rpc" -q 1 -z 1 -s 5 -m "rpc" -r "true"
 
 run-integration-tests:
 	@nix-shell ./tests/integration_tests/shell.nix --run ./scripts/run-integration-tests.sh
@@ -393,7 +393,7 @@ format-fix:
 ###############################################################################
 
 
-protoVer=0.11.6
+protoVer=0.14.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 

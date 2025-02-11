@@ -4,7 +4,9 @@ import pytest
 from web3 import Web3
 
 from .network import setup_ethermint
-from .utils import ADDRS, send_transaction
+from .utils import ADDRS, send_transaction, w3_wait_for_block
+
+NEW_BASE_FEE = 100000000000
 
 
 @pytest.fixture(scope="module")
@@ -29,6 +31,8 @@ def cluster(request, custom_ethermint, geth):
 
 def test_basic(cluster):
     w3: Web3 = cluster.w3
+    # need at least 5 blocks
+    w3_wait_for_block(w3, 5)
     call = w3.provider.make_request
     tx = {"to": ADDRS["community"], "value": 10, "gasPrice": w3.eth.gas_price}
     send_transaction(w3, tx)

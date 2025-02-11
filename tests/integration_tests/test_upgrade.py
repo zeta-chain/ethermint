@@ -19,6 +19,7 @@
 #     wait_for_block,
 #     wait_for_block_time,
 #     wait_for_port,
+#     find_log_event_attrs,
 # )
 
 
@@ -104,8 +105,8 @@
 #     target_height = w3.eth.block_number + 10
 #     print("upgrade height", target_height)
 
-#     plan_name = "integration-test-upgrade"
-#     rsp = cli.gov_propose(
+#     plan_name = "sdk50"
+#     rsp = cli.gov_propose_legacy(
 #         "community",
 #         "software-upgrade",
 #         {
@@ -117,12 +118,24 @@
 #         },
 #     )
 #     assert rsp["code"] == 0, rsp["raw_log"]
-
+#     print("Rsp: ", rsp)
 #     # get proposal_id
-#     ev = parse_events(rsp["logs"])["submit_proposal"]
+
+#     rsp = cli.event_query_tx_for(rsp["txhash"])
+#     print("Rsp: ", rsp)
+
+#     def cb(attrs):
+#         return "proposal_id" in attrs
+
+#     ev = find_log_event_attrs(rsp["events"], "submit_proposal", cb)
+
+#     print("Ev: ", rsp)
+
 #     proposal_id = ev["proposal_id"]
 
 #     rsp = cli.gov_vote("validator", proposal_id, "yes")
+#     print("Rsp: ", rsp)
+
 #     assert rsp["code"] == 0, rsp["raw_log"]
 #     # rsp = custom_ethermint.cosmos_cli(1).gov_vote("validator", proposal_id, "yes")
 #     # assert rsp["code"] == 0, rsp["raw_log"]
@@ -179,4 +192,8 @@
 #             home=cli.data_dir,
 #         )
 #     )
-# assert p == {"allowed_clients": ["06-solomachine", "07-tendermint", "09-localhost"]}
+#     assert p == {"allowed_clients":[
+#       "06-solomachine",
+#       "07-tendermint",
+#       "09-localhost"
+#     ]}

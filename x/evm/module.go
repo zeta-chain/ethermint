@@ -20,6 +20,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"cosmossdk.io/core/appmodule"
+	"github.com/zeta-chain/ethermint/x/evm/simulation"
+
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -41,6 +44,9 @@ import (
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
+
+	_ appmodule.HasEndBlocker   = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the evm module.
@@ -88,6 +94,11 @@ func (b AppModuleBasic) RegisterGRPCGatewayRoutes(c client.Context, serveMux *ru
 	}
 }
 
+// RegisterInterfaces registers interfaces and implementations of the evm module.
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
+}
+
 // GetTxCmd returns the root tx command for the evm module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd()
@@ -96,11 +107,6 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 // GetQueryCmd returns no root query command for the evm module.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
-}
-
-// RegisterInterfaces registers interfaces and implementations of the evm module.
-func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	types.RegisterInterfaces(registry)
 }
 
 // ____________________________________________________________________________
@@ -139,27 +145,17 @@ func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
-
-	m := keeper.NewMigrator(*am.keeper, am.legacySubspace)
-	err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4)
-	if err != nil {
-		panic(err)
-	}
-
-	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4to5); err != nil {
-		panic(err)
-	}
 }
 
 // BeginBlock returns the begin block for the evm module.
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	am.keeper.BeginBlock(ctx, req)
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	return am.keeper.BeginBlock(sdk.UnwrapSDKContext(ctx))
 }
 
 // EndBlock returns the end blocker for the evm module. It returns no validator
 // updates.
-func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return am.keeper.EndBlock(ctx, req)
+func (am AppModule) EndBlock(ctx context.Context) error {
+	return am.keeper.EndBlock(sdk.UnwrapSDKContext(ctx))
 }
 
 // InitGenesis performs genesis initialization for the evm module. It returns
@@ -179,7 +175,8 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // RegisterStoreDecoder registers a decoder for evm module's types
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
+	sdr[types.StoreKey] = simulation.NewDecodeStore()
 }
 
 // GenerateGenesisState creates a randomized GenState of the evm module.
@@ -190,3 +187,9 @@ func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
 func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return nil
 }
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}

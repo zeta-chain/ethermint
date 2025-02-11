@@ -33,7 +33,7 @@ var (
 	ModuleCdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 
 	// AminoCdc is a amino codec created to support amino JSON compatible msgs.
-	AminoCdc = codec.NewAminoCodec(amino)
+	AminoCdc = codec.NewAminoCodec(amino) //nolint:staticcheck
 )
 
 const (
@@ -92,14 +92,14 @@ func PackTxData(txData TxData) (*codectypes.Any, error) {
 
 // UnpackTxData unpacks an Any into a TxData. It returns an error if the
 // client state can't be unpacked into a TxData.
-func UnpackTxData(any *codectypes.Any) (TxData, error) {
-	if any == nil {
+func UnpackTxData(cdcAny *codectypes.Any) (TxData, error) {
+	if cdcAny == nil {
 		return nil, errorsmod.Wrap(errortypes.ErrUnpackAny, "protobuf Any message cannot be nil")
 	}
 
-	txData, ok := any.GetCachedValue().(TxData)
+	txData, ok := cdcAny.GetCachedValue().(TxData)
 	if !ok {
-		return nil, errorsmod.Wrapf(errortypes.ErrUnpackAny, "cannot unpack Any into TxData %T", any)
+		return nil, errorsmod.Wrapf(errortypes.ErrUnpackAny, "cannot unpack Any into TxData %T", cdcAny)
 	}
 
 	return txData, nil

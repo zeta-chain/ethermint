@@ -20,6 +20,8 @@ import (
 	"math"
 	"math/big"
 
+	sdkmath "cosmossdk.io/math"
+
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/holiman/uint256"
 
@@ -132,8 +134,8 @@ func (k Keeper) GetHashFn(ctx sdk.Context) vm.GetHashFunc {
 		case ctx.BlockHeight() > h:
 			// Case 2: if the chain is not the current height we need to retrieve the hash from the store for the
 			// current chain epoch. This only applies if the current height is greater than the requested height.
-			histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, h)
-			if !found {
+			histInfo, err := k.stakingKeeper.GetHistoricalInfo(ctx, h)
+			if err != nil {
 				k.Logger(ctx).Debug("historical info not found", "height", h)
 				return common.Hash{}
 			}
@@ -443,8 +445,8 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 	// calculate a minimum amount of gas to be charged to sender if GasLimit
 	// is considerably higher than GasUsed to stay more aligned with Tendermint gas mechanics
 	// for more info https://github.com/evmos/ethermint/issues/1085
-	// #nosec G115 msg.GasLimit range checked
-	gasLimit := sdk.NewDec(int64(msg.GasLimit))
+	// #nosec G701 G115 msg.GasLimit range checked
+	gasLimit := sdkmath.LegacyNewDec(int64(msg.GasLimit))
 	minGasMultiplier := k.GetMinGasMultiplier(ctx)
 	minimumGasUsed := gasLimit.Mul(minGasMultiplier)
 
@@ -452,8 +454,8 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 		return nil, errorsmod.Wrapf(types.ErrGasOverflow, "message gas limit < leftover gas (%d < %d)", msg.GasLimit, leftoverGas)
 	}
 
-	// #nosec G115 temporaryGasUsed always in range
-	gasUsed := sdk.MaxDec(minimumGasUsed, sdk.NewDec(int64(temporaryGasUsed))).TruncateInt().Uint64()
+	// #nosec G701 G115 temporaryGasUsed always in range
+	gasUsed := sdkmath.LegacyMaxDec(minimumGasUsed, sdkmath.LegacyNewDec(int64(temporaryGasUsed))).TruncateInt().Uint64()
 	// reset leftoverGas, to be used by the tracer
 	leftoverGas = msg.GasLimit - gasUsed
 

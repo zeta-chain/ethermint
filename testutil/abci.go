@@ -4,7 +4,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/ethermint/app"
@@ -16,11 +16,15 @@ import (
 //  2. DeliverTx
 //  3. EndBlock
 //  4. Commit
-func Commit(ctx sdk.Context, app *app.EthermintApp, t time.Duration, vs *tmtypes.ValidatorSet) (sdk.Context, error) {
+func Commit(ctx sdk.Context, app *app.EthermintApp, t time.Duration, vs *cmttypes.ValidatorSet) (sdk.Context, error) {
 	header := ctx.BlockHeader()
+	req := abci.RequestFinalizeBlock{Height: header.Height}
 
 	if vs != nil {
-		res := app.EndBlock(abci.RequestEndBlock{Height: header.Height})
+		res, err := app.FinalizeBlock(&req)
+		if err != nil {
+			return ctx, err
+		}
 
 		nextVals, err := applyValSetChanges(vs, res.ValidatorUpdates)
 		if err != nil {
@@ -29,26 +33,30 @@ func Commit(ctx sdk.Context, app *app.EthermintApp, t time.Duration, vs *tmtypes
 		header.ValidatorsHash = vs.Hash()
 		header.NextValidatorsHash = nextVals.Hash()
 	} else {
-		app.EndBlocker(ctx, abci.RequestEndBlock{Height: header.Height})
+		if _, err := app.EndBlocker(ctx); err != nil {
+			return ctx, err
+		}
 	}
 
-	_ = app.Commit()
+	if _, err := app.Commit(); err != nil {
+		return ctx, err
+	}
 
 	header.Height++
 	header.Time = header.Time.Add(t)
 	header.AppHash = app.LastCommitID().Hash
 
-	app.BeginBlock(abci.RequestBeginBlock{
-		Header: header,
-	})
+	if _, err := app.BeginBlocker(ctx); err != nil {
+		return ctx, err
+	}
 
 	return ctx.WithBlockHeader(header), nil
 }
 
 // applyValSetChanges takes in tmtypes.ValidatorSet and []abci.ValidatorUpdate and will return a new tmtypes.ValidatorSet which has the
 // provided validator updates applied to the provided validator set.
-func applyValSetChanges(valSet *tmtypes.ValidatorSet, valUpdates []abci.ValidatorUpdate) (*tmtypes.ValidatorSet, error) {
-	updates, err := tmtypes.PB2TM.ValidatorUpdates(valUpdates)
+func applyValSetChanges(valSet *cmttypes.ValidatorSet, valUpdates []abci.ValidatorUpdate) (*cmttypes.ValidatorSet, error) {
+	updates, err := cmttypes.PB2TM.ValidatorUpdates(valUpdates)
 	if err != nil {
 		return nil, err
 	}

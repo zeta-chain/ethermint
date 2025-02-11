@@ -1134,7 +1134,7 @@ Query defines the gRPC querier service.
 <a name="ethermint.types.v1.EthAccount"></a>
 
 ### EthAccount
-EthAccount implements the authtypes.AccountI interface and embeds an
+EthAccount implements the sdk.AccountI interface and embeds an
 authtypes.BaseAccount type. It is compatible with the auth AccountKeeper.
 
 

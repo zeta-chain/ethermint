@@ -9,7 +9,7 @@ from pystarport import ports
 from web3.middleware import geth_poa_middleware
 
 from .cosmoscli import CosmosCLI
-from .utils import wait_for_port
+from .utils import supervisorctl, w3_wait_for_block, wait_for_port
 
 DEFAULT_CHAIN_BINARY = "ethermintd"
 
@@ -62,6 +62,9 @@ class Ethermint:
             self.base_dir / f"node{i}", self.node_rpc(i), self.chain_binary
         )
 
+    def supervisorctl(self, *args):
+        return supervisorctl(self.base_dir / "../tasks.ini", *args)
+
 
 class Geth:
     def __init__(self, w3):
@@ -70,9 +73,9 @@ class Geth:
 
 def setup_ethermint(path, base_port, long_timeout_commit=False):
     cfg = Path(__file__).parent / (
-        "configs/default.jsonnet"
+        "configs/long_timeout_commit.jsonnet"
         if long_timeout_commit
-        else "configs/long_timeout_commit.jsonnet"
+        else "configs/default.jsonnet"
     )
     yield from setup_custom_ethermint(path, base_port, cfg)
 
@@ -86,6 +89,10 @@ def setup_geth(path, base_port):
             str(base_port),
             "--port",
             str(base_port + 1),
+            "--miner.etherbase",
+            "0x57f96e6B86CdeFdB3d412547816a82E3E0EbF9D2",
+            "--http.api",
+            "eth,net,web3,debug",
         ]
         print(*cmd)
         proc = subprocess.Popen(
@@ -122,7 +129,11 @@ def setup_custom_ethermint(
     if chain_binary is not None:
         cmd = cmd[:1] + ["--cmd", chain_binary] + cmd[1:]
     print(*cmd)
-    subprocess.run(cmd, check=True)
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError as err:
+        print("Error {}: {}".format(err.returncode, err.output))
+        raise err
     if post_init is not None:
         post_init(path, base_port, config)
     proc = subprocess.Popen(
@@ -133,9 +144,11 @@ def setup_custom_ethermint(
         if wait_port:
             wait_for_port(ports.evmrpc_port(base_port))
             wait_for_port(ports.evmrpc_ws_port(base_port))
-        yield Ethermint(
+        ethermint_instance = Ethermint(
             path / "ethermint_9000-1", chain_binary=chain_binary or DEFAULT_CHAIN_BINARY
         )
+        w3_wait_for_block(ethermint_instance.w3, 1)
+        yield ethermint_instance
     finally:
         os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
         proc.wait()

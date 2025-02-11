@@ -20,6 +20,7 @@ import (
 	"sort"
 
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -334,11 +335,11 @@ func (s *StateDB) setStateObject(object *stateObject) {
 	s.stateObjects[object.Address()] = object
 }
 
-func (s *StateDB) cloneNativeState() sdk.MultiStore {
+func (s *StateDB) cloneNativeState() storetypes.MultiStore {
 	return s.cacheMultiStore().Clone()
 }
 
-func (s *StateDB) restoreNativeState(ms sdk.MultiStore) {
+func (s *StateDB) restoreNativeState(ms storetypes.MultiStore) {
 	manager := sdk.NewEventManager()
 	s.cacheCtx = s.cacheCtx.WithMultiStore(ms).WithEventManager(manager)
 }

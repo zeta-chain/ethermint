@@ -7,7 +7,8 @@ let
     "clef"
   ];
 
-in buildGoModule rec {
+in
+buildGoModule rec {
   pname = "go-ethereum";
   version = "1.10.25";
 
@@ -18,7 +19,7 @@ in buildGoModule rec {
     sha256 = "sha256-mnf0kMfQEEQMricZJfyF7ZB/2F1dyPBx9iT2v/rGh1U=";
   };
 
-  vendorSha256 = "sha256-Dj+xN8lr98LJyYr2FwJ7yUIJkUeUrr1fkcbj4hShJI0=";
+  vendorHash = "sha256-Dj+xN8lr98LJyYr2FwJ7yUIJkUeUrr1fkcbj4hShJI0=";
 
   doCheck = false;
 
@@ -41,7 +42,6 @@ in buildGoModule rec {
     "cmd/faucet"
     "cmd/geth"
     "cmd/p2psim"
-    "cmd/puppeth"
     "cmd/rlpdump"
     "cmd/utils"
   ];

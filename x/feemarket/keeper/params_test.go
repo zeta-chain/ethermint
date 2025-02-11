@@ -18,7 +18,9 @@ func (suite *KeeperTestSuite) TestSetGetParams() {
 		{
 			"success - Checks if the default params are set correctly",
 			func() interface{} {
-				return types.DefaultParams()
+				defaultParams := types.DefaultParams()
+				defaultParams.BaseFee = params.BaseFee
+				return defaultParams
 			},
 			func() interface{} {
 				return suite.app.FeeMarketKeeper.GetParams(suite.ctx)

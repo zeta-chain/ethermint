@@ -75,6 +75,9 @@ const (
 
 	// DefaultMaxOpenConnections represents the amount of open connections (unlimited = 0)
 	DefaultMaxOpenConnections = 0
+
+	// DefaultReturnDataLimit is maximum number of bytes returned from eth_call or similar invocations
+	DefaultReturnDataLimit = 100000
 )
 
 var evmTracers = []string{"json", "markdown", "struct", "access_list"}

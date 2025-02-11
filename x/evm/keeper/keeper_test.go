@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	coreheader "cosmossdk.io/core/header"
 	"github.com/holiman/uint256"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -17,7 +18,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -42,13 +42,9 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/params"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/crypto/tmhash"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmversion "github.com/cometbft/cometbft/proto/tendermint/version"
-	"github.com/cometbft/cometbft/version"
 )
 
 var testTokens = sdkmath.NewIntWithDecimal(1000, 18)
@@ -93,7 +89,6 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	checkTx := false
-	suite.app = app.Setup(checkTx, nil)
 	suite.SetupApp(checkTx)
 }
 
@@ -124,6 +119,25 @@ func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
 	suite.consAddress = sdk.ConsAddress(priv.PubKey().Address())
 
 	suite.app = app.Setup(checkTx, func(app *app.EthermintApp, genesis app.GenesisState) app.GenesisState {
+		coins := sdk.NewCoins(sdk.NewCoin(types.DefaultEVMDenom, sdkmath.NewInt(100000000000000)))
+		b32address := sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), suite.consAddress.Bytes())
+		balances := []banktypes.Balance{
+			{
+				Address: b32address,
+				Coins:   coins,
+			},
+			{
+				Address: app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName).String(),
+				Coins:   coins,
+			},
+		}
+		var bankGenesis banktypes.GenesisState
+		app.AppCodec().MustUnmarshalJSON(genesis[banktypes.ModuleName], &bankGenesis)
+		// Update balances and total supply
+		bankGenesis.Balances = append(bankGenesis.Balances, balances...)
+		bankGenesis.Supply = bankGenesis.Supply.Add(coins...).Add(coins...)
+		genesis[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(&bankGenesis)
+
 		feemarketGenesis := feemarkettypes.DefaultGenesisState()
 		if suite.enableFeemarket {
 			feemarketGenesis.Params.EnableHeight = 1
@@ -146,61 +160,11 @@ func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
 		return genesis
 	})
 
-	if suite.mintFeeCollector {
-		// mint some coin to fee collector
-		coins := sdk.NewCoins(sdk.NewCoin(types.DefaultEVMDenom, sdkmath.NewInt(int64(params.TxGas)-1)))
-		genesisState := app.NewTestGenesisState(suite.app.AppCodec())
-		balances := []banktypes.Balance{
-			{
-				Address: suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName).String(),
-				Coins:   coins,
-			},
-		}
-		var bankGenesis banktypes.GenesisState
-		suite.app.AppCodec().MustUnmarshalJSON(genesisState[banktypes.ModuleName], &bankGenesis)
-		// Update balances and total supply
-		bankGenesis.Balances = append(bankGenesis.Balances, balances...)
-		bankGenesis.Supply = bankGenesis.Supply.Add(coins...)
-		genesisState[banktypes.ModuleName] = suite.app.AppCodec().MustMarshalJSON(&bankGenesis)
-
-		// we marshal the genesisState of all module to a byte array
-		stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
-		require.NoError(t, err)
-
-		// Initialize the chain
-		suite.app.InitChain(
-			abci.RequestInitChain{
-				ChainId:         "ethermint_9000-1",
-				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: app.DefaultConsensusParams,
-				AppStateBytes:   stateBytes,
-			},
-		)
-	}
-
-	suite.ctx = suite.app.BaseApp.NewContext(checkTx, tmproto.Header{
-		Height:          1,
-		ChainID:         "ethermint_9000-1",
-		Time:            time.Now().UTC(),
-		ProposerAddress: suite.consAddress.Bytes(),
-		Version: tmversion.Consensus{
-			Block: version.BlockProtocol,
-		},
-		LastBlockId: tmproto.BlockID{
-			Hash: tmhash.Sum([]byte("block_id")),
-			PartSetHeader: tmproto.PartSetHeader{
-				Total: 11,
-				Hash:  tmhash.Sum([]byte("partset_header")),
-			},
-		},
-		AppHash:            tmhash.Sum([]byte("app")),
-		DataHash:           tmhash.Sum([]byte("data")),
-		EvidenceHash:       tmhash.Sum([]byte("evidence")),
-		ValidatorsHash:     tmhash.Sum([]byte("validators")),
-		NextValidatorsHash: tmhash.Sum([]byte("next_validators")),
-		ConsensusHash:      tmhash.Sum([]byte("consensus")),
-		LastResultsHash:    tmhash.Sum([]byte("last_result")),
-	})
+	suite.ctx = suite.app.NewUncachedContext(checkTx, tmproto.Header{
+		Height:  1,
+		ChainID: app.ChainID,
+		Time:    time.Now().UTC(),
+	}).WithChainID(app.ChainID).WithProposer(suite.consAddress)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.EvmKeeper)
@@ -210,11 +174,12 @@ func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
 		BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(suite.address.Bytes()), nil, 0, 0),
 		CodeHash:    common.BytesToHash(crypto.Keccak256(nil)).String(),
 	}
+	acc.AccountNumber = suite.app.AccountKeeper.NextAccountNumber(suite.ctx)
 
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
 	valAddr := sdk.ValAddress(suite.address.Bytes())
-	validator, err := stakingtypes.NewValidator(valAddr, priv.PubKey(), stakingtypes.Description{})
+	validator, err := stakingtypes.NewValidator(valAddr.String(), priv.PubKey(), stakingtypes.Description{})
 	require.NoError(t, err)
 	err = suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, validator)
 	require.NoError(t, err)
@@ -222,7 +187,7 @@ func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
 	require.NoError(t, err)
 	suite.app.StakingKeeper.SetValidator(suite.ctx, validator)
 
-	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
+	encodingConfig := encoding.MakeConfig()
 	suite.clientCtx = client.Context{}.WithTxConfig(encodingConfig.TxConfig)
 	suite.ethSigner = ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
 	suite.appCodec = encodingConfig.Codec
@@ -237,28 +202,29 @@ func (suite *KeeperTestSuite) EvmDenom() string {
 
 // Commit and begin new block
 func (suite *KeeperTestSuite) Commit() {
-	_ = suite.app.Commit()
-	header := suite.ctx.BlockHeader()
-	header.Height += 1
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: header,
+	jumpTime := time.Second * 0
+	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: suite.ctx.BlockHeight(),
+		Time:   suite.ctx.BlockTime(),
 	})
-
+	suite.app.Commit()
+	newBlockTime := suite.ctx.BlockTime().Add(jumpTime)
+	header := suite.ctx.BlockHeader()
+	header.Time = newBlockTime
+	header.Height++
 	// update ctx
-	suite.ctx = suite.app.BaseApp.NewContext(false, header)
-
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, suite.app.EvmKeeper)
-	suite.queryClient = types.NewQueryClient(queryHelper)
+	suite.ctx = suite.app.NewUncachedContext(false, header).WithHeaderInfo(coreheader.Info{
+		Height: header.Height,
+		Time:   header.Time,
+	})
 }
 
 func (suite *KeeperTestSuite) StateDB() *statedb.StateDB {
-	return statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(suite.ctx.HeaderHash().Bytes())))
+	return statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(suite.ctx.HeaderHash())))
 }
 
 // DeployTestContract deploy a test erc20 contract and returns the contract address
 func (suite *KeeperTestSuite) DeployTestContract(t require.TestingT, owner common.Address, supply *big.Int) common.Address {
-	ctx := sdk.WrapSDKContext(suite.ctx)
 	chainID := suite.app.EvmKeeper.ChainID()
 
 	ctorArgs, err := types.ERC20Contract.ABI.Pack("", owner, supply)
@@ -272,7 +238,7 @@ func (suite *KeeperTestSuite) DeployTestContract(t require.TestingT, owner commo
 		Data: (*hexutil.Bytes)(&data),
 	})
 	require.NoError(t, err)
-	res, err := suite.queryClient.EstimateGas(ctx, &types.EthCallRequest{
+	res, err := suite.queryClient.EstimateGas(suite.ctx, &types.EthCallRequest{
 		Args:            args,
 		GasCap:          uint64(config.DefaultGasCap),
 		ProposerAddress: suite.ctx.BlockHeader().ProposerAddress,
@@ -308,7 +274,7 @@ func (suite *KeeperTestSuite) DeployTestContract(t require.TestingT, owner commo
 	erc20DeployTx.From = suite.address.Hex()
 	err = erc20DeployTx.Sign(ethtypes.LatestSignerForChainID(chainID), suite.signer)
 	require.NoError(t, err)
-	rsp, err := suite.app.EvmKeeper.EthereumTx(ctx, erc20DeployTx)
+	rsp, err := suite.app.EvmKeeper.EthereumTx(suite.ctx, erc20DeployTx)
 	require.NoError(t, err)
 	require.Empty(t, rsp.VmError)
 	return crypto.CreateAddress(suite.address, nonce)
@@ -442,7 +408,7 @@ func (suite *KeeperTestSuite) TestBaseFee() {
 			suite.enableFeemarket = tc.enableFeemarket
 			suite.enableLondonHF = tc.enableLondonHF
 			suite.SetupTest()
-			suite.app.EvmKeeper.BeginBlock(suite.ctx, abci.RequestBeginBlock{})
+			suite.app.EvmKeeper.BeginBlock(suite.ctx)
 			params := suite.app.EvmKeeper.GetParams(suite.ctx)
 			ethCfg := params.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
 			baseFee := suite.app.EvmKeeper.GetBaseFee(suite.ctx, ethCfg)
@@ -479,7 +445,7 @@ func (suite *KeeperTestSuite) TestGetAccountStorage() {
 			suite.SetupTest()
 			tc.malleate()
 			i := 0
-			suite.app.AccountKeeper.IterateAccounts(suite.ctx, func(account authtypes.AccountI) bool {
+			suite.app.AccountKeeper.IterateAccounts(suite.ctx, func(account sdk.AccountI) bool {
 				ethAccount, ok := account.(ethermint.EthAccountI)
 				if !ok {
 					// ignore non EthAccounts

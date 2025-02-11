@@ -6,6 +6,9 @@ import (
 	"testing"
 	"time"
 
+	coreheader "cosmossdk.io/core/header"
+
+	sdkmath "cosmossdk.io/math"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -34,10 +37,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/crypto/tmhash"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmversion "github.com/cometbft/cometbft/proto/tendermint/version"
-	"github.com/cometbft/cometbft/version"
 )
 
 type KeeperTestSuite struct {
@@ -89,29 +89,11 @@ func (suite *KeeperTestSuite) SetupApp(checkTx bool) {
 	require.NoError(t, err)
 	suite.consAddress = sdk.ConsAddress(priv.PubKey().Address())
 
-	suite.ctx = suite.app.BaseApp.NewContext(checkTx, tmproto.Header{
-		Height:          1,
-		ChainID:         "ethermint_9000-1",
-		Time:            time.Now().UTC(),
-		ProposerAddress: suite.consAddress.Bytes(),
-		Version: tmversion.Consensus{
-			Block: version.BlockProtocol,
-		},
-		LastBlockId: tmproto.BlockID{
-			Hash: tmhash.Sum([]byte("block_id")),
-			PartSetHeader: tmproto.PartSetHeader{
-				Total: 11,
-				Hash:  tmhash.Sum([]byte("partset_header")),
-			},
-		},
-		AppHash:            tmhash.Sum([]byte("app")),
-		DataHash:           tmhash.Sum([]byte("data")),
-		EvidenceHash:       tmhash.Sum([]byte("evidence")),
-		ValidatorsHash:     tmhash.Sum([]byte("validators")),
-		NextValidatorsHash: tmhash.Sum([]byte("next_validators")),
-		ConsensusHash:      tmhash.Sum([]byte("consensus")),
-		LastResultsHash:    tmhash.Sum([]byte("last_result")),
-	})
+	suite.ctx = suite.app.NewUncachedContext(checkTx, tmproto.Header{
+		Height:  1,
+		ChainID: app.ChainID,
+		Time:    time.Now().UTC(),
+	}).WithChainID(app.ChainID)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.FeeMarketKeeper)
@@ -121,50 +103,45 @@ func (suite *KeeperTestSuite) SetupApp(checkTx bool) {
 		BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(suite.address.Bytes()), nil, 0, 0),
 		CodeHash:    common.BytesToHash(crypto.Keccak256(nil)).String(),
 	}
+	acc.AccountNumber = suite.app.AccountKeeper.NextAccountNumber(s.ctx)
 
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
 	valAddr := sdk.ValAddress(suite.address.Bytes())
-	validator, err := stakingtypes.NewValidator(valAddr, priv.PubKey(), stakingtypes.Description{})
+	validator, err := stakingtypes.NewValidator(valAddr.String(), priv.PubKey(), stakingtypes.Description{})
 	require.NoError(t, err)
 	validator = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validator, true)
-	err = suite.app.StakingKeeper.Hooks().AfterValidatorCreated(suite.ctx, validator.GetOperator())
+	err = suite.app.StakingKeeper.Hooks().AfterValidatorCreated(suite.ctx, valAddr)
 	require.NoError(t, err)
 
 	err = suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, validator)
 	require.NoError(t, err)
 	suite.app.StakingKeeper.SetValidator(suite.ctx, validator)
 
-	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
+	encodingConfig := encoding.MakeConfig()
 	suite.clientCtx = client.Context{}.WithTxConfig(encodingConfig.TxConfig)
 	suite.ethSigner = ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
 	suite.appCodec = encodingConfig.Codec
 	suite.denom = evmtypes.DefaultEVMDenom
 }
 
-// Commit commits and starts a new block with an updated context.
+// Commit and begin new block
 func (suite *KeeperTestSuite) Commit() {
-	suite.CommitAfter(time.Second * 0)
-}
-
-// Commit commits a block at a given time.
-func (suite *KeeperTestSuite) CommitAfter(t time.Duration) {
-	header := suite.ctx.BlockHeader()
-	suite.app.EndBlock(abci.RequestEndBlock{Height: header.Height})
-	_ = suite.app.Commit()
-
-	header.Height += 1
-	header.Time = header.Time.Add(t)
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: header,
+	jumpTime := time.Second * 0
+	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: suite.ctx.BlockHeight(),
+		Time:   suite.ctx.BlockTime(),
 	})
-
+	suite.app.Commit()
+	newBlockTime := suite.ctx.BlockTime().Add(jumpTime)
+	header := suite.ctx.BlockHeader()
+	header.Time = newBlockTime
+	header.Height++
 	// update ctx
-	suite.ctx = suite.app.BaseApp.NewContext(false, header)
-
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, suite.app.FeeMarketKeeper)
-	suite.queryClient = types.NewQueryClient(queryHelper)
+	suite.ctx = suite.app.NewUncachedContext(false, header).WithHeaderInfo(coreheader.Info{
+		Height: header.Height,
+		Time:   header.Time,
+	})
 }
 
 func (suite *KeeperTestSuite) TestSetGetBlockGasWanted() {
@@ -198,9 +175,9 @@ func (suite *KeeperTestSuite) TestSetGetGasFee() {
 		{
 			"with last block given",
 			func() {
-				suite.app.FeeMarketKeeper.SetBaseFee(suite.ctx, sdk.OneDec().BigInt())
+				suite.app.FeeMarketKeeper.SetBaseFee(suite.ctx, sdkmath.LegacyOneDec().BigInt())
 			},
-			sdk.OneDec().BigInt(),
+			sdkmath.LegacyOneDec().BigInt(),
 		},
 	}
 
