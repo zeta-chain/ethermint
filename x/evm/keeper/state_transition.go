@@ -401,11 +401,12 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 
 	if contractCreation {
 		// take over the nonce management from evm:
-		// - reset sender's nonce to msg.Nonce() before calling evm.
-		// - increase sender's nonce by one no matter the result.
+		// - reset sender's nonce to msg.Nonce() to generate correct contract address.
+		// - set the nonce back to the original value after contract creation.
+		oldNonce := stateDB.GetNonce(sender.Address())
 		stateDB.SetNonce(sender.Address(), msg.Nonce)
 		ret, _, leftoverGas, vmErr = evm.Create(sender, msg.Data, leftoverGas, valueUint256)
-		stateDB.SetNonce(sender.Address(), msg.Nonce+1)
+		stateDB.SetNonce(sender.Address(), oldNonce)
 	} else {
 		ret, leftoverGas, vmErr = evm.Call(sender, *msg.To, msg.Data, leftoverGas, valueUint256)
 	}
