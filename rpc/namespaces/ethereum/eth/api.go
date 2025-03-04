@@ -17,6 +17,7 @@ package eth
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 
@@ -177,6 +178,10 @@ func (e *PublicAPI) GetBlockByHash(hash common.Hash, fullTx bool) (map[string]in
 // GetTransactionByHash returns the transaction identified by hash.
 func (e *PublicAPI) GetTransactionByHash(hash common.Hash) (*rpctypes.RPCTransaction, error) {
 	e.logger.Debug("eth_getTransactionByHash", "hash", hash.Hex())
+	e.logger.Info("eth_getTransactionByHash_________________________", "hash", hash.Hex())
+	fmt.Println("eth_getTransactionByHash_________________________", "hash", hash.Hex())
+	e.logger.Warn("eth_getTransactionByHash_________________________", "hash", hash.Hex())
+
 	return e.backend.GetTransactionByHash(hash)
 }
 
