@@ -315,6 +315,7 @@ func (b *Backend) GetTransactionByBlockNumberAndIndex(blockNum rpctypes.BlockNum
 // TODO: Don't need to convert once hashing is fixed on Tendermint
 // https://github.com/tendermint/tendermint/issues/6539
 func (b *Backend) GetTxByEthHash(hash common.Hash) (*ethermint.TxResult, error) {
+	fmt.Println("GetTxByEthHash--------------------------------------------")
 	if b.indexer != nil {
 		return b.indexer.GetByTxHash(hash)
 	}
@@ -327,6 +328,7 @@ func (b *Backend) GetTxByEthHash(hash common.Hash) (*ethermint.TxResult, error) 
 	if err != nil {
 		return nil, errorsmod.Wrapf(err, "GetTxByEthHash %s", hash.Hex())
 	}
+	fmt.Println("GetTxByEthHash--------------------------------------------")
 	return txResult, nil
 }
 
