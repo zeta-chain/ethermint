@@ -91,7 +91,7 @@ jobs:
       - uses: cachix/install-nix-action@v23
         with:
           nix_path: nixpkgs=channel:nixos-22.11
-      - uses: cachix/cachix-action@v15
+      - uses: cachix/cachix-action@v16
         with:
           name: ethermint
           signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
@@ -129,7 +129,7 @@ jobs:
       - uses: cachix/install-nix-action@v23
         with:
           nix_path: nixpkgs=channel:nixos-22.11
-      - uses: cachix/cachix-action@v15
+      - uses: cachix/cachix-action@v16
         with:
           name: ethermint
           signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
