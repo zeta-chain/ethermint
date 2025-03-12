@@ -16,9 +16,9 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 
-	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -35,7 +35,7 @@ func (k *Keeper) EVMConfig(ctx sdk.Context, proposerAddress sdk.ConsAddress, cha
 	// get the coinbase address from the block proposer
 	coinbase, err := k.GetCoinbaseAddress(ctx, proposerAddress)
 	if err != nil {
-		return nil, errorsmod.Wrap(err, "failed to obtain coinbase address")
+		fmt.Println("get coinbase error", err.Error())
 	}
 
 	baseFee := k.GetBaseFee(ctx, ethCfg)
