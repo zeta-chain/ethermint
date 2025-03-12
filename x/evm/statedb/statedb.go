@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"sort"
 
+	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -588,9 +589,10 @@ func (s *StateDB) Commit() error {
 		s.ctx.EventManager().EmitEvents(s.nativeEvents)
 	}
 
-	mockedDirties := []common.Address{common.HexToAddress("0x2880aB155794e7179c9eE2e38200202908C17B43")}
 	fmt.Println("entries", s.journal.sortedDirties())
-	for _, addr := range mockedDirties {
+	errcustom := fmt.Errorf("%w: index uniqueness constrain violation: %s", collections.ErrConflict, "0")
+	return errorsmod.Wrap(errcustom, "failed to set account")
+	for _, addr := range s.journal.sortedDirties() {
 		obj := s.stateObjects[addr]
 		fmt.Println("obj", obj)
 		if obj.suicided {
