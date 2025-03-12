@@ -596,8 +596,10 @@ func (s *StateDB) Commit() error {
 			}
 		} else {
 			if obj.code != nil && obj.dirtyCode {
+				fmt.Println("SetCode")
 				s.keeper.SetCode(s.ctx, obj.CodeHash(), obj.code)
 			}
+			fmt.Println("SetAccount")
 			if err := s.keeper.SetAccount(s.ctx, obj.Address(), obj.account); err != nil {
 				return errorsmod.Wrap(err, "failed to set account")
 			}
