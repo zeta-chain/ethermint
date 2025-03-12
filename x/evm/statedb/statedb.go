@@ -588,11 +588,11 @@ func (s *StateDB) Commit() error {
 		s.ctx.EventManager().EmitEvents(s.nativeEvents)
 	}
 
+	mockedDirties := []common.Address{common.HexToAddress("0x2880aB155794e7179c9eE2e38200202908C17B43")}
 	fmt.Println("entries", s.journal.sortedDirties())
-	for _, addr := range s.journal.sortedDirties() {
+	for _, addr := range mockedDirties {
 		obj := s.stateObjects[addr]
 		fmt.Println("obj", obj)
-		obj.suicided = false
 		if obj.suicided {
 			if err := s.keeper.DeleteAccount(s.ctx, obj.Address()); err != nil {
 				return errorsmod.Wrap(err, "failed to delete account")
