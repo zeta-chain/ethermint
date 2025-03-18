@@ -1,6 +1,7 @@
 module github.com/zeta-chain/ethermint
 
 go 1.22
+toolchain go1.24.1
 
 require (
 	cosmossdk.io/api v0.7.6
@@ -41,7 +42,7 @@ require (
 	github.com/tyler-smith/go-bip39 v1.1.0
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
 	golang.org/x/net v0.29.0
-	golang.org/x/text v0.18.0
+	golang.org/x/text v0.23.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142
 	google.golang.org/grpc v1.67.1
 	sigs.k8s.io/yaml v1.4.0
@@ -59,7 +60,7 @@ require (
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/cosmos/ibc-go/v8 v8.5.2
 	github.com/hashicorp/go-metrics v0.5.3
-	golang.org/x/sync v0.8.0
+	golang.org/x/sync v0.12.0
 	google.golang.org/protobuf v1.35.1
 )
 
