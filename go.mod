@@ -1,6 +1,7 @@
 module github.com/zeta-chain/ethermint
 
 go 1.22
+toolchain go1.24.1
 
 require (
 	cosmossdk.io/api v0.7.6
@@ -40,8 +41,8 @@ require (
 	github.com/tidwall/sjson v1.2.5
 	github.com/tyler-smith/go-bip39 v1.1.0
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
-	golang.org/x/net v0.29.0
-	golang.org/x/text v0.18.0
+	golang.org/x/net v0.37.0
+	golang.org/x/text v0.23.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142
 	google.golang.org/grpc v1.67.1
 	sigs.k8s.io/yaml v1.4.0
@@ -59,7 +60,7 @@ require (
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/cosmos/ibc-go/v8 v8.5.2
 	github.com/hashicorp/go-metrics v0.5.3
-	golang.org/x/sync v0.8.0
+	golang.org/x/sync v0.12.0
 	google.golang.org/protobuf v1.35.1
 )
 
@@ -232,11 +233,11 @@ require (
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.27.0 // indirect
+	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/mod v0.18.0 // indirect
 	golang.org/x/oauth2 v0.22.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
-	golang.org/x/term v0.24.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/term v0.30.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.22.0 // indirect
 	google.golang.org/api v0.186.0 // indirect
