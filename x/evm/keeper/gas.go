@@ -83,8 +83,5 @@ func (k *Keeper) ResetGasMeterAndConsumeGas(ctx sdk.Context, gasUsed uint64) {
 func GasToRefund(availableRefund, gasConsumed, refundQuotient uint64) uint64 {
 	// Apply refund counter
 	refund := gasConsumed / refundQuotient
-	if refund > availableRefund {
-		return availableRefund
-	}
-	return refund
+	return min(refund, availableRefund)
 }
