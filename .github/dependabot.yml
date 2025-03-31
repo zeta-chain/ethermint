@@ -1,29 +1,32 @@
 version: 2
-open-pull-requests-limit: 0
-# updates:
-# - package-ecosystem: github-actions
-#   directory: "/"
-#   schedule:
-#     interval: daily
-#     time: "10:00"
-#   open-pull-requests-limit: 10
-#   reviewers:
-#   - fedekunze
-#   - khoslaventures
-#   labels:
-#   - dependencies
-# - package-ecosystem: docker
-#   directory: "/"
-#   schedule:
-#     interval: daily
-#     time: "10:00"
-#   open-pull-requests-limit: 10
-#   reviewers:
-#   - fedekunze
-#   - khoslaventures
-# - package-ecosystem: gomod
-#   directory: "/"
-#   schedule:
-#     interval: daily
-#     time: "10:00"
-#   open-pull-requests-limit: 10
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: daily
+      time: "01:00"
+    open-pull-requests-limit: 0
+
+  - package-ecosystem: gomod
+    directory: "/"
+    schedule:
+      interval: daily
+      time: "01:05"
+    labels:
+      - "A:automerge"
+      - dependencies
+    open-pull-requests-limit: 0
+
+  - package-ecosystem: gomod
+    directory: "/simapp"
+    schedule:
+      interval: daily
+      time: "01:10"
+    labels:
+      - "A:automerge"
+      - dependencies
+    open-pull-requests-limit: 0
+
+  # Repeat the above structure for each package-ecosystem and directory,
+  # setting open-pull-requests-limit: 0 to disable pull requests.
+
