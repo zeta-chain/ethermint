@@ -122,10 +122,12 @@ var (
 // with the return reason.
 func NewExecErrorWithReason(revertReason []byte) *RevertError {
 	result := common.CopyBytes(revertReason)
-	reason, errUnpack := abi.UnpackRevert(result)
 	err := errors.New("execution reverted")
+	reason, errUnpack := abi.UnpackRevert(result)
 	if errUnpack == nil {
 		err = fmt.Errorf("execution reverted: %v", reason)
+	} else if len(revertReason) > 0 {
+		err = fmt.Errorf("execution reverted: %s", hexutil.Encode(result))
 	}
 	return &RevertError{
 		error:  err,
