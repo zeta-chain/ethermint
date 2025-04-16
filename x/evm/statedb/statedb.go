@@ -588,6 +588,10 @@ func (s *StateDB) Commit() error {
 		s.ctx.EventManager().EmitEvents(s.nativeEvents)
 	}
 
+	fmt.Println("TEST: trace commit e", s.journal.entries)
+
+	fmt.Println("TEST: trace commit d", s.journal.sortedDirties())
+
 	for _, addr := range s.journal.sortedDirties() {
 		obj := s.stateObjects[addr]
 		if obj.suicided {
