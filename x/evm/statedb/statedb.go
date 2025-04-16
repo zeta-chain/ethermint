@@ -594,6 +594,7 @@ func (s *StateDB) Commit() error {
 
 	for _, addr := range s.journal.sortedDirties() {
 		obj := s.stateObjects[addr]
+		fmt.Println("TEST: obj", addr, obj.suicided, obj.code, obj.dirtyCode, obj.dirtyStorage)
 		if obj.suicided {
 			if err := s.keeper.DeleteAccount(s.ctx, obj.Address()); err != nil {
 				return errorsmod.Wrap(err, "failed to delete account")
@@ -602,9 +603,12 @@ func (s *StateDB) Commit() error {
 			if obj.code != nil && obj.dirtyCode {
 				s.keeper.SetCode(s.ctx, obj.CodeHash(), obj.code)
 			}
+			fmt.Println("TEST: set account 1")
 			if err := s.keeper.SetAccount(s.ctx, obj.Address(), obj.account); err != nil {
 				return errorsmod.Wrap(err, "failed to set account")
 			}
+			fmt.Println("TEST: set account 2")
+
 			for _, key := range obj.dirtyStorage.SortedKeys() {
 				value := obj.dirtyStorage[key]
 				// Skip noop changes, persist actual changes
