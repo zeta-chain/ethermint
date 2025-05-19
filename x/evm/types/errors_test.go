@@ -25,13 +25,13 @@ func TestNewExecErrorWithReason(t *testing.T) {
 		},
 		{
 			"With unpackable reason",
-			"execution reverted",
+			"execution reverted: 0x61",
 			[]byte("a"),
 			"0x61",
 		},
 		{
 			"With packable reason but empty reason",
-			"execution reverted",
+			"execution reverted: 0x08c379a0",
 			revertSelector,
 			"0x08c379a0",
 		},

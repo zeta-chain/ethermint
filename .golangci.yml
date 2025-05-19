@@ -1,5 +1,6 @@
 run:
   tests: false
+  timeout: 5m
   # timeout for analysis, e.g. 30s, 5m, default is 1m
   # timeout: 5m
 
@@ -21,7 +22,6 @@ linters:
     - misspell
     - nakedret
     - prealloc
-    - exportloopref
     - staticcheck
     - stylecheck
     - typecheck
@@ -30,16 +30,16 @@ linters:
     - unused
     - nolintlint
     - asciicheck
-    - exportloopref
     - gofumpt
     - gomodguard
     - whitespace
+    - copyloopvar
 
 issues:
   exclude:
     - composite
   exclude-generated: strict
-  exclude-dirs: ['.git', '.github']
+  exclude-dirs: ['.git', '.github', '.idea', 'docs', 'scripts']
   exclude-rules:
     - path: _test\.go
       linters:
