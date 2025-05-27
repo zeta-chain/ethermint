@@ -27,6 +27,7 @@ const (
 	AttributeKeyEthereumTxHash  = "ethereumTxHash"
 	AttributeKeyTxIndex         = "txIndex"
 	AttributeKeyTxGasUsed       = "txGasUsed"
+	AttributeKeyTxGasLimit      = "txGasLimit"
 	AttributeKeyTxType          = "txType"
 	AttributeKeyTxLog           = "txLog"
 
